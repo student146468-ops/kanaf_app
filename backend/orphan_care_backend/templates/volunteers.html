@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="page-shell">
+    <div class="panel">
+        <h3 class="panel-title">إضافة متطوع جديد <span class="panel-kicker"><i class="fas fa-hand-holding-heart"></i></span></h3>
+        <form method="POST" class="form-grid">
+            {% csrf_token %}
+            <div>
+                <label for="v_name">اسم المتطوع</label>
+                <input id="v_name" type="text" name="v_name" required placeholder="الاسم الكامل">
+            </div>
+            <div>
+                <label for="v_specialty">التخصص أو المهارة</label>
+                <input id="v_specialty" type="text" name="v_specialty" required placeholder="تنظيم، تدريس، تمريض">
+            </div>
+            <button type="submit"><i class="fas fa-user-plus"></i> إضافة متطوع</button>
+        </form>
+        <div style="margin-top: 14px;">
+            <a class="btn-3d" href="{% url 'volunteer_applications_list' %}">
+                <i class="fas fa-list-check"></i> طلبات التطوع
+            </a>
+        </div>
+    </div>
+
+    <div class="content-card">
+        <div class="panel" style="box-shadow: none; border: 0; background: transparent; padding-bottom: 0;">
+            <h3 class="panel-title">قائمة المتطوعين النشطين</h3>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>الاسم</th>
+                        <th>التخصص</th>
+                        <th>النقاط</th>
+                        <th style="text-align: center;">إجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for v in volunteers %}
+                    <tr>
+                        <td class="name-cell">{{ v.name }}</td>
+                        <td>{{ v.specialty }}</td>
+                        <td><span class="badge">{{ v.points }} نقطة</span></td>
+                        <td style="text-align: center;">
+                            <form method="POST" action="{% url 'delete_volunteer' v.id %}" class="delete-form" data-delete-name="{{ v.name }}" style="display: inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="confirm_delete" value="">
+                                <button type="submit" class="delete-button"><i class="fas fa-trash"></i> حذف</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="empty-state">لا يوجد متطوعون مسجلون حاليا.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endblock %}

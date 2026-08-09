@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div style="direction: rtl; padding: 20px; font-family: 'Tajawal', sans-serif;">
+    
+    <div style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 30px;">
+        <h3 style="color: #4338ca; margin-top: 0;">👶 إضافة يتيم جديد</h3>
+        <form method="POST" style="display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;">
+            {% csrf_token %}
+            <div style="flex: 2; min-width: 200px;">
+                <label style="display: block; margin-bottom: 8px; color: #64748b;">اسم اليتيم:</label>
+                <input type="text" name="o_name" required placeholder="الاسم الرباعي" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #e2e8f0; outline: none;">
+            </div>
+            <div style="flex: 1; min-width: 100px;">
+                <label style="display: block; margin-bottom: 8px; color: #64748b;">العمر:</label>
+                <input type="number" name="o_age" required placeholder="0" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #e2e8f0; outline: none;">
+            </div>
+            <button type="submit" style="background: #4338ca; color: white; padding: 12px 30px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; transition: 0.3s;">
+                حفظ البيانات
+            </button>
+        </form>
+    </div>
+
+    <div style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+        <h3 style="margin-top: 0; color: #1e293b;">📑 قائمة الأيتام المسجلين</h3>
+        <table style="width: 100%; border-collapse: collapse; text-align: right;">
+            <thead>
+                <tr style="border-bottom: 2px solid #f1f5f9; color: #64748b;">
+                    <th style="padding: 15px;">الاسم</th>
+                    <th style="padding: 15px;">العمر</th>
+                    <th style="padding: 15px;">الحالة</th>
+                    <th style="padding: 15px; text-align: center;">إجراءات</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for orphan in orphans %}
+                <tr style="border-bottom: 1px solid #f1f5f9; transition: 0.2s;">
+                    <td style="padding: 15px; color: #1e293b; font-weight: bold;">{{ orphan.name }}</td>
+                    <td style="padding: 15px; color: #64748b;">{{ orphan.age }} سنة</td>
+                    <td style="padding: 15px;">
+                        <span style="background: #eef2ff; color: #4338ca; padding: 5px 12px; border-radius: 20px; font-size: 0.85rem;">
+                            {{ orphan.status }}
+                        </span>
+                    </td>
+                    <td style="padding: 15px; text-align: center;">
+                        <form method="POST" action="{% url 'delete_orphan' orphan.id %}" class="delete-form" data-delete-name="{{ orphan.name }}" style="display: inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="confirm_delete" value="">
+                            <button type="submit" class="delete-button">❌ حذف</button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" style="padding: 30px; text-align: center; color: #94a3b8;">لا يوجد أيتام مسجلون حالياً.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+{% endblock %}

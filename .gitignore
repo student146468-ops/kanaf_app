@@ -1,0 +1,6 @@
+
+__pycache__/
+*.pyc
+frontend/orphan_care_app/READY_APK/Kanaf-anywhere-debug.apk
+
+*.apk

@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="page-shell">
+    <div class="panel">
+        <h3 class="panel-title">إضافة تبرع مالي <span class="panel-kicker"><i class="fas fa-wallet"></i></span></h3>
+        <form method="POST" class="form-grid">
+            {% csrf_token %}
+            <div>
+                <label for="d_name">اسم المتبرع</label>
+                <input id="d_name" type="text" name="d_name" required placeholder="مثال: متبرع تجريبي">
+            </div>
+            <div>
+                <label for="d_item">نوع التبرع</label>
+                <input id="d_item" type="text" name="d_item" required placeholder="المبلغ أو وصف التبرع">
+            </div>
+            <button type="submit"><i class="fas fa-plus"></i> إضافة التبرع</button>
+        </form>
+    </div>
+
+    <div class="content-card">
+        <div class="panel" style="box-shadow: none; border: 0; background: transparent; padding-bottom: 0;">
+            <h3 class="panel-title">سجل التبرعات</h3>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>المتبرع</th>
+                        <th>النوع</th>
+                        <th>الاحتياج</th>
+                        <th>المبلغ / الكمية</th>
+                        <th>تاريخ الإنشاء</th>
+                        <th>الحالة</th>
+                        <th style="text-align: center;">الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for d in donations %}
+                    <tr>
+                        <td class="name-cell">
+                            {% if d.donor_name %}
+                                {{ d.donor_name }}
+                            {% elif d.user %}
+                                {{ d.user.username }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if d.donation_type == "financial" %}مالي{% elif d.donation_type == "in_kind" %}عيني{% else %}{{ d.get_donation_type_display }}{% endif %}
+                            {% if d.item_type %}<br><small>{{ d.item_type }}</small>{% endif %}
+                        </td>
+                        <td>{{ d.need|default:"-" }}</td>
+                        <td>
+                            {% if d.donation_type == "financial" %}
+                                {{ d.amount|default:"-" }}
+                            {% else %}
+                                {{ d.quantity|default:d.description|default:"-" }}
+                            {% endif %}
+                        </td>
+                        <td>{{ d.donation_date|date:"Y-m-d H:i" }}</td>
+                        <td>
+                            <span class="badge badge-green">
+                                {% if d.status == "pending" %}قيد الانتظار
+                                {% elif d.status == "accepted" %}مقبول
+                                {% elif d.status == "rejected" %}مرفوض
+                                {% elif d.status == "completed" %}مكتمل
+                                {% else %}{{ d.status }}{% endif %}
+                            </span>
+                        </td>
+                        <td style="text-align: center;">
+                            <form method="POST" action="{% url 'update_donation_status' d.id %}" style="display: inline-flex; gap: 8px; align-items: center; margin-inline-end: 8px;">
+                                {% csrf_token %}
+                                <select name="status" aria-label="حالة التبرع">
+                                    {% for value, label in donation_status_choices %}
+                                    <option value="{{ value }}" {% if d.status == value %}selected{% endif %}>
+                                        {% if value == "pending" %}قيد الانتظار
+                                        {% elif value == "accepted" %}مقبول
+                                        {% elif value == "rejected" %}مرفوض
+                                        {% elif value == "completed" %}مكتمل
+                                        {% else %}{{ label }}{% endif %}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit"><i class="fas fa-floppy-disk"></i> حفظ</button>
+                            </form>
+                            <form method="POST" action="{% url 'delete_donation' d.id %}" class="delete-form" data-delete-name="{{ d }}" style="display: inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="confirm_delete" value="">
+                                <button type="submit" class="delete-button"><i class="fas fa-trash"></i> حذف</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="empty-state">لا توجد تبرعات مسجلة حاليًا.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endblock %}

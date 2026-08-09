@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block content %}
+<div style="direction: rtl; padding: 30px; font-family: 'Tajawal', sans-serif; background-color: #f8fafc; min-height: 100vh;">
+    
+    <h2 style="color: #1e293b; margin-bottom: 30px; border-right: 5px solid #4338ca; padding-right: 15px;">📊 التقارير والإحصائيات العامة</h2>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 25px;">
+        
+        <div style="background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); transition: 0.3s; border-bottom: 5px solid #4338ca;">
+            <p style="color: #64748b; font-size: 1.1rem; margin: 0;">إجمالي الأيتام</p>
+            <h1 style="color: #1e293b; font-size: 2.5rem; margin: 15px 0;">{{ total_orphans }}</h1>
+            <span style="color: #4338ca; font-size: 0.9rem;">👤 طفل مسجل</span>
+        </div>
+
+        <div style="background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border-bottom: 5px solid #f59e0b;">
+            <p style="color: #64748b; font-size: 1.1rem; margin: 0;">المتطوعين</p>
+            <h1 style="color: #1e293b; font-size: 2.5rem; margin: 15px 0;">{{ total_volunteers }}</h1>
+            <span style="color: #f59e0b; font-size: 0.9rem;">🤝 متطوع نشط</span>
+        </div>
+
+        <div style="background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border-bottom: 5px solid #10b981;">
+            <p style="color: #64748b; font-size: 1.1rem; margin: 0;">عمليات التبرع</p>
+            <h1 style="color: #1e293b; font-size: 2.5rem; margin: 15px 0;">{{ total_donations }}</h1>
+            <span style="color: #10b981; font-size: 0.9rem;">🎁 عملية مسجلة</span>
+        </div>
+
+        <div style="background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border-bottom: 5px solid #ec4899;">
+            <p style="color: #64748b; font-size: 1.1rem; margin: 0;">الكفلاء</p>
+            <h1 style="color: #1e293b; font-size: 2.5rem; margin: 15px 0;">{{ total_sponsors }}</h1>
+            <span style="color: #ec4899; font-size: 0.9rem;">💖 كفيل مسجل</span>
+        </div>
+
+    </div>
+
+    <div style="margin-top: 40px; background: #eff6ff; padding: 20px; border-radius: 15px; color: #1e40af; border: 1px dashed #bfdbfe;">
+        💡 **ملاحظة:** الأرقام أعلاه يتم تحديثها تلقائياً بمجرد إضافة بيانات جديدة في الأقسام الأخرى.
+    </div>
+</div>
+{% endblock %}

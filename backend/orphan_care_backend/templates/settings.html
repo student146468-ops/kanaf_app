@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block content %}
+<div style="direction: rtl; padding: 20px; font-family: 'Tajawal', sans-serif;">
+    <h2 style="color: #1e293b;">⚙️ إعدادات المنظومة</h2>
+    <div style="background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+        <div style="margin-bottom: 20px;">
+            <label style="font-weight: bold; display: block; margin-bottom: 10px;">اسم المؤسسة:</label>
+            <input type="text" value="جمعية رعاية الأيتام" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd;">
+        </div>
+        <div style="margin-bottom: 20px;">
+            <label style="font-weight: bold; display: block; margin-bottom: 10px;">لغة النظام:</label>
+            <select style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd;">
+                <option>العربية</option>
+                <option>English</option>
+            </select>
+        </div>
+        <button style="background: #1e293b; color: white; padding: 12px 30px; border: none; border-radius: 10px; cursor: pointer;">حفظ الإعدادات</button>
+    </div>
+</div>
+{% endblock %}

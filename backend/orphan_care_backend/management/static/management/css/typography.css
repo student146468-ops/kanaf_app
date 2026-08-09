@@ -1,0 +1,286 @@
+@import url("https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap");
+
+:root {
+  --kanaf-font-arabic: "SF Arabic", "Tajawal", "IBM Plex Sans Arabic", sans-serif;
+  --kanaf-font-latin: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+  --font-arabic: var(--kanaf-font-arabic);
+  --font-latin: var(--kanaf-font-latin);
+  --font-display: var(--kanaf-font-arabic);
+  --font-main: var(--kanaf-font-arabic);
+  --font-weight-title: 700;
+  --font-weight-subtitle: 600;
+  --font-weight-small-title: 500;
+  --font-weight-body: 400;
+  --font-size-main-title: 28px;
+  --font-size-page-title: 24px;
+  --font-size-card-title: 18px;
+  --font-size-body: 15px;
+  --font-size-secondary: 13px;
+  --font-size-button: 15px;
+  --line-height-ui: 1.55;
+}
+
+html,
+body,
+body *:not(i):not(.fa):not(.fas):not(.far):not(.fab):not(.fa-solid):not(.fa-regular):not(.fa-brands):not([class*="icon-"]) {
+  font-family: var(--kanaf-font-arabic) !important;
+}
+
+html,
+body {
+  font-size: var(--font-size-body) !important;
+  font-weight: var(--font-weight-body) !important;
+  line-height: var(--line-height-ui);
+  text-rendering: geometricPrecision;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  direction: rtl;
+}
+
+body,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+a,
+span,
+strong,
+small,
+label,
+input,
+select,
+textarea,
+button,
+table,
+thead,
+tbody,
+tfoot,
+tr,
+th,
+td,
+option,
+optgroup,
+legend,
+fieldset,
+code,
+pre,
+.modal,
+.modal *:not(i),
+.alert,
+.alert *:not(i),
+.dropdown-menu,
+.dropdown-menu *:not(i),
+.notification,
+.notification *:not(i),
+.toast,
+.toast *:not(i),
+.brand,
+.brand *,
+.sidebar,
+.sidebar *:not(i),
+.content,
+.content *:not(i),
+.topbar,
+.topbar *:not(i),
+.panel,
+.panel *:not(i),
+.content-card,
+.content-card *:not(i),
+.stat-card,
+.stat-card *:not(i),
+.metric-card,
+.metric-card *:not(i),
+.mini-card,
+.mini-card *:not(i),
+.quick-actions,
+.quick-actions *:not(i),
+.delete-confirm-dialog,
+.delete-confirm-dialog *:not(i),
+.messages,
+.messages *:not(i),
+#container,
+#container *:not(.fa):not(.fas):not(.far):not(.fab):not([class*="icon-"]) {
+  font-family: var(--font-main) !important;
+}
+
+h1,
+.brand h1 {
+  font-family: var(--font-display) !important;
+  font-size: var(--font-size-main-title) !important;
+  font-weight: var(--font-weight-title) !important;
+  line-height: 1.25;
+}
+
+h2,
+.page-title h2,
+#content h1 {
+  font-family: var(--font-display) !important;
+  font-size: var(--font-size-page-title) !important;
+  font-weight: var(--font-weight-title) !important;
+  line-height: 1.35;
+}
+
+h3,
+.panel-title,
+.card-title,
+.module caption {
+  font-size: var(--font-size-card-title) !important;
+  font-weight: var(--font-weight-subtitle) !important;
+  line-height: 1.45;
+}
+
+h4,
+h5,
+h6,
+thead th,
+.sidebar a,
+.badge,
+.panel-kicker,
+.name-cell,
+.user-card strong {
+  font-weight: var(--font-weight-small-title) !important;
+}
+
+p,
+li,
+td,
+input,
+select,
+textarea,
+.list-item span,
+.user-card span,
+.page-title p {
+  font-size: var(--font-size-body) !important;
+  font-weight: var(--font-weight-body) !important;
+}
+
+small,
+.help,
+.helptext,
+.trend,
+.panel-kicker,
+.badge,
+.user-card span {
+  font-size: var(--font-size-secondary) !important;
+}
+
+button,
+.btn-3d,
+.quick-action,
+.delete-button,
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+.button {
+  font-size: var(--font-size-button) !important;
+  font-weight: var(--font-weight-subtitle) !important;
+  line-height: 1.35;
+}
+
+input,
+select,
+textarea {
+  direction: rtl;
+}
+
+input[type="email"],
+input[type="number"],
+input[type="tel"],
+input[name*="email"],
+input[name*="username"],
+input[name*="password"],
+.latin,
+.number,
+.date,
+.time,
+.amount,
+code,
+pre {
+  font-family: var(--font-latin) !important;
+}
+
+.stat-card strong,
+.metric-card strong,
+.mini-card strong,
+.stat-number {
+  font-family: var(--font-latin) !important;
+  font-weight: var(--font-weight-title) !important;
+  font-variant-numeric: tabular-nums;
+}
+
+.fa,
+.fas,
+.far,
+.fab,
+.fa-solid,
+.fa-regular,
+.fa-brands {
+  font-family: "Font Awesome 6 Free" !important;
+}
+
+.fab,
+.fa-brands {
+  font-family: "Font Awesome 6 Brands" !important;
+}
+
+/* Django admin and login pages */
+body.login,
+body.change-form,
+body.change-list,
+#header,
+#branding,
+#user-tools,
+#content,
+.module,
+.form-row,
+.submit-row,
+.breadcrumbs {
+  font-family: var(--font-main) !important;
+}
+
+body.login #container {
+  border-radius: 18px;
+}
+
+#container,
+#content,
+#content-main,
+.colMS,
+#changelist,
+.changelist-form-container,
+.results,
+.module,
+.form-row,
+.submit-row {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+.colMS,
+.changelist-form-container,
+.results {
+  overflow-x: auto;
+}
+
+#changelist table,
+.module table {
+  width: 100%;
+}
+
+#changelist th,
+#changelist td,
+.module th,
+.module td {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.visually-hidden,
+.theme-label-when-auto,
+.theme-label-when-light,
+.theme-label-when-dark {
+  overflow: hidden !important;
+}

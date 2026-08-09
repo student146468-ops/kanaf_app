@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="page-shell">
+    <div class="content-card">
+        <div class="panel" style="box-shadow: none; border: 0; background: transparent; padding-bottom: 0;">
+            <h3 class="panel-title">طلبات التطوع</h3>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>المتطوع</th>
+                        <th>فرصة التطوع</th>
+                        <th>تاريخ التقديم</th>
+                        <th>الرسالة</th>
+                        <th>الحالة</th>
+                        <th style="text-align: center;">الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for application in applications %}
+                    <tr>
+                        <td class="name-cell">{{ application.user.username }}</td>
+                        <td>{{ application.opportunity.title }}</td>
+                        <td>{{ application.created_at|date:"Y-m-d H:i" }}</td>
+                        <td>{{ application.message|default:"-" }}</td>
+                        <td>
+                            <span class="badge badge-green">
+                                {% if application.status == "pending" %}قيد الانتظار
+                                {% elif application.status == "accepted" %}مقبول
+                                {% elif application.status == "rejected" %}مرفوض
+                                {% elif application.status == "completed" %}مكتمل
+                                {% else %}{{ application.status }}{% endif %}
+                            </span>
+                        </td>
+                        <td style="text-align: center;">
+                            <form method="POST" action="{% url 'update_volunteer_application_status' application.id %}" style="display: inline-flex; gap: 8px; align-items: center;">
+                                {% csrf_token %}
+                                <select name="status" aria-label="حالة طلب التطوع">
+                                    {% for value, label in application_status_choices %}
+                                    <option value="{{ value }}" {% if application.status == value %}selected{% endif %}>
+                                        {% if value == "pending" %}قيد الانتظار
+                                        {% elif value == "accepted" %}مقبول
+                                        {% elif value == "rejected" %}مرفوض
+                                        {% elif value == "completed" %}مكتمل
+                                        {% else %}{{ label }}{% endif %}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit"><i class="fas fa-floppy-disk"></i> حفظ</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="empty-state">لا توجد طلبات تطوع مسجلة حاليًا.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endblock %}

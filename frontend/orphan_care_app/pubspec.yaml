@@ -1,0 +1,69 @@
+name: kanaf
+description: تطبيق كنف
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # 🌍 تعريب مكوّنات Material الأصلية (منتقي التاريخ، الرسائل المدمجة).
+  # بدونه تظهر مكوّنات Flutter الجاهزة بالإنجليزية داخل تطبيق عربي.
+  flutter_localizations:
+    sdk: flutter
+
+  # 🔌 مكتبات الربط والاتصال بالـ API
+  dio: ^5.3.0
+
+  # 📦 إدارة الحالة والبيانات
+  provider: ^6.0.0
+
+  # 💾 التخزين المحلي (الجلسة فقط — لا تخزين محلي للمعاملات)
+  shared_preferences: ^2.2.0
+
+  # 🎨 الأيقونات والتصميم
+  cupertino_icons: ^1.0.6
+
+  # 📊 الرسوم البيانية والإحصائيات
+  fl_chart: ^0.63.0
+
+  # 🌐 تنسيق الأرقام والتواريخ العربية
+  # مثبّت على 0.20.2 لأن flutter_localizations من الـ SDK يفرضها.
+  intl: ^0.20.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+  
+  assets:
+    - assets/images/logo.png
+    - assets/images/child.png
+    - assets/images/apple_icon.png
+    - assets/images/google_icon.png
+    - assets/images/happy_child.png    
+    - assets/images/
+  
+  # الخطوط العربية الاحترافية
+  fonts:
+    - family: Cairo
+      fonts:
+        - asset: assets/fonts/Cairo.ttf
+    - family: Tajawal
+      fonts:
+        - asset: assets/fonts/Tajawal-Regular.ttf
+        - asset: assets/fonts/Tajawal-Bold.ttf
+          weight: 700
+    - family: Vazirmatn
+      fonts:
+        - asset: assets/fonts/Vazirmatn-Regular.ttf
+        - asset: assets/fonts/Vazirmatn-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Vazirmatn-Bold.ttf
+          weight: 700

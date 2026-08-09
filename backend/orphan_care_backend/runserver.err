@@ -1,0 +1,13 @@
+[31/Jul/2026 12:33:40] "GET /api/health/ HTTP/1.1" 200 31
+[31/Jul/2026 12:33:41,426] - Broken pipe from ('127.0.0.1', 54400)
+[31/Jul/2026 12:33:52] "GET /api/health/ HTTP/1.1" 200 31
+[31/Jul/2026 12:33:52,994] - Broken pipe from ('127.0.0.1', 54403)
+[31/Jul/2026 12:34:13] "POST /api/auth/register/ HTTP/1.1" 201 1593
+[31/Jul/2026 12:34:14] "POST /api/auth/login/ HTTP/1.1" 200 1484
+[31/Jul/2026 12:34:15] "POST /api/auth/register/ HTTP/1.1" 201 1617
+[31/Jul/2026 12:34:16] "POST /api/auth/login/ HTTP/1.1" 200 1500
+[31/Jul/2026 12:34:19,857] - Broken pipe from ('127.0.0.1', 54410)
+[31/Jul/2026 12:52:28] "OPTIONS /api/auth/register/ HTTP/1.1" 200 0
+[31/Jul/2026 12:52:30] "POST /api/auth/register/ HTTP/1.1" 201 1502
+[31/Jul/2026 12:52:31] "OPTIONS /api/needs/ HTTP/1.1" 200 0
+[31/Jul/2026 12:52:31] "GET /api/needs/ HTTP/1.1" 200 2

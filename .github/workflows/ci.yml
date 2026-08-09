@@ -1,0 +1,31 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend/orphan_care_backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --upgrade pip
+      - run: pip install -r requirements.txt
+      - run: python manage.py check
+      - run: python manage.py check --deploy
+        env:
+          DEBUG: "False"
+          SECRET_KEY: "ci-secret-key-with-enough-length-for-django-deploy-checks-123456789"
+          ALLOWED_HOSTS: "localhost,127.0.0.1,testserver"
+      - run: python manage.py makemigrations --check --dry-run
+      - run: python manage.py spectacular --validate --file /tmp/schema.yml
+      - run: python manage.py test
+      - run: docker build -t kanaf-backend-ci .

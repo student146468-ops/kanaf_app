@@ -1,0 +1,12 @@
+.venv
+.venv312
+__pycache__/
+*.pyc
+db.sqlite3
+media/
+staticfiles/
+logs/
+backups/
+.env
+.git
+.github

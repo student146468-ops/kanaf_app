@@ -1,0 +1,505 @@
+{"time":"2026-08-08 05:42:26,800","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 05:42:48,502","level":"WARNING","logger":"django.request","message":"Bad Request: /api/orphans/"}
+{"time":"2026-08-08 05:42:48,513","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 05:43:06,834","level":"WARNING","logger":"django.request","message":"Forbidden: /api/volunteer-applications/1/approve/"}
+{"time":"2026-08-08 05:43:06,838","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/orphans/"}
+{"time":"2026-08-08 05:43:30,936","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 05:43:32,955","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 05:43:32,966","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 05:43:32,973","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 05:43:32,981","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 05:43:32,988","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 05:43:32,997","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 05:43:33,003","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 05:43:33,010","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 05:43:33,015","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 05:43:51,976","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/donations/1/"}
+{"time":"2026-08-08 05:43:51,980","level":"WARNING","logger":"django.request","message":"Forbidden: /api/donations/1/"}
+{"time":"2026-08-08 05:43:56,376","level":"INFO","logger":"management.views_api","message":"Need id=1 was archived through DELETE by user id=2"}
+{"time":"2026-08-08 05:44:00,464","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/orphans/1/"}
+{"time":"2026-08-08 05:44:00,470","level":"WARNING","logger":"django.request","message":"Forbidden: /api/orphans/1/"}
+{"time":"2026-08-08 05:44:04,196","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/volunteers/1/"}
+{"time":"2026-08-08 05:44:04,201","level":"WARNING","logger":"django.request","message":"Forbidden: /api/volunteers/1/"}
+{"time":"2026-08-08 05:44:07,910","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/volunteer-opportunities/1/"}
+{"time":"2026-08-08 05:44:07,915","level":"WARNING","logger":"django.request","message":"Forbidden: /api/volunteer-opportunities/1/"}
+{"time":"2026-08-08 05:44:18,845","level":"WARNING","logger":"django.request","message":"Not Found: /api/notifications/2/"}
+{"time":"2026-08-08 05:44:23,847","level":"INFO","logger":"management.views_api","message":"Delete blocked for VolunteerOpportunity id=1 because of related records: {'applications': 1}"}
+{"time":"2026-08-08 05:44:23,848","level":"WARNING","logger":"django.request","message":"Conflict: /api/volunteer-opportunities/1/"}
+{"time":"2026-08-08 05:44:56,869","level":"WARNING","logger":"django.request","message":"Method Not Allowed (GET): /donations/1/status/"}
+{"time":"2026-08-08 05:45:05,559","level":"WARNING","logger":"django.request","message":"Method Not Allowed (GET): /volunteer-applications/1/status/"}
+{"time":"2026-08-08 14:02:08,492","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 14:02:22,218","level":"WARNING","logger":"django.request","message":"Bad Request: /api/orphans/"}
+{"time":"2026-08-08 14:02:22,227","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 14:02:35,532","level":"WARNING","logger":"django.request","message":"Forbidden: /api/volunteer-applications/1/approve/"}
+{"time":"2026-08-08 14:02:35,538","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/orphans/"}
+{"time":"2026-08-08 14:02:54,885","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 14:02:56,362","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 14:02:56,369","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 14:02:56,376","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 14:02:56,381","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 14:02:56,388","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 14:02:56,393","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 14:02:56,399","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 14:02:56,405","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 14:02:56,410","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 14:03:10,051","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/donations/1/"}
+{"time":"2026-08-08 14:03:10,057","level":"WARNING","logger":"django.request","message":"Forbidden: /api/donations/1/"}
+{"time":"2026-08-08 14:03:13,031","level":"INFO","logger":"management.views_api","message":"Need id=1 was archived through DELETE by user id=2"}
+{"time":"2026-08-08 14:03:16,194","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/orphans/1/"}
+{"time":"2026-08-08 14:03:16,198","level":"WARNING","logger":"django.request","message":"Forbidden: /api/orphans/1/"}
+{"time":"2026-08-08 14:03:19,202","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/volunteers/1/"}
+{"time":"2026-08-08 14:03:19,208","level":"WARNING","logger":"django.request","message":"Forbidden: /api/volunteers/1/"}
+{"time":"2026-08-08 14:03:22,231","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/volunteer-opportunities/1/"}
+{"time":"2026-08-08 14:03:22,235","level":"WARNING","logger":"django.request","message":"Forbidden: /api/volunteer-opportunities/1/"}
+{"time":"2026-08-08 14:03:29,635","level":"WARNING","logger":"django.request","message":"Not Found: /api/notifications/2/"}
+{"time":"2026-08-08 14:03:32,595","level":"INFO","logger":"management.views_api","message":"Delete blocked for VolunteerOpportunity id=1 because of related records: {'applications': 1}"}
+{"time":"2026-08-08 14:03:32,596","level":"WARNING","logger":"django.request","message":"Conflict: /api/volunteer-opportunities/1/"}
+{"time":"2026-08-08 14:04:02,522","level":"WARNING","logger":"django.request","message":"Method Not Allowed (GET): /donations/1/status/"}
+{"time":"2026-08-08 14:04:09,378","level":"WARNING","logger":"django.request","message":"Method Not Allowed (GET): /volunteer-applications/1/status/"}
+{"time":"2026-08-08 14:29:24,925","level":"INFO","logger":"management.views_api","message":"Password reset completed for user id=1"}
+{"time":"2026-08-08 14:29:24,938","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 14:30:00,436","level":"INFO","logger":"management.views_api","message":"Password reset completed for user id=1"}
+{"time":"2026-08-08 14:30:00,457","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 14:30:04,218","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 14:30:04,229","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 14:30:04,238","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 14:30:04,247","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 14:30:04,257","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 14:30:04,265","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 14:30:12,836","level":"INFO","logger":"management.views_api","message":"Password reset completed for user id=1"}
+{"time":"2026-08-08 14:30:19,683","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 14:30:26,030","level":"INFO","logger":"management.views_api","message":"Password reset completed for user id=1"}
+{"time":"2026-08-08 14:30:28,193","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/auth/login/"}
+{"time":"2026-08-08 14:30:32,108","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 14:30:33,864","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/"}
+{"time":"2026-08-08 14:30:35,959","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 14:30:37,579","level":"INFO","logger":"management.views_api","message":"Password reset completed for user id=1"}
+{"time":"2026-08-08 14:30:41,395","level":"INFO","logger":"management.views_api","message":"Password reset requested for unknown email"}
+{"time":"2026-08-08 14:30:43,211","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 14:30:45,365","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 14:31:18,614","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 14:31:35,711","level":"WARNING","logger":"django.request","message":"Bad Request: /api/orphans/"}
+{"time":"2026-08-08 14:31:35,718","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 14:31:50,706","level":"WARNING","logger":"django.request","message":"Forbidden: /api/volunteer-applications/1/approve/"}
+{"time":"2026-08-08 14:31:50,711","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/orphans/"}
+{"time":"2026-08-08 14:32:15,740","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 14:32:17,390","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 14:32:17,399","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 14:32:17,410","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 14:32:17,419","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 14:32:17,433","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 14:32:17,442","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 14:32:17,449","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 14:32:17,457","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 14:32:17,464","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 14:32:34,248","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/donations/1/"}
+{"time":"2026-08-08 14:32:34,252","level":"WARNING","logger":"django.request","message":"Forbidden: /api/donations/1/"}
+{"time":"2026-08-08 14:32:38,209","level":"INFO","logger":"management.views_api","message":"Need id=1 was archived through DELETE by user id=2"}
+{"time":"2026-08-08 14:32:42,066","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/orphans/1/"}
+{"time":"2026-08-08 14:32:42,071","level":"WARNING","logger":"django.request","message":"Forbidden: /api/orphans/1/"}
+{"time":"2026-08-08 14:32:46,147","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/volunteers/1/"}
+{"time":"2026-08-08 14:32:46,153","level":"WARNING","logger":"django.request","message":"Forbidden: /api/volunteers/1/"}
+{"time":"2026-08-08 14:32:49,787","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/volunteer-opportunities/1/"}
+{"time":"2026-08-08 14:32:49,792","level":"WARNING","logger":"django.request","message":"Forbidden: /api/volunteer-opportunities/1/"}
+{"time":"2026-08-08 14:32:59,259","level":"WARNING","logger":"django.request","message":"Not Found: /api/notifications/2/"}
+{"time":"2026-08-08 14:33:02,841","level":"INFO","logger":"management.views_api","message":"Delete blocked for VolunteerOpportunity id=1 because of related records: {'applications': 1}"}
+{"time":"2026-08-08 14:33:02,843","level":"WARNING","logger":"django.request","message":"Conflict: /api/volunteer-opportunities/1/"}
+{"time":"2026-08-08 14:33:36,605","level":"WARNING","logger":"django.request","message":"Method Not Allowed (GET): /donations/1/status/"}
+{"time":"2026-08-08 14:33:42,599","level":"WARNING","logger":"django.request","message":"Method Not Allowed (GET): /volunteer-applications/1/status/"}
+{"time":"2026-08-08 14:34:29,638","level":"INFO","logger":"management.views_api","message":"Password reset completed for user id=1"}
+{"time":"2026-08-08 14:34:29,644","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 14:34:32,577","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 14:34:32,583","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 14:34:32,592","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 14:34:32,602","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 14:34:32,609","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 14:34:32,614","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 14:34:38,574","level":"INFO","logger":"management.views_api","message":"Password reset completed for user id=1"}
+{"time":"2026-08-08 14:34:43,103","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 14:34:47,559","level":"INFO","logger":"management.views_api","message":"Password reset completed for user id=1"}
+{"time":"2026-08-08 14:34:49,085","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/auth/login/"}
+{"time":"2026-08-08 14:34:52,078","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 14:34:53,548","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/"}
+{"time":"2026-08-08 14:34:55,071","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 14:34:56,558","level":"INFO","logger":"management.views_api","message":"Password reset completed for user id=1"}
+{"time":"2026-08-08 14:34:59,513","level":"INFO","logger":"management.views_api","message":"Password reset requested for unknown email"}
+{"time":"2026-08-08 14:35:01,270","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 14:35:02,749","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 16:43:10,475","level":"INFO","logger":"management.views_api","message":"Email changed for user id=1"}
+{"time":"2026-08-08 16:43:16,163","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/change-email/"}
+{"time":"2026-08-08 16:43:19,713","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/change-email/"}
+{"time":"2026-08-08 16:43:23,566","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/change-email/"}
+{"time":"2026-08-08 16:43:27,130","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/change-email/"}
+{"time":"2026-08-08 16:43:30,820","level":"INFO","logger":"management.views_api","message":"Email changed for user id=1"}
+{"time":"2026-08-08 16:43:32,612","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/auth/change-password/"}
+{"time":"2026-08-08 16:43:38,372","level":"INFO","logger":"management.views_api","message":"Password changed for user id=1"}
+{"time":"2026-08-08 16:43:43,995","level":"INFO","logger":"management.views_api","message":"Password changed for user id=1"}
+{"time":"2026-08-08 16:43:53,581","level":"INFO","logger":"management.views_api","message":"Password changed for user id=1"}
+{"time":"2026-08-08 16:43:55,421","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/auth/login/"}
+{"time":"2026-08-08 16:44:02,410","level":"INFO","logger":"management.views_api","message":"Email changed for user id=1"}
+{"time":"2026-08-08 16:44:07,949","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/change-password/"}
+{"time":"2026-08-08 16:44:10,966","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/change-password/"}
+{"time":"2026-08-08 16:44:14,105","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/change-password/"}
+{"time":"2026-08-08 16:44:18,869","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/change-password/"}
+{"time":"2026-08-08 17:01:01,287","level":"INFO","logger":"management.views_api","message":"Email changed for user id=1"}
+{"time":"2026-08-08 17:01:05,874","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/change-email/"}
+{"time":"2026-08-08 17:01:08,797","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/change-email/"}
+{"time":"2026-08-08 17:01:11,779","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/change-email/"}
+{"time":"2026-08-08 17:01:14,813","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/change-email/"}
+{"time":"2026-08-08 17:01:17,746","level":"INFO","logger":"management.views_api","message":"Email changed for user id=1"}
+{"time":"2026-08-08 17:01:19,373","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/auth/change-password/"}
+{"time":"2026-08-08 17:01:23,877","level":"INFO","logger":"management.views_api","message":"Password changed for user id=1"}
+{"time":"2026-08-08 17:01:28,391","level":"INFO","logger":"management.views_api","message":"Password changed for user id=1"}
+{"time":"2026-08-08 17:01:35,767","level":"INFO","logger":"management.views_api","message":"Password changed for user id=1"}
+{"time":"2026-08-08 17:01:37,234","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/auth/login/"}
+{"time":"2026-08-08 17:01:41,823","level":"INFO","logger":"management.views_api","message":"Email changed for user id=1"}
+{"time":"2026-08-08 17:01:46,274","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/change-password/"}
+{"time":"2026-08-08 17:01:49,301","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/change-password/"}
+{"time":"2026-08-08 17:01:52,185","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/change-password/"}
+{"time":"2026-08-08 17:01:56,724","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/change-password/"}
+{"time":"2026-08-08 17:02:01,262","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 17:02:14,828","level":"WARNING","logger":"django.request","message":"Bad Request: /api/orphans/"}
+{"time":"2026-08-08 17:02:14,834","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 17:02:28,442","level":"WARNING","logger":"django.request","message":"Forbidden: /api/volunteer-applications/1/approve/"}
+{"time":"2026-08-08 17:02:28,447","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/orphans/"}
+{"time":"2026-08-08 17:02:47,880","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 17:02:49,502","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 17:02:49,510","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 17:02:49,515","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 17:02:49,520","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 17:02:49,527","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 17:02:49,534","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 17:02:49,542","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 17:02:49,548","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 17:02:49,554","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 17:03:03,144","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/donations/1/"}
+{"time":"2026-08-08 17:03:03,148","level":"WARNING","logger":"django.request","message":"Forbidden: /api/donations/1/"}
+{"time":"2026-08-08 17:03:06,131","level":"INFO","logger":"management.views_api","message":"Need id=1 was archived through DELETE by user id=2"}
+{"time":"2026-08-08 17:03:09,079","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/orphans/1/"}
+{"time":"2026-08-08 17:03:09,083","level":"WARNING","logger":"django.request","message":"Forbidden: /api/orphans/1/"}
+{"time":"2026-08-08 17:03:12,044","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/volunteers/1/"}
+{"time":"2026-08-08 17:03:12,047","level":"WARNING","logger":"django.request","message":"Forbidden: /api/volunteers/1/"}
+{"time":"2026-08-08 17:03:15,087","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/volunteer-opportunities/1/"}
+{"time":"2026-08-08 17:03:15,091","level":"WARNING","logger":"django.request","message":"Forbidden: /api/volunteer-opportunities/1/"}
+{"time":"2026-08-08 17:03:22,917","level":"WARNING","logger":"django.request","message":"Not Found: /api/notifications/2/"}
+{"time":"2026-08-08 17:03:25,869","level":"INFO","logger":"management.views_api","message":"Delete blocked for VolunteerOpportunity id=1 because of related records: {'applications': 1}"}
+{"time":"2026-08-08 17:03:25,870","level":"WARNING","logger":"django.request","message":"Conflict: /api/volunteer-opportunities/1/"}
+{"time":"2026-08-08 17:03:51,845","level":"WARNING","logger":"django.request","message":"Method Not Allowed (GET): /donations/1/status/"}
+{"time":"2026-08-08 17:03:57,846","level":"WARNING","logger":"django.request","message":"Method Not Allowed (GET): /volunteer-applications/1/status/"}
+{"time":"2026-08-08 17:04:42,447","level":"INFO","logger":"management.views_api","message":"Password reset completed for user id=1"}
+{"time":"2026-08-08 17:04:42,456","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 17:04:45,503","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 17:04:45,510","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 17:04:45,516","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 17:04:45,524","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 17:04:45,530","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 17:04:45,536","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 17:04:51,439","level":"INFO","logger":"management.views_api","message":"Password reset completed for user id=1"}
+{"time":"2026-08-08 17:04:55,909","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 17:05:00,344","level":"INFO","logger":"management.views_api","message":"Password reset completed for user id=1"}
+{"time":"2026-08-08 17:05:01,875","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/auth/login/"}
+{"time":"2026-08-08 17:05:04,967","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 17:05:06,440","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/"}
+{"time":"2026-08-08 17:05:07,922","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 17:05:09,401","level":"INFO","logger":"management.views_api","message":"Password reset completed for user id=1"}
+{"time":"2026-08-08 17:05:12,362","level":"INFO","logger":"management.views_api","message":"Password reset requested for unknown email"}
+{"time":"2026-08-08 17:05:13,804","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 17:05:15,385","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 22:30:35,311","level":"INFO","logger":"management.views_api","message":"Email changed for user id=1"}
+{"time":"2026-08-08 22:30:50,555","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/change-email/"}
+{"time":"2026-08-08 22:30:55,094","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/change-email/"}
+{"time":"2026-08-08 22:30:59,806","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/change-email/"}
+{"time":"2026-08-08 22:31:04,123","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/change-email/"}
+{"time":"2026-08-08 22:31:08,595","level":"INFO","logger":"management.views_api","message":"Email changed for user id=1"}
+{"time":"2026-08-08 22:31:10,787","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/auth/change-password/"}
+{"time":"2026-08-08 22:31:17,375","level":"INFO","logger":"management.views_api","message":"Password changed for user id=1"}
+{"time":"2026-08-08 22:31:24,442","level":"INFO","logger":"management.views_api","message":"Password changed for user id=1"}
+{"time":"2026-08-08 22:31:36,244","level":"INFO","logger":"management.views_api","message":"Password changed for user id=1"}
+{"time":"2026-08-08 22:31:38,800","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/auth/login/"}
+{"time":"2026-08-08 22:31:45,505","level":"INFO","logger":"management.views_api","message":"Email changed for user id=1"}
+{"time":"2026-08-08 22:31:52,037","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/change-password/"}
+{"time":"2026-08-08 22:31:56,225","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/change-password/"}
+{"time":"2026-08-08 22:32:00,373","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/change-password/"}
+{"time":"2026-08-08 22:32:06,881","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/change-password/"}
+{"time":"2026-08-08 22:32:13,448","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 22:32:32,901","level":"WARNING","logger":"django.request","message":"Bad Request: /api/orphans/"}
+{"time":"2026-08-08 22:32:32,910","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 22:32:51,188","level":"WARNING","logger":"django.request","message":"Forbidden: /api/volunteer-applications/1/approve/"}
+{"time":"2026-08-08 22:32:51,197","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/orphans/"}
+{"time":"2026-08-08 22:33:14,981","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 22:33:16,797","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 22:33:16,813","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 22:33:16,822","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 22:33:16,832","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 22:33:16,845","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 22:33:16,859","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 22:33:16,866","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 22:33:16,880","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 22:33:16,888","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 22:33:20,426","level":"WARNING","logger":"django.request","message":"Forbidden: /api/volunteer-applications/1/approve/"}
+{"time":"2026-08-08 22:33:23,939","level":"WARNING","logger":"django.request","message":"Forbidden: /api/volunteer-applications/1/complete/"}
+{"time":"2026-08-08 22:33:32,567","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/donations/1/"}
+{"time":"2026-08-08 22:33:32,577","level":"WARNING","logger":"django.request","message":"Forbidden: /api/donations/1/"}
+{"time":"2026-08-08 22:33:36,087","level":"INFO","logger":"management.views_api","message":"Need id=1 was archived through DELETE by user id=2"}
+{"time":"2026-08-08 22:33:39,399","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/orphans/1/"}
+{"time":"2026-08-08 22:33:39,405","level":"WARNING","logger":"django.request","message":"Forbidden: /api/orphans/1/"}
+{"time":"2026-08-08 22:33:43,010","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/volunteers/1/"}
+{"time":"2026-08-08 22:33:43,015","level":"WARNING","logger":"django.request","message":"Forbidden: /api/volunteers/1/"}
+{"time":"2026-08-08 22:33:46,560","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/volunteer-opportunities/1/"}
+{"time":"2026-08-08 22:33:46,565","level":"WARNING","logger":"django.request","message":"Forbidden: /api/volunteer-opportunities/1/"}
+{"time":"2026-08-08 22:33:56,773","level":"WARNING","logger":"django.request","message":"Not Found: /api/notifications/2/"}
+{"time":"2026-08-08 22:34:01,940","level":"INFO","logger":"management.views_api","message":"Delete blocked for VolunteerOpportunity id=1 because of related records: {'applications': 1}"}
+{"time":"2026-08-08 22:34:01,942","level":"WARNING","logger":"django.request","message":"Conflict: /api/volunteer-opportunities/1/"}
+{"time":"2026-08-08 22:34:29,677","level":"WARNING","logger":"django.request","message":"Method Not Allowed (GET): /donations/1/status/"}
+{"time":"2026-08-08 22:34:35,607","level":"WARNING","logger":"django.request","message":"Method Not Allowed (GET): /volunteer-applications/1/status/"}
+{"time":"2026-08-08 22:35:20,014","level":"INFO","logger":"management.views_api","message":"Password reset completed for user id=1"}
+{"time":"2026-08-08 22:35:20,021","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 22:35:22,903","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 22:35:22,911","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 22:35:22,918","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 22:35:22,925","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 22:35:22,932","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 22:35:22,938","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 22:35:29,104","level":"INFO","logger":"management.views_api","message":"Password reset completed for user id=1"}
+{"time":"2026-08-08 22:35:33,645","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 22:35:38,225","level":"INFO","logger":"management.views_api","message":"Password reset completed for user id=1"}
+{"time":"2026-08-08 22:35:39,783","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/auth/login/"}
+{"time":"2026-08-08 22:35:42,862","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 22:35:44,481","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/"}
+{"time":"2026-08-08 22:35:45,894","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 22:35:47,789","level":"INFO","logger":"management.views_api","message":"Password reset completed for user id=1"}
+{"time":"2026-08-08 22:35:50,668","level":"INFO","logger":"management.views_api","message":"Password reset requested for unknown email"}
+{"time":"2026-08-08 22:35:52,127","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 22:35:53,588","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 23:01:57,549","level":"WARNING","logger":"django.request","message":"Not Found: /api/care-homes/me/"}
+{"time":"2026-08-08 23:02:30,185","level":"WARNING","logger":"django.request","message":"Not Found: /api/volunteer-applications/1/approve/"}
+{"time":"2026-08-08 23:02:33,140","level":"WARNING","logger":"django.request","message":"Forbidden: /api/visit-hours/"}
+{"time":"2026-08-08 23:02:36,042","level":"WARNING","logger":"django.request","message":"Forbidden: /api/care-homes/1/"}
+{"time":"2026-08-08 23:02:40,436","level":"WARNING","logger":"django.request","message":"Bad Request: /api/volunteer-applications/1/rate/"}
+{"time":"2026-08-08 23:02:49,300","level":"WARNING","logger":"django.request","message":"Bad Request: /api/volunteer-applications/1/rate/"}
+{"time":"2026-08-08 23:02:49,307","level":"WARNING","logger":"django.request","message":"Bad Request: /api/volunteer-applications/1/rate/"}
+{"time":"2026-08-08 23:02:49,316","level":"WARNING","logger":"django.request","message":"Bad Request: /api/volunteer-applications/1/rate/"}
+{"time":"2026-08-08 23:02:49,323","level":"WARNING","logger":"django.request","message":"Bad Request: /api/volunteer-applications/1/rate/"}
+{"time":"2026-08-08 23:02:52,222","level":"WARNING","logger":"django.request","message":"Bad Request: /api/visit-hours/"}
+{"time":"2026-08-08 23:03:28,338","level":"INFO","logger":"management.views_api","message":"Email changed for user id=1"}
+{"time":"2026-08-08 23:03:32,920","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/change-email/"}
+{"time":"2026-08-08 23:03:35,861","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/change-email/"}
+{"time":"2026-08-08 23:03:38,855","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/change-email/"}
+{"time":"2026-08-08 23:03:42,077","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/change-email/"}
+{"time":"2026-08-08 23:03:45,421","level":"INFO","logger":"management.views_api","message":"Email changed for user id=1"}
+{"time":"2026-08-08 23:03:47,089","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/auth/change-password/"}
+{"time":"2026-08-08 23:03:53,302","level":"INFO","logger":"management.views_api","message":"Password changed for user id=1"}
+{"time":"2026-08-08 23:03:58,360","level":"INFO","logger":"management.views_api","message":"Password changed for user id=1"}
+{"time":"2026-08-08 23:04:06,722","level":"INFO","logger":"management.views_api","message":"Password changed for user id=1"}
+{"time":"2026-08-08 23:04:08,201","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/auth/login/"}
+{"time":"2026-08-08 23:04:13,816","level":"INFO","logger":"management.views_api","message":"Email changed for user id=1"}
+{"time":"2026-08-08 23:04:19,621","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/change-password/"}
+{"time":"2026-08-08 23:04:23,566","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/change-password/"}
+{"time":"2026-08-08 23:04:27,512","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/change-password/"}
+{"time":"2026-08-08 23:04:33,991","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/change-password/"}
+{"time":"2026-08-08 23:04:41,229","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 23:05:11,876","level":"WARNING","logger":"django.request","message":"Bad Request: /api/orphans/"}
+{"time":"2026-08-08 23:05:11,888","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 23:05:33,217","level":"WARNING","logger":"django.request","message":"Forbidden: /api/volunteer-applications/1/approve/"}
+{"time":"2026-08-08 23:05:33,222","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/orphans/"}
+{"time":"2026-08-08 23:05:55,911","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 23:05:57,867","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 23:05:57,876","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 23:05:57,882","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 23:05:57,890","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 23:05:57,897","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 23:05:57,903","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 23:05:57,909","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 23:05:57,916","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 23:05:57,922","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-08 23:06:12,664","level":"WARNING","logger":"django.request","message":"Not Found: /api/care-homes/me/"}
+{"time":"2026-08-08 23:06:53,029","level":"WARNING","logger":"django.request","message":"Not Found: /api/volunteer-applications/1/approve/"}
+{"time":"2026-08-08 23:06:56,834","level":"WARNING","logger":"django.request","message":"Forbidden: /api/visit-hours/"}
+{"time":"2026-08-08 23:07:01,256","level":"WARNING","logger":"django.request","message":"Forbidden: /api/care-homes/1/"}
+{"time":"2026-08-08 23:07:07,768","level":"WARNING","logger":"django.request","message":"Bad Request: /api/volunteer-applications/1/rate/"}
+{"time":"2026-08-08 23:07:23,799","level":"WARNING","logger":"django.request","message":"Bad Request: /api/volunteer-applications/1/rate/"}
+{"time":"2026-08-08 23:07:23,811","level":"WARNING","logger":"django.request","message":"Bad Request: /api/volunteer-applications/1/rate/"}
+{"time":"2026-08-08 23:07:23,822","level":"WARNING","logger":"django.request","message":"Bad Request: /api/volunteer-applications/1/rate/"}
+{"time":"2026-08-08 23:07:23,838","level":"WARNING","logger":"django.request","message":"Bad Request: /api/volunteer-applications/1/rate/"}
+{"time":"2026-08-08 23:07:29,487","level":"WARNING","logger":"django.request","message":"Bad Request: /api/visit-hours/"}
+{"time":"2026-08-08 23:07:39,952","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/donations/1/"}
+{"time":"2026-08-08 23:07:39,957","level":"WARNING","logger":"django.request","message":"Forbidden: /api/donations/1/"}
+{"time":"2026-08-08 23:07:45,360","level":"INFO","logger":"management.views_api","message":"Need id=1 was archived through DELETE by user id=2"}
+{"time":"2026-08-08 23:07:49,840","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/orphans/1/"}
+{"time":"2026-08-08 23:07:49,844","level":"WARNING","logger":"django.request","message":"Forbidden: /api/orphans/1/"}
+{"time":"2026-08-08 23:07:55,058","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/volunteers/1/"}
+{"time":"2026-08-08 23:07:55,061","level":"WARNING","logger":"django.request","message":"Forbidden: /api/volunteers/1/"}
+{"time":"2026-08-08 23:07:58,159","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/volunteer-opportunities/1/"}
+{"time":"2026-08-08 23:07:58,163","level":"WARNING","logger":"django.request","message":"Forbidden: /api/volunteer-opportunities/1/"}
+{"time":"2026-08-08 23:08:07,083","level":"WARNING","logger":"django.request","message":"Not Found: /api/notifications/2/"}
+{"time":"2026-08-08 23:08:10,477","level":"INFO","logger":"management.views_api","message":"Delete blocked for VolunteerOpportunity id=1 because of related records: {'applications': 1}"}
+{"time":"2026-08-08 23:08:10,478","level":"WARNING","logger":"django.request","message":"Conflict: /api/volunteer-opportunities/1/"}
+{"time":"2026-08-08 23:08:38,128","level":"WARNING","logger":"django.request","message":"Method Not Allowed (GET): /donations/1/status/"}
+{"time":"2026-08-08 23:08:44,555","level":"WARNING","logger":"django.request","message":"Method Not Allowed (GET): /volunteer-applications/1/status/"}
+{"time":"2026-08-08 23:09:32,048","level":"INFO","logger":"management.views_api","message":"Password reset completed for user id=1"}
+{"time":"2026-08-08 23:09:32,054","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 23:09:35,576","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 23:09:35,587","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 23:09:35,597","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 23:09:35,605","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 23:09:35,615","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 23:09:35,622","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 23:09:42,828","level":"INFO","logger":"management.views_api","message":"Password reset completed for user id=1"}
+{"time":"2026-08-08 23:09:50,096","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 23:09:55,686","level":"INFO","logger":"management.views_api","message":"Password reset completed for user id=1"}
+{"time":"2026-08-08 23:09:57,198","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/auth/login/"}
+{"time":"2026-08-08 23:10:00,309","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 23:10:01,807","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/"}
+{"time":"2026-08-08 23:10:03,268","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 23:10:05,029","level":"INFO","logger":"management.views_api","message":"Password reset completed for user id=1"}
+{"time":"2026-08-08 23:10:08,104","level":"INFO","logger":"management.views_api","message":"Password reset requested for unknown email"}
+{"time":"2026-08-08 23:10:10,212","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-08 23:10:12,012","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-09 00:01:25,916","level":"INFO","logger":"management.views_api","message":"Email changed for user id=1"}
+{"time":"2026-08-09 00:01:30,375","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/change-email/"}
+{"time":"2026-08-09 00:01:33,678","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/change-email/"}
+{"time":"2026-08-09 00:01:37,564","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/change-email/"}
+{"time":"2026-08-09 00:01:41,606","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/change-email/"}
+{"time":"2026-08-09 00:01:45,471","level":"INFO","logger":"management.views_api","message":"Email changed for user id=1"}
+{"time":"2026-08-09 00:01:47,012","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/auth/change-password/"}
+{"time":"2026-08-09 00:01:51,946","level":"INFO","logger":"management.views_api","message":"Password changed for user id=1"}
+{"time":"2026-08-09 00:01:56,704","level":"INFO","logger":"management.views_api","message":"Password changed for user id=1"}
+{"time":"2026-08-09 00:02:06,070","level":"INFO","logger":"management.views_api","message":"Password changed for user id=1"}
+{"time":"2026-08-09 00:02:07,524","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/auth/login/"}
+{"time":"2026-08-09 00:02:11,960","level":"INFO","logger":"management.views_api","message":"Email changed for user id=1"}
+{"time":"2026-08-09 00:02:17,426","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/change-password/"}
+{"time":"2026-08-09 00:02:20,907","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/change-password/"}
+{"time":"2026-08-09 00:02:24,393","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/change-password/"}
+{"time":"2026-08-09 00:02:29,864","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/change-password/"}
+{"time":"2026-08-09 00:02:35,071","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-09 00:02:49,076","level":"WARNING","logger":"django.request","message":"Bad Request: /api/orphans/"}
+{"time":"2026-08-09 00:02:49,085","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-09 00:03:04,517","level":"WARNING","logger":"django.request","message":"Forbidden: /api/volunteer-applications/1/approve/"}
+{"time":"2026-08-09 00:03:04,522","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/orphans/"}
+{"time":"2026-08-09 00:03:25,960","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-09 00:03:27,774","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-09 00:03:27,783","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-09 00:03:27,790","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-09 00:03:27,798","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-09 00:03:27,807","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-09 00:03:27,814","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-09 00:03:27,821","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-09 00:03:27,830","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-09 00:03:27,837","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-09 00:03:44,916","level":"WARNING","logger":"django.request","message":"Not Found: /api/care-homes/me/"}
+{"time":"2026-08-09 00:04:26,818","level":"WARNING","logger":"django.request","message":"Not Found: /api/volunteer-applications/1/approve/"}
+{"time":"2026-08-09 00:04:30,552","level":"WARNING","logger":"django.request","message":"Forbidden: /api/visit-hours/"}
+{"time":"2026-08-09 00:04:34,409","level":"WARNING","logger":"django.request","message":"Forbidden: /api/care-homes/1/"}
+{"time":"2026-08-09 00:04:40,921","level":"WARNING","logger":"django.request","message":"Bad Request: /api/volunteer-applications/1/rate/"}
+{"time":"2026-08-09 00:04:56,054","level":"WARNING","logger":"django.request","message":"Bad Request: /api/volunteer-applications/1/rate/"}
+{"time":"2026-08-09 00:04:56,069","level":"WARNING","logger":"django.request","message":"Bad Request: /api/volunteer-applications/1/rate/"}
+{"time":"2026-08-09 00:04:56,083","level":"WARNING","logger":"django.request","message":"Bad Request: /api/volunteer-applications/1/rate/"}
+{"time":"2026-08-09 00:04:56,104","level":"WARNING","logger":"django.request","message":"Bad Request: /api/volunteer-applications/1/rate/"}
+{"time":"2026-08-09 00:05:00,557","level":"WARNING","logger":"django.request","message":"Bad Request: /api/visit-hours/"}
+{"time":"2026-08-09 00:05:11,348","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/donations/1/"}
+{"time":"2026-08-09 00:05:11,352","level":"WARNING","logger":"django.request","message":"Forbidden: /api/donations/1/"}
+{"time":"2026-08-09 00:05:15,519","level":"INFO","logger":"management.views_api","message":"Need id=1 was archived through DELETE by user id=2"}
+{"time":"2026-08-09 00:05:19,979","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/orphans/1/"}
+{"time":"2026-08-09 00:05:19,983","level":"WARNING","logger":"django.request","message":"Forbidden: /api/orphans/1/"}
+{"time":"2026-08-09 00:05:24,666","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/volunteers/1/"}
+{"time":"2026-08-09 00:05:24,677","level":"WARNING","logger":"django.request","message":"Forbidden: /api/volunteers/1/"}
+{"time":"2026-08-09 00:05:29,286","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/volunteer-opportunities/1/"}
+{"time":"2026-08-09 00:05:29,298","level":"WARNING","logger":"django.request","message":"Forbidden: /api/volunteer-opportunities/1/"}
+{"time":"2026-08-09 00:05:42,098","level":"WARNING","logger":"django.request","message":"Not Found: /api/notifications/2/"}
+{"time":"2026-08-09 00:05:45,382","level":"INFO","logger":"management.views_api","message":"Delete blocked for VolunteerOpportunity id=1 because of related records: {'applications': 1}"}
+{"time":"2026-08-09 00:05:45,383","level":"WARNING","logger":"django.request","message":"Conflict: /api/volunteer-opportunities/1/"}
+{"time":"2026-08-09 00:06:23,032","level":"WARNING","logger":"django.request","message":"Method Not Allowed (GET): /donations/1/status/"}
+{"time":"2026-08-09 00:06:31,648","level":"WARNING","logger":"django.request","message":"Method Not Allowed (GET): /volunteer-applications/1/status/"}
+{"time":"2026-08-09 00:07:34,528","level":"INFO","logger":"management.views_api","message":"Password reset completed for user id=1"}
+{"time":"2026-08-09 00:07:34,538","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-09 00:07:38,196","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-09 00:07:38,204","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-09 00:07:38,213","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-09 00:07:38,222","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-09 00:07:38,232","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-09 00:07:38,242","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-09 00:07:44,937","level":"INFO","logger":"management.views_api","message":"Password reset completed for user id=1"}
+{"time":"2026-08-09 00:07:48,096","level":"INFO","logger":"management.views_api","message":"Email changed for user id=1"}
+{"time":"2026-08-09 00:07:49,744","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-09 00:07:53,096","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/change-email/"}
+{"time":"2026-08-09 00:07:54,718","level":"INFO","logger":"management.views_api","message":"Password reset completed for user id=1"}
+{"time":"2026-08-09 00:07:56,434","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/change-email/"}
+{"time":"2026-08-09 00:07:56,531","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/auth/login/"}
+{"time":"2026-08-09 00:07:59,611","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/change-email/"}
+{"time":"2026-08-09 00:07:59,723","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-09 00:08:01,446","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/"}
+{"time":"2026-08-09 00:08:02,905","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/change-email/"}
+{"time":"2026-08-09 00:08:03,040","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-09 00:08:04,993","level":"INFO","logger":"management.views_api","message":"Password reset completed for user id=1"}
+{"time":"2026-08-09 00:08:06,502","level":"INFO","logger":"management.views_api","message":"Email changed for user id=1"}
+{"time":"2026-08-09 00:08:08,189","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/auth/change-password/"}
+{"time":"2026-08-09 00:08:08,385","level":"INFO","logger":"management.views_api","message":"Password reset requested for unknown email"}
+{"time":"2026-08-09 00:08:10,178","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-09 00:08:11,907","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-09 00:08:13,654","level":"INFO","logger":"management.views_api","message":"Password changed for user id=1"}
+{"time":"2026-08-09 00:08:18,668","level":"INFO","logger":"management.views_api","message":"Password changed for user id=1"}
+{"time":"2026-08-09 00:08:26,556","level":"INFO","logger":"management.views_api","message":"Password changed for user id=1"}
+{"time":"2026-08-09 00:08:28,134","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/auth/login/"}
+{"time":"2026-08-09 00:08:32,884","level":"INFO","logger":"management.views_api","message":"Email changed for user id=1"}
+{"time":"2026-08-09 00:08:37,752","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/change-password/"}
+{"time":"2026-08-09 00:08:40,763","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/change-password/"}
+{"time":"2026-08-09 00:08:43,733","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/change-password/"}
+{"time":"2026-08-09 00:08:48,113","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/change-password/"}
+{"time":"2026-08-09 00:08:52,671","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-09 00:09:06,270","level":"WARNING","logger":"django.request","message":"Bad Request: /api/orphans/"}
+{"time":"2026-08-09 00:09:06,276","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-09 00:09:19,703","level":"WARNING","logger":"django.request","message":"Forbidden: /api/volunteer-applications/1/approve/"}
+{"time":"2026-08-09 00:09:19,707","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/orphans/"}
+{"time":"2026-08-09 00:09:39,424","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-09 00:09:40,927","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-09 00:09:40,936","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-09 00:09:40,941","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-09 00:09:40,948","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-09 00:09:40,955","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-09 00:09:40,960","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-09 00:09:40,966","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-09 00:09:40,971","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-09 00:09:40,976","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/register/"}
+{"time":"2026-08-09 00:09:54,920","level":"WARNING","logger":"django.request","message":"Not Found: /api/care-homes/me/"}
+{"time":"2026-08-09 00:10:29,988","level":"WARNING","logger":"django.request","message":"Not Found: /api/volunteer-applications/1/approve/"}
+{"time":"2026-08-09 00:10:33,313","level":"WARNING","logger":"django.request","message":"Forbidden: /api/visit-hours/"}
+{"time":"2026-08-09 00:10:36,673","level":"WARNING","logger":"django.request","message":"Forbidden: /api/care-homes/1/"}
+{"time":"2026-08-09 00:10:41,662","level":"WARNING","logger":"django.request","message":"Bad Request: /api/volunteer-applications/1/rate/"}
+{"time":"2026-08-09 00:10:51,390","level":"WARNING","logger":"django.request","message":"Bad Request: /api/volunteer-applications/1/rate/"}
+{"time":"2026-08-09 00:10:51,399","level":"WARNING","logger":"django.request","message":"Bad Request: /api/volunteer-applications/1/rate/"}
+{"time":"2026-08-09 00:10:51,408","level":"WARNING","logger":"django.request","message":"Bad Request: /api/volunteer-applications/1/rate/"}
+{"time":"2026-08-09 00:10:51,417","level":"WARNING","logger":"django.request","message":"Bad Request: /api/volunteer-applications/1/rate/"}
+{"time":"2026-08-09 00:10:55,358","level":"WARNING","logger":"django.request","message":"Bad Request: /api/visit-hours/"}
+{"time":"2026-08-09 00:11:02,824","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/donations/1/"}
+{"time":"2026-08-09 00:11:02,829","level":"WARNING","logger":"django.request","message":"Forbidden: /api/donations/1/"}
+{"time":"2026-08-09 00:11:07,388","level":"INFO","logger":"management.views_api","message":"Need id=1 was archived through DELETE by user id=2"}
+{"time":"2026-08-09 00:11:11,697","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/orphans/1/"}
+{"time":"2026-08-09 00:11:11,701","level":"WARNING","logger":"django.request","message":"Forbidden: /api/orphans/1/"}
+{"time":"2026-08-09 00:11:14,772","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/volunteers/1/"}
+{"time":"2026-08-09 00:11:14,776","level":"WARNING","logger":"django.request","message":"Forbidden: /api/volunteers/1/"}
+{"time":"2026-08-09 00:11:18,020","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/volunteer-opportunities/1/"}
+{"time":"2026-08-09 00:11:18,030","level":"WARNING","logger":"django.request","message":"Forbidden: /api/volunteer-opportunities/1/"}
+{"time":"2026-08-09 00:11:27,024","level":"WARNING","logger":"django.request","message":"Not Found: /api/notifications/2/"}
+{"time":"2026-08-09 00:11:31,758","level":"INFO","logger":"management.views_api","message":"Delete blocked for VolunteerOpportunity id=1 because of related records: {'applications': 1}"}
+{"time":"2026-08-09 00:11:31,763","level":"WARNING","logger":"django.request","message":"Conflict: /api/volunteer-opportunities/1/"}
+{"time":"2026-08-09 00:12:07,312","level":"WARNING","logger":"django.request","message":"Method Not Allowed (GET): /donations/1/status/"}
+{"time":"2026-08-09 00:12:15,870","level":"WARNING","logger":"django.request","message":"Method Not Allowed (GET): /volunteer-applications/1/status/"}
+{"time":"2026-08-09 00:13:02,475","level":"INFO","logger":"management.views_api","message":"Password reset completed for user id=1"}
+{"time":"2026-08-09 00:13:02,487","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-09 00:13:05,696","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-09 00:13:05,707","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-09 00:13:05,715","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-09 00:13:05,724","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-09 00:13:05,732","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-09 00:13:05,746","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-09 00:13:12,676","level":"INFO","logger":"management.views_api","message":"Password reset completed for user id=1"}
+{"time":"2026-08-09 00:13:17,467","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-09 00:13:23,588","level":"INFO","logger":"management.views_api","message":"Password reset completed for user id=1"}
+{"time":"2026-08-09 00:13:26,092","level":"WARNING","logger":"django.request","message":"Unauthorized: /api/auth/login/"}
+{"time":"2026-08-09 00:13:31,138","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-09 00:13:32,586","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/"}
+{"time":"2026-08-09 00:13:34,040","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-09 00:13:35,739","level":"INFO","logger":"management.views_api","message":"Password reset completed for user id=1"}
+{"time":"2026-08-09 00:13:38,917","level":"INFO","logger":"management.views_api","message":"Password reset requested for unknown email"}
+{"time":"2026-08-09 00:13:40,695","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
+{"time":"2026-08-09 00:13:42,485","level":"WARNING","logger":"django.request","message":"Bad Request: /api/auth/password-reset/confirm/"}
