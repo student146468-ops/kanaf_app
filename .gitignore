@@ -4,3 +4,6 @@ __pycache__/
 frontend/orphan_care_app/READY_APK/Kanaf-anywhere-debug.apk
 
 *.apk
+
+# مخرجات فشل الاختبارات الذهبية (تشخيصية مؤقتة)
+**/test/failures/
