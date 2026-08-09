@@ -56,7 +56,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='volunteerapplication',
-            constraint=models.CheckConstraint(condition=models.Q(('rating__isnull', True), models.Q(('rating__gte', 1), ('rating__lte', 5)), _connector='OR'), name='volunteer_application_rating_range'),
+            constraint=models.CheckConstraint(check=models.Q(('rating__isnull', True), models.Q(('rating__gte', 1), ('rating__lte', 5)), _connector='OR'), name='volunteer_application_rating_range'),
         ),
         migrations.AddField(
             model_name='visithour',
@@ -73,6 +73,6 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='visithour',
-            constraint=models.CheckConstraint(condition=models.Q(('end_time__gt', models.F('start_time'))), name='visit_hour_end_after_start'),
+            constraint=models.CheckConstraint(check=models.Q(('end_time__gt', models.F('start_time'))), name='visit_hour_end_after_start'),
         ),
     ]
