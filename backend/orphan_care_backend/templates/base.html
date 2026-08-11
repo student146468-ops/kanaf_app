@@ -1097,7 +1097,7 @@
         </nav>
 
         <div class="sidebar-footer">
-            <a class="logout-chip" href="/admin/logout/">
+            <a class="logout-chip" href="{% url 'logout' %}">
                 <i class="fas fa-arrow-right-from-bracket"></i> تسجيل خروج
             </a>
         </div>
@@ -1144,11 +1144,11 @@
                         <span>&#1575;&#1604;&#1573;&#1593;&#1583;&#1575;&#1583;&#1575;&#1578;</span>
                         <i class="fas fa-gear"></i>
                     </a>
-                    <a href="/admin/password_change/" role="menuitem">
+                    <a href="/django-admin/password_change/" role="menuitem">
                         <span>&#1578;&#1594;&#1610;&#1610;&#1585; &#1603;&#1604;&#1605;&#1577; &#1575;&#1604;&#1605;&#1585;&#1608;&#1585;</span>
                         <i class="fas fa-key"></i>
                     </a>
-                    <a href="/admin/logout/" role="menuitem">
+                    <a href="{% url 'logout' %}" role="menuitem">
                         <span>&#1578;&#1587;&#1580;&#1610;&#1604; &#1575;&#1604;&#1582;&#1585;&#1608;&#1580;</span>
                         <i class="fas fa-arrow-right-from-bracket"></i>
                     </a>

@@ -1,17 +1,25 @@
 import json
 import logging
 
-from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import user_passes_test
 from django.db import IntegrityError
 from django.db.models import ProtectedError
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
 from management.models import Donation, InventoryItem, Orphan, Sponsor, Volunteer, VolunteerApplication
 from management.serializers import DonationSerializer, InventorySerializer, OrphanSerializer, SponsorSerializer, VolunteerSerializer
 
 logger = logging.getLogger(__name__)
+
+
+staff_required = user_passes_test(
+    lambda user: user.is_active and user.is_staff,
+    login_url='login',
+)
 
 
 STATUS_LABELS_AR = {
@@ -35,7 +43,41 @@ def _save_from_serializer(request, serializer_class, data, redirect_name, templa
     return render(request, template_name, context)
 
 
-@staff_member_required
+def _safe_next_url(request):
+    next_url = request.POST.get('next') or request.GET.get('next') or ''
+    if url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+        return next_url
+    return ''
+
+
+def login_view(request):
+    if request.user.is_authenticated and request.user.is_staff:
+        return redirect(_safe_next_url(request) or 'dashboard')
+
+    if request.method == 'POST':
+        username = request.POST.get('username', '').strip()
+        password = request.POST.get('password', '')
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None and user.is_active and user.is_staff:
+            login(request, user)
+            return redirect(_safe_next_url(request) or 'dashboard')
+
+        if user is not None and not user.is_staff:
+            messages.error(request, 'هذا الحساب لا يملك صلاحية الدخول إلى منظومة الإدارة.')
+        else:
+            messages.error(request, 'اسم المستخدم أو كلمة المرور غير صحيحة.')
+
+    return render(request, 'login.html', {'next': _safe_next_url(request)})
+
+
+def logout_view(request):
+    logout(request)
+    messages.success(request, 'تم تسجيل الخروج بنجاح.')
+    return redirect('login')
+
+
+@staff_required
 def dashboard(request):
     context = {
         'total_orphans': Orphan.objects.count(),
@@ -45,7 +87,7 @@ def dashboard(request):
     return render(request, 'dashboard.html', context)
 
 
-@staff_member_required
+@staff_required
 def orphans_list(request):
     context = {'orphans': Orphan.objects.all(), 'total_count': Orphan.objects.count()}
     if request.method == 'POST':
@@ -60,7 +102,7 @@ def orphans_list(request):
     return render(request, 'orphans.html', context)
 
 
-@staff_member_required
+@staff_required
 def volunteers_view(request):
     context = {'volunteers': Volunteer.objects.all(), 'total_count': Volunteer.objects.count()}
     if request.method == 'POST':
@@ -75,7 +117,7 @@ def volunteers_view(request):
     return render(request, 'volunteers.html', context)
 
 
-@staff_member_required
+@staff_required
 def volunteer_applications_view(request):
     context = {
         'applications': VolunteerApplication.objects.select_related('user', 'opportunity').all(),
@@ -84,7 +126,7 @@ def volunteer_applications_view(request):
     return render(request, 'volunteer_applications.html', context)
 
 
-@staff_member_required
+@staff_required
 def donations_list(request):
     context = {
         'donations': Donation.objects.select_related('user', 'need').all(),
@@ -102,7 +144,7 @@ def donations_list(request):
     return render(request, 'donations.html', context)
 
 
-@staff_member_required
+@staff_required
 @require_POST
 def update_donation_status(request, pk):
     return _update_management_status(
@@ -115,7 +157,7 @@ def update_donation_status(request, pk):
     )
 
 
-@staff_member_required
+@staff_required
 @require_POST
 def update_volunteer_application_status(request, pk):
     return _update_management_status(
@@ -128,7 +170,7 @@ def update_volunteer_application_status(request, pk):
     )
 
 
-@staff_member_required
+@staff_required
 def sponsors_list(request):
     context = {'sponsors': Sponsor.objects.all()}
     if request.method == 'POST':
@@ -143,7 +185,7 @@ def sponsors_list(request):
     return render(request, 'sponsors.html', context)
 
 
-@staff_member_required
+@staff_required
 def inventory_view(request):
     context = {'items': InventoryItem.objects.all()}
     if request.method == 'POST':
@@ -158,7 +200,7 @@ def inventory_view(request):
     return render(request, 'inventory.html', context)
 
 
-@staff_member_required
+@staff_required
 def reports_view(request):
     context = {
         'total_orphans': Orphan.objects.count(),
@@ -170,32 +212,32 @@ def reports_view(request):
     return render(request, 'reports.html', context)
 
 
-@staff_member_required
+@staff_required
 def settings_view(request):
     return render(request, 'settings.html')
 
 
-@staff_member_required
+@staff_required
 def delete_orphan(request, pk):
     return _delete_management_record(request, Orphan, pk, 'orphans_list', 'orphan')
 
 
-@staff_member_required
+@staff_required
 def delete_volunteer(request, pk):
     return _delete_management_record(request, Volunteer, pk, 'volunteers_list', 'volunteer')
 
 
-@staff_member_required
+@staff_required
 def delete_donation(request, pk):
     return _delete_management_record(request, Donation, pk, 'donations_list', 'donation')
 
 
-@staff_member_required
+@staff_required
 def delete_sponsor(request, pk):
     return _delete_management_record(request, Sponsor, pk, 'sponsors_list', 'sponsor')
 
 
-@staff_member_required
+@staff_required
 def delete_inventory(request, pk):
     return _delete_management_record(request, InventoryItem, pk, 'inventory_view', 'inventory item')
 
@@ -248,7 +290,7 @@ def _update_management_status(request, model_class, pk, allowed_choices, redirec
     return redirect(redirect_name)
 
 
-@staff_member_required
+@staff_required
 def api_dashboard(request):
     orphans_data = OrphanSerializer(Orphan.objects.all(), many=True).data
     donations_data = DonationSerializer(Donation.objects.all(), many=True).data

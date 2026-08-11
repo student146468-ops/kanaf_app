@@ -1,10 +1,14 @@
 from django.contrib import admin
 from django.urls import include, path
+from django.views.generic import RedirectView
 
 from . import views
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('admin/', RedirectView.as_view(pattern_name='dashboard', permanent=False), name='admin_dashboard'),
+    path('django-admin/', admin.site.urls),
+    path('login/', views.login_view, name='login'),
+    path('logout/', views.logout_view, name='logout'),
     path('', views.dashboard, name='dashboard'),
     path('orphans/', views.orphans_list, name='orphans_list'),
     path('volunteers/', views.volunteers_view, name='volunteers_list'),

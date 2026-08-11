@@ -29,6 +29,47 @@ from management.models import (
 User = get_user_model()
 
 
+@override_settings(STORAGES={
+    'default': {
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+    },
+    'staticfiles': {
+        'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
+    },
+})
+class ManagementWebRoutingTests(TestCase):
+    def test_anonymous_management_routes_use_kanaf_login(self):
+        response = self.client.get('/')
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response['Location'], '/login/?next=/')
+
+        response = self.client.get('/login/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'كنف')
+
+    def test_admin_path_points_to_kanaf_shell_not_django_admin(self):
+        response = self.client.get('/admin/')
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response['Location'], '/')
+
+        response = self.client.get('/django-admin/')
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(response['Location'].startswith('/django-admin/login/'))
+
+    def test_staff_user_can_reach_orange_dashboard(self):
+        user = User.objects.create_user(
+            username='staff-dashboard',
+            password='StrongPass123!',
+            is_staff=True,
+        )
+        self.client.force_login(user)
+
+        response = self.client.get('/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'منظومة كنف')
+
+
 class AuthApiTests(APITestCase):
     def test_health_endpoint_reports_database(self):
         response = self.client.get(reverse('health'))
