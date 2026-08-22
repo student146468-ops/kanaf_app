@@ -150,8 +150,8 @@ class _IdentityCard extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  KanafPalette.seed.withValues(alpha: 0.22),
-                  KanafPalette.ember.withValues(alpha: 0.14),
+                  KanafPalette.seed.withOpacity(0.22),
+                  KanafPalette.ember.withOpacity(0.14),
                 ],
                 begin: Alignment.topRight,
                 end: Alignment.bottomLeft,

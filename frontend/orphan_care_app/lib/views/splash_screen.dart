@@ -211,8 +211,8 @@ class _SplashWaves extends StatelessWidget {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      KanafPalette.ember.withValues(alpha: 0.42),
-                      KanafPalette.ember.withValues(alpha: 0.66),
+                      KanafPalette.ember.withOpacity(0.42),
+                      KanafPalette.ember.withOpacity(0.66),
                     ],
                   ),
                 ),

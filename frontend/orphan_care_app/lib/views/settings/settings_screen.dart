@@ -162,7 +162,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       onPressed: _isLoggingOut ? null : _confirmLogout,
       style: OutlinedButton.styleFrom(
         foregroundColor: scheme.error,
-        side: BorderSide(color: scheme.error.withValues(alpha: 0.5)),
+        side: BorderSide(color: scheme.error.withOpacity(0.5)),
       ),
       icon: _isLoggingOut
           ? const SizedBox.square(

@@ -364,7 +364,7 @@ class _RoleBanner extends StatelessWidget {
 
     return KanafCard(
       color: scheme.primaryContainer,
-      borderColor: scheme.primary.withValues(alpha: 0.35),
+      borderColor: scheme.primary.withOpacity(0.35),
       child: Row(
         children: [
           Icon(icon, color: scheme.onPrimaryContainer),
@@ -383,7 +383,7 @@ class _RoleBanner extends StatelessWidget {
                 Text(
                   'يحدد نوع الحساب ما ستراه بعد الدخول',
                   style: context.texts.bodySmall?.copyWith(
-                    color: scheme.onPrimaryContainer.withValues(alpha: 0.8),
+                    color: scheme.onPrimaryContainer.withOpacity(0.8),
                   ),
                 ),
               ],

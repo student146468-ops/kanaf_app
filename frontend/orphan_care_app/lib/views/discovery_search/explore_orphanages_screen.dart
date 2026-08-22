@@ -186,7 +186,7 @@ class _CareHomeCard extends StatelessWidget {
                 width: 50,
                 height: 50,
                 decoration: BoxDecoration(
-                  color: scheme.primary.withValues(alpha: 0.12),
+                  color: scheme.primary.withOpacity(0.12),
                   borderRadius: KanafRadii.md,
                 ),
                 child: Icon(

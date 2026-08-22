@@ -291,7 +291,7 @@ class _ProfileHeader extends StatelessWidget {
                         vertical: KanafSpacing.xs,
                       ),
                       decoration: BoxDecoration(
-                        color: scheme.primary.withValues(alpha: 0.12),
+                        color: scheme.primary.withOpacity(0.12),
                         borderRadius: KanafRadii.pill,
                       ),
                       child: Text(

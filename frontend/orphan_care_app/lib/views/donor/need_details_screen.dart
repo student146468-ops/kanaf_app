@@ -182,7 +182,7 @@ class _HeaderCard extends StatelessWidget {
             width: 54,
             height: 54,
             decoration: BoxDecoration(
-              color: scheme.primary.withValues(alpha: 0.12),
+              color: scheme.primary.withOpacity(0.12),
               borderRadius: KanafRadii.md,
             ),
             child: Icon(need.icon, size: 27, color: scheme.primary),

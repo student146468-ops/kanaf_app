@@ -216,7 +216,7 @@ class _SlideView extends StatelessWidget {
                   borderRadius: KanafRadii.xl,
                   boxShadow: [
                     BoxShadow(
-                      color: KanafPalette.seed.withValues(alpha: 0.16),
+                      color: KanafPalette.seed.withOpacity(0.16),
                       blurRadius: 34,
                       offset: const Offset(0, 14),
                     ),

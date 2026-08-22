@@ -321,7 +321,7 @@ class _CategoryTile extends StatelessWidget {
                 height: 46,
                 decoration: BoxDecoration(
                   color: selected
-                      ? scheme.primary.withValues(alpha: 0.16)
+                      ? scheme.primary.withOpacity(0.16)
                       : scheme.surfaceContainerHighest,
                   borderRadius: KanafRadii.sm,
                 ),

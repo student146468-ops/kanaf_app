@@ -69,7 +69,7 @@ class _KanafSkeletonState extends State<KanafSkeleton>
               end: Alignment(1 + slide, 0),
               colors: [
                 scheme.surfaceContainerHighest,
-                scheme.surfaceContainerHighest.withValues(alpha: 0.45),
+                scheme.surfaceContainerHighest.withOpacity(0.45),
                 scheme.surfaceContainerHighest,
               ],
               stops: const [0.1, 0.5, 0.9],

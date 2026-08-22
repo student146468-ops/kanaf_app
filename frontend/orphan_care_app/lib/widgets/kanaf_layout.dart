@@ -31,7 +31,7 @@ class KanafCard extends StatelessWidget {
     final shape = RoundedRectangleBorder(
       borderRadius: KanafRadii.lg,
       side: BorderSide(
-        color: borderColor ?? scheme.outlineVariant.withValues(alpha: 0.6),
+        color: borderColor ?? scheme.outlineVariant.withOpacity(0.6),
       ),
     );
 
@@ -44,8 +44,8 @@ class KanafCard extends StatelessWidget {
           : InkWell(
               onTap: onTap,
               // نبضة اللمس بلون الهوية — تفصيل صغير يُحسّ ولا يُرى.
-              splashColor: scheme.primary.withValues(alpha: 0.08),
-              highlightColor: scheme.primary.withValues(alpha: 0.04),
+              splashColor: scheme.primary.withOpacity(0.08),
+              highlightColor: scheme.primary.withOpacity(0.04),
               child: Padding(padding: padding, child: child),
             ),
     );
@@ -140,8 +140,8 @@ class KanafBackdrop extends StatelessWidget {
                     center: const Alignment(0.9, -1),
                     radius: 1.25,
                     colors: [
-                      KanafPalette.ember.withValues(alpha: intensity),
-                      KanafPalette.ember.withValues(alpha: 0),
+                      KanafPalette.ember.withOpacity(intensity),
+                      KanafPalette.ember.withOpacity(0),
                     ],
                   ),
                 ),
@@ -156,8 +156,8 @@ class KanafBackdrop extends StatelessWidget {
                     center: const Alignment(-1, -0.75),
                     radius: 1.1,
                     colors: [
-                      KanafPalette.seed.withValues(alpha: intensity * 0.7),
-                      KanafPalette.seed.withValues(alpha: 0),
+                      KanafPalette.seed.withOpacity(intensity * 0.7),
+                      KanafPalette.seed.withOpacity(0),
                     ],
                   ),
                 ),
@@ -192,12 +192,12 @@ class KanafLogo extends StatelessWidget {
         color: scheme.surfaceContainerLowest,
         // حلقة برتقالية رقيقة تربط الشعار بالهوية بلا صخب.
         border: Border.all(
-          color: KanafPalette.seed.withValues(alpha: 0.22),
+          color: KanafPalette.seed.withOpacity(0.22),
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: KanafPalette.seed.withValues(alpha: 0.22),
+            color: KanafPalette.seed.withOpacity(0.22),
             blurRadius: size * 0.34,
             spreadRadius: -size * 0.06,
             offset: Offset(0, size * 0.09),
@@ -256,7 +256,7 @@ class KanafHeroBand extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: KanafPalette.seed.withValues(alpha: 0.30),
+            color: KanafPalette.seed.withOpacity(0.30),
             blurRadius: 28,
             offset: const Offset(0, 12),
           ),
@@ -283,7 +283,7 @@ class KanafHeroBand extends StatelessWidget {
               subtitle!,
               textAlign: TextAlign.center,
               style: context.texts.bodyMedium?.copyWith(
-                color: Colors.white.withValues(alpha: 0.92),
+                color: Colors.white.withOpacity(0.92),
               ),
             ),
           ],
@@ -329,7 +329,7 @@ class KanafStatTile extends StatelessWidget {
             width: 38,
             height: 38,
             decoration: BoxDecoration(
-              color: tone.withValues(alpha: 0.12),
+              color: tone.withOpacity(0.12),
               borderRadius: KanafRadii.sm,
             ),
             child: Icon(icon, size: 20, color: tone),
@@ -421,7 +421,7 @@ class KanafActionBar extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLowest,
         border: Border(
-          top: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.7)),
+          top: BorderSide(color: scheme.outlineVariant.withOpacity(0.7)),
         ),
       ),
       child: SafeArea(top: false, child: child),

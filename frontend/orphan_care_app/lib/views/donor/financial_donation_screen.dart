@@ -230,30 +230,26 @@ class _FinancialDonationScreenState extends State<FinancialDonationScreen> {
         const SizedBox(height: KanafSpacing.md),
         KanafCard(
           padding: EdgeInsets.zero,
-          // RadioGroup هو الواجهة الحديثة: تدير المجموعة قيمة واحدة
-          // وتتولى الوصولية (a11y) بدل تمرير groupValue لكل عنصر.
-          child: RadioGroup<String>(
-            groupValue: _selectedPaymentMethod,
-            onChanged: (value) {
-              if (value != null) {
-                setState(() => _selectedPaymentMethod = value);
-              }
-            },
-            child: Column(
-              children: [
-                for (var i = 0; i < _paymentMethods.length; i++) ...[
-                  if (i > 0) const Divider(height: 1, indent: KanafSpacing.lg),
-                  RadioListTile<String>(
-                    value: _paymentMethods[i].name,
-                    title: Text(_paymentMethods[i].name),
-                    secondary: Icon(_paymentMethods[i].icon),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: KanafSpacing.md,
-                    ),
+          child: Column(
+            children: [
+              for (var i = 0; i < _paymentMethods.length; i++) ...[
+                if (i > 0) const Divider(height: 1, indent: KanafSpacing.lg),
+                RadioListTile<String>(
+                  value: _paymentMethods[i].name,
+                  groupValue: _selectedPaymentMethod,
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() => _selectedPaymentMethod = value);
+                    }
+                  },
+                  title: Text(_paymentMethods[i].name),
+                  secondary: Icon(_paymentMethods[i].icon),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: KanafSpacing.md,
                   ),
-                ],
+                ),
               ],
-            ),
+            ],
           ),
         ),
       ],

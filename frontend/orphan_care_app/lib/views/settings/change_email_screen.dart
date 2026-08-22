@@ -129,7 +129,7 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
             width: 46,
             height: 46,
             decoration: BoxDecoration(
-              color: scheme.primary.withValues(alpha: 0.12),
+              color: scheme.primary.withOpacity(0.12),
               borderRadius: KanafRadii.sm,
             ),
             child: Icon(Icons.alternate_email_rounded, color: scheme.primary),

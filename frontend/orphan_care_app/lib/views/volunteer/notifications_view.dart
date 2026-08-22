@@ -224,7 +224,7 @@ class _NotificationCard extends StatelessWidget {
 
     return KanafCard(
       onTap: onTap,
-      color: isRead ? null : scheme.primaryContainer.withValues(alpha: 0.35),
+      color: isRead ? null : scheme.primaryContainer.withOpacity(0.35),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -232,7 +232,7 @@ class _NotificationCard extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: scheme.primary.withValues(alpha: isRead ? 0.09 : 0.16),
+              color: scheme.primary.withOpacity(isRead ? 0.09 : 0.16),
               borderRadius: KanafRadii.sm,
             ),
             child: Icon(_iconFor(type), size: 22, color: scheme.primary),

@@ -193,8 +193,8 @@ class _NotificationCard extends StatelessWidget {
       // النقطة، فلا يعتمد التمييز على عنصر واحد صغير.
       color: isRead
           ? scheme.surfaceContainerLow
-          : scheme.primary.withValues(alpha: 0.06),
-      borderColor: isRead ? null : scheme.primary.withValues(alpha: 0.28),
+          : scheme.primary.withOpacity(0.06),
+      borderColor: isRead ? null : scheme.primary.withOpacity(0.28),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -202,7 +202,7 @@ class _NotificationCard extends StatelessWidget {
             width: 42,
             height: 42,
             decoration: BoxDecoration(
-              color: tone.withValues(alpha: 0.14),
+              color: tone.withOpacity(0.14),
               borderRadius: KanafRadii.sm,
             ),
             child: Icon(icon, size: 21, color: tone),

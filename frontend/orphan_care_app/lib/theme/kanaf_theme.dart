@@ -83,14 +83,14 @@ abstract final class KanafTheme {
         systemOverlayStyle:
             isLight ? SystemUiOverlayStyle.dark : SystemUiOverlayStyle.light,
       ),
-      cardTheme: CardThemeData(
+      cardTheme: CardTheme(
         color: scheme.surfaceContainerLow,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
           borderRadius: KanafRadii.lg,
-          side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.6)),
+          side: BorderSide(color: scheme.outlineVariant.withOpacity(0.6)),
         ),
       ),
       filledButtonTheme: FilledButtonThemeData(
@@ -171,13 +171,13 @@ abstract final class KanafTheme {
       bottomSheetTheme: BottomSheetThemeData(
         backgroundColor: scheme.surfaceContainerLow,
         surfaceTintColor: Colors.transparent,
-        modalBarrierColor: scheme.scrim.withValues(alpha: 0.45),
+        modalBarrierColor: scheme.scrim.withOpacity(0.45),
         shape: const RoundedRectangleBorder(borderRadius: KanafRadii.sheet),
         showDragHandle: true,
         dragHandleColor: scheme.outlineVariant,
         clipBehavior: Clip.antiAlias,
       ),
-      dialogTheme: DialogThemeData(
+      dialogTheme: DialogTheme(
         backgroundColor: scheme.surfaceContainerHigh,
         surfaceTintColor: Colors.transparent,
         shape: const RoundedRectangleBorder(borderRadius: KanafRadii.xl),

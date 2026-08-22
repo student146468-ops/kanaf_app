@@ -184,8 +184,8 @@ class _CenterCard extends StatelessWidget {
       onTap: onOpen,
       color: isRead
           ? scheme.surfaceContainerLow
-          : scheme.primary.withValues(alpha: 0.06),
-      borderColor: isRead ? null : scheme.primary.withValues(alpha: 0.28),
+          : scheme.primary.withOpacity(0.06),
+      borderColor: isRead ? null : scheme.primary.withOpacity(0.28),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
