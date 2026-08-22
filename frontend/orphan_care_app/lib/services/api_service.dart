@@ -6,16 +6,38 @@ import '../utils/auth_navigation.dart';
 import 'api_config.dart';
 import 'api_failure.dart';
 
-export 'api_failure.dart' show ApiFailureKind, ApiServiceException, NetworkProbe;
+export 'api_failure.dart'
+    show ApiFailureKind, ApiServiceException, NetworkProbe;
 
 const String _registerServiceUnavailableMessage =
     'تعذر الاتصال بخدمة إنشاء الحساب حالياً. تأكد من تشغيل الخادم وحاول مرة أخرى.';
 const String _loginServiceUnavailableMessage =
     'تعذر الاتصال بخدمة تسجيل الدخول حالياً. تأكد من تشغيل الخادم وحاول مرة أخرى.';
-const String _duplicateEmailMessage =
-    'هذا البريد الإلكتروني مستخدم بالفعل.';
+const String _duplicateEmailMessage = 'هذا البريد الإلكتروني مستخدم بالفعل.';
 const String _duplicatePhoneMessage = 'رقم الهاتف مستخدم بالفعل.';
 const String _duplicateAccountMessage = 'بيانات الحساب مستخدمة بالفعل.';
+
+class PhoneVerificationRequiredException extends ApiServiceException {
+  const PhoneVerificationRequiredException({
+    required this.userId,
+    required this.email,
+    required this.phoneNumber,
+    required this.role,
+    String message = 'رقم الهاتف غير موثق. أدخل رمز التحقق لإكمال العملية.',
+  }) : super(message, kind: ApiFailureKind.unauthorized, statusCode: 403);
+
+  final int? userId;
+  final String email;
+  final String phoneNumber;
+  final String? role;
+
+  Map<String, dynamic> toRouteArguments() => {
+        'user_id': userId,
+        'email': email,
+        'phone_number': phoneNumber,
+        'role': role,
+      };
+}
 
 class ApiService {
   static final ApiService _instance = ApiService._internal();
@@ -111,6 +133,8 @@ class ApiService {
       return responseData;
     } on DioException catch (e) {
       debugPrint('Login API error: ${_developerErrorSummary(e)}');
+      final verification = _phoneVerificationRequired(e);
+      if (verification != null) throw verification;
       throw ApiServiceException(
         friendlyMessageForDioException(
           e,
@@ -135,6 +159,9 @@ class ApiService {
       final response = await _dio.post(path, data: userData);
       _logAuthResponse('register', response);
       final responseData = _extractMap(response.data);
+      if (responseData['requires_phone_verification'] == true) {
+        return responseData;
+      }
       await _saveAuthSession(responseData);
       return responseData;
     } on DioException catch (e) {
@@ -153,6 +180,44 @@ class ApiService {
       throw const ApiServiceException(
         'تعذر إكمال إنشاء الحساب حالياً. حاول مرة أخرى.',
       );
+    }
+  }
+
+  Future<Map<String, dynamic>> resendPhoneOtp({
+    required String phoneNumber,
+    String? email,
+  }) async {
+    try {
+      final response = await _dio.post('/auth/phone-otp/send/', data: {
+        'phone_number': phoneNumber,
+        if (email != null && email.isNotEmpty) 'email': email,
+      });
+      return _extractMap(response.data);
+    } on DioException catch (e) {
+      debugPrint('Phone OTP send API error: ${_developerErrorSummary(e)}');
+      throw ApiServiceException(_phoneOtpErrorMessage(e));
+    }
+  }
+
+  Future<Map<String, dynamic>> verifyPhoneOtp({
+    int? userId,
+    required String phoneNumber,
+    String? email,
+    required String code,
+  }) async {
+    try {
+      final response = await _dio.post('/auth/phone-otp/verify/', data: {
+        if (userId != null) 'user_id': userId,
+        if (email != null && email.isNotEmpty) 'email': email,
+        'phone_number': phoneNumber,
+        'code': code,
+      });
+      final data = _extractMap(response.data);
+      await _saveAuthSession(data);
+      return data;
+    } on DioException catch (e) {
+      debugPrint('Phone OTP verify API error: ${_developerErrorSummary(e)}');
+      throw ApiServiceException(_phoneOtpErrorMessage(e));
     }
   }
 
@@ -283,7 +348,12 @@ class ApiService {
       if (detail != null && detail.toString().trim().isNotEmpty) {
         return detail.toString();
       }
-      for (final key in const ['code', 'password', 'password_confirm', 'email']) {
+      for (final key in const [
+        'code',
+        'password',
+        'password_confirm',
+        'email'
+      ]) {
         final value = data[key];
         if (value == null) continue;
         final text = value is Iterable
@@ -314,8 +384,8 @@ class ApiService {
   ///    رمز التحديث (rotation)، فتفشل البقية وتمسح الجلسة رغم نجاحها.
   ///    صار هناك تجديد واحد في الطيران يتشاركه الجميع.
   Future<bool> refreshAccessToken() {
-    return _refreshInFlight ??= _performRefresh()
-        .whenComplete(() => _refreshInFlight = null);
+    return _refreshInFlight ??=
+        _performRefresh().whenComplete(() => _refreshInFlight = null);
   }
 
   Future<bool> _performRefresh() async {
@@ -329,14 +399,16 @@ class ApiService {
         data: {'refresh': refreshToken},
       );
       final data = response.data;
-      final access = data is Map ? data['access'] ?? data['access_token'] : null;
+      final access =
+          data is Map ? data['access'] ?? data['access_token'] : null;
       if (access == null || access.toString().isEmpty) {
         await _clearToken();
         return false;
       }
       await _saveToken(
         access.toString(),
-        refreshToken: data is Map ? data['refresh'] ?? refreshToken : refreshToken,
+        refreshToken:
+            data is Map ? data['refresh'] ?? refreshToken : refreshToken,
       );
       return true;
     } on DioException {
@@ -790,6 +862,46 @@ class ApiService {
         'request=${_safeLogData(e.requestOptions.data)}';
   }
 
+  static PhoneVerificationRequiredException? _phoneVerificationRequired(
+    DioException e,
+  ) {
+    final data = e.response?.data;
+    if (data is! Map || data['code'] != 'phone_verification_required') {
+      return null;
+    }
+    return PhoneVerificationRequiredException(
+      userId: int.tryParse('${data['user_id'] ?? ''}'),
+      email: (data['email'] ?? '').toString(),
+      phoneNumber: (data['phone_number'] ?? '').toString(),
+      role: AuthNavigation.normalizeRole((data['role'] ?? '').toString()),
+      message: (data['detail'] ?? '').toString().trim().isNotEmpty
+          ? data['detail'].toString()
+          : 'رقم الهاتف غير موثق. أدخل رمز التحقق لإكمال الدخول.',
+    );
+  }
+
+  static String _phoneOtpErrorMessage(DioException e) {
+    final data = e.response?.data;
+    if (data is Map) {
+      final detail = data['detail'];
+      if (detail != null && detail.toString().trim().isNotEmpty) {
+        return detail.toString();
+      }
+      for (final key in const ['code', 'phone_number']) {
+        final value = data[key];
+        if (value == null) continue;
+        final text = value is Iterable
+            ? value.map((item) => item.toString()).join(' ')
+            : value.toString();
+        if (text.trim().isNotEmpty) return text;
+      }
+    }
+    return friendlyMessageForDioException(
+      e,
+      fallback: 'تعذر التحقق من رمز الهاتف حالياً. حاول مرة أخرى.',
+    );
+  }
+
   static void _logAuthRequest(
     String method,
     String path,
@@ -817,6 +929,8 @@ class ApiService {
           final keyText = key.toString().toLowerCase();
           if (keyText.contains('password') ||
               keyText.contains('token') ||
+              keyText == 'code' ||
+              keyText.contains('otp') ||
               keyText == 'access' ||
               keyText == 'refresh') {
             return MapEntry(key, '***');

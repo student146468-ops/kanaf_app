@@ -19,6 +19,7 @@ import '../views/notifications_tracking/notification_detail_screen.dart';
 import '../views/notifications_tracking/notifications_center_screen.dart';
 import '../views/notifications_tracking/track_need_status_screen.dart';
 import '../views/onboarding_screen.dart';
+import '../views/phone_verification_screen.dart';
 import '../views/register_screen.dart';
 import '../views/reset_password_screen.dart';
 import '../views/role_selection_screen.dart';
@@ -43,6 +44,7 @@ abstract final class KanafRoutes {
   static const String roleSelection = '/role_selection';
   static const String login = '/login';
   static const String register = '/register';
+  static const String phoneVerification = '/otp';
   static const String forgotPassword = '/forgot_password';
   static const String resetPassword = '/reset_password';
 
@@ -121,8 +123,9 @@ abstract final class KanafRouter {
       case KanafRoutes.forgotPassword:
         return ((_) => const ForgotPasswordScreen(), push);
       case KanafRoutes.resetPassword:
-      case '/otp':
         return ((_) => const ResetPasswordScreen(), push);
+      case KanafRoutes.phoneVerification:
+        return ((_) => const PhoneVerificationScreen(), push);
 
       case '/home':
       case KanafRoutes.donorHome:

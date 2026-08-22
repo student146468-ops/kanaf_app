@@ -201,6 +201,7 @@ REST_FRAMEWORK = {
         # حدّ ضيق خاص باستعادة كلمة المرور: نقطة النهاية مفتوحة بلا
         # مصادقة وتُرسل بريداً، فهي هدف طبيعي للإساءة والتخمين.
         'password_reset': config('PASSWORD_RESET_THROTTLE', default='20/hour'),
+        'phone_otp': config('PHONE_OTP_THROTTLE', default='8/hour'),
     },
 }
 
@@ -220,6 +221,17 @@ EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 EMAIL_USE_TLS = config_bool('EMAIL_USE_TLS', default=True)
 EMAIL_TIMEOUT = int(config('EMAIL_TIMEOUT', default='10'))
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='no-reply@kanaf.app')
+
+# ============ إعدادات SMS / OTP ============
+# للتطوير والاختبارات: console لا يرسل رسالة حقيقية ويكتفي بالـ logging.
+# للإنتاج: اضبط SMS_BACKEND=twilio مع بيانات Twilio أدناه.
+SMS_BACKEND = config('SMS_BACKEND', default='console' if DEBUG else 'twilio')
+SMS_DEFAULT_COUNTRY_CODE = config('SMS_DEFAULT_COUNTRY_CODE', default='+218')
+SMS_TIMEOUT = int(config('SMS_TIMEOUT', default='15'))
+TWILIO_ACCOUNT_SID = config('TWILIO_ACCOUNT_SID', default='')
+TWILIO_AUTH_TOKEN = config('TWILIO_AUTH_TOKEN', default='')
+TWILIO_FROM_NUMBER = config('TWILIO_FROM_NUMBER', default='')
+TWILIO_MESSAGING_SERVICE_SID = config('TWILIO_MESSAGING_SERVICE_SID', default='')
 
 # ============ إعدادات CORS ============
 CORS_ALLOWED_ORIGINS = [

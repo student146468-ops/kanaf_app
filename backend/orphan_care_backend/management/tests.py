@@ -1,4 +1,5 @@
 import re
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.conf import settings
@@ -18,6 +19,7 @@ from management.models import (
     Notification,
     Orphan,
     PasswordResetCode,
+    PhoneVerificationCode,
     Sponsor,
     UserProfile,
     VisitHour,
@@ -111,6 +113,10 @@ class AuthApiTests(APITestCase):
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertTrue(get_user_model().objects.filter(username='newuser').exists())
+        self.assertTrue(response.json()['requires_phone_verification'])
+        user = get_user_model().objects.get(username='newuser')
+        self.assertFalse(user.profile.is_verified)
+        self.assertEqual(PhoneVerificationCode.objects.filter(user=user).count(), 1)
 
     def test_register_rejects_duplicate_email_with_email_error(self):
         get_user_model().objects.create_user(
@@ -168,8 +174,8 @@ class AuthApiTests(APITestCase):
         }, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertIn('access', response.json())
-        self.assertIn('user', response.json())
+        self.assertTrue(response.json()['requires_phone_verification'])
+        self.assertIn('user_id', response.json())
 
     def test_flutter_login_path_is_available(self):
         get_user_model().objects.create_user(
@@ -252,7 +258,69 @@ class AuthApiTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         user = get_user_model().objects.get(username='roleuser')
         self.assertEqual(user.profile.role, UserProfile.ROLE_VOLUNTEER)
-        self.assertEqual(response.json()['user']['role'], UserProfile.ROLE_VOLUNTEER)
+        self.assertEqual(response.json()['role'], UserProfile.ROLE_VOLUNTEER)
+        self.assertFalse(user.profile.is_verified)
+
+    def test_register_then_phone_otp_verify_returns_tokens(self):
+        with patch('management.views_api.secrets.randbelow', return_value=123456):
+            register = self.client.post(reverse('register'), {
+                'username': 'otpuser',
+                'email': 'otpuser@example.com',
+                'password': 'StrongPass123!',
+                'password_confirm': 'StrongPass123!',
+                'role': UserProfile.ROLE_DONOR,
+                'phone_number': '0912345678',
+            }, format='json')
+
+        self.assertEqual(register.status_code, status.HTTP_201_CREATED)
+        body = register.json()
+        verify = self.client.post(reverse('phone_otp_verify'), {
+            'user_id': body['user_id'],
+            'email': body['email'],
+            'phone_number': body['phone_number'],
+            'code': '123456',
+        }, format='json')
+
+        self.assertEqual(verify.status_code, status.HTTP_200_OK)
+        self.assertIn('access', verify.json())
+        user = get_user_model().objects.get(username='otpuser')
+        user.profile.refresh_from_db()
+        self.assertTrue(user.profile.is_verified)
+
+    def test_unverified_phone_login_requires_otp(self):
+        user = get_user_model().objects.create_user(
+            username='unverified',
+            email='unverified@example.com',
+            password='StrongPass123!',
+        )
+        UserProfile.objects.create(
+            user=user,
+            role=UserProfile.ROLE_DONOR,
+            phone_number='0912345678',
+        )
+
+        response = self.client.post(reverse('token_obtain_pair'), {
+            'email': 'unverified@example.com',
+            'password': 'StrongPass123!',
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.json()['code'], 'phone_verification_required')
+
+    @override_settings(SMS_BACKEND='twilio', TWILIO_ACCOUNT_SID='', TWILIO_AUTH_TOKEN='')
+    def test_register_reports_missing_sms_credentials(self):
+        response = self.client.post(reverse('register'), {
+            'username': 'nosms',
+            'email': 'nosms@example.com',
+            'password': 'StrongPass123!',
+            'password_confirm': 'StrongPass123!',
+            'role': UserProfile.ROLE_DONOR,
+            'phone_number': '0912345678',
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
+        self.assertEqual(response.json()['code'], 'sms_not_configured')
+        self.assertFalse(get_user_model().objects.filter(username='nosms').exists())
 
     def test_invalid_role_is_rejected(self):
         response = self.client.post(reverse('register'), {

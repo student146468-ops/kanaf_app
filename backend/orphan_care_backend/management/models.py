@@ -81,6 +81,47 @@ class PasswordResetCode(models.Model):
         )
 
 
+class PhoneVerificationCode(models.Model):
+    """رمز تحقق الهاتف لحساب جديد.
+
+    نفس قواعد الأمان المستخدمة في PasswordResetCode: لا نخزن الرمز
+    الصريح، ونحد الصلاحية والمحاولات، ونبطل الرموز الأقدم عند إصدار
+    رمز جديد.
+    """
+
+    CODE_LENGTH = 6
+    MAX_ATTEMPTS = 5
+    VALIDITY = timezone.timedelta(minutes=10)
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='phone_verification_codes',
+    )
+    phone_number = models.CharField(max_length=20, db_index=True)
+    code_hash = models.CharField(max_length=64, db_index=True)
+    provider = models.CharField(max_length=40, blank=True)
+    provider_message_id = models.CharField(max_length=100, blank=True)
+    created_at = models.DateTimeField(default=timezone.now, db_index=True)
+    expires_at = models.DateTimeField(db_index=True)
+    used_at = models.DateTimeField(null=True, blank=True)
+    attempts = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', 'used_at'], name='phone_otp_user_used_idx'),
+            models.Index(fields=['phone_number', 'used_at'], name='phone_otp_phone_used_idx'),
+        ]
+
+    def __str__(self):
+        return f'PhoneVerificationCode(user={self.user_id}, phone={self.phone_number})'
+
+    @property
+    def is_expired(self):
+        return timezone.now() >= self.expires_at
+
+
 class Volunteer(models.Model):
     name = models.CharField(max_length=100, db_index=True)
     specialty = models.CharField(max_length=100, db_index=True)

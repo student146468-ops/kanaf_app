@@ -121,9 +121,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                         const SizedBox(height: KanafSpacing.md),
                         TextButton(
-                          onPressed: _isLoading
-                              ? null
-                              : () => Navigator.pop(context),
+                          onPressed:
+                              _isLoading ? null : () => Navigator.pop(context),
                           child: const Text('لدي حساب بالفعل'),
                         ),
                       ],
@@ -315,6 +314,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (!mounted) return;
       setState(() => _isLoading = false);
       TextInput.finishAutofillContext();
+
+      if (response['requires_phone_verification'] == true) {
+        Navigator.of(context).pushReplacementNamed(
+          KanafRoutes.phoneVerification,
+          arguments: response,
+        );
+        return;
+      }
 
       AuthNavigation.navigateByRole(
         context,

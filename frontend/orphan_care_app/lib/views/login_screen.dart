@@ -148,8 +148,7 @@ class _LoginScreenState extends State<LoginScreen> {
         prefixIcon: const Icon(Icons.lock_outline_rounded),
         suffixIcon: IconButton(
           tooltip: _obscurePassword ? 'إظهار كلمة المرور' : 'إخفاء كلمة المرور',
-          onPressed: () =>
-              setState(() => _obscurePassword = !_obscurePassword),
+          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
           icon: Icon(
             _obscurePassword
                 ? Icons.visibility_off_outlined
@@ -240,6 +239,13 @@ class _LoginScreenState extends State<LoginScreen> {
       debugPrint('Login failed: $error');
       if (!mounted) return;
       setState(() => _isLoading = false);
+      if (error is PhoneVerificationRequiredException) {
+        Navigator.of(context).pushNamed(
+          KanafRoutes.phoneVerification,
+          arguments: error.toRouteArguments(),
+        );
+        return;
+      }
       _showError(
         error is ApiServiceException
             ? error.message
