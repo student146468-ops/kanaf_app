@@ -45,13 +45,22 @@ def send_sms(*, phone_number, message):
     backend = settings.SMS_BACKEND.lower()
     destination = normalize_phone_for_sms(phone_number)
 
-    if backend in {'console', 'log'}:
+    if backend in {'development', 'console', 'log'}:
+        if not settings.DEBUG:
+            raise SmsConfigurationError(
+                'Development SMS backend is not allowed when DEBUG=False.'
+            )
         logger.info(
-            'SMS console backend accepted message to phone=%s length=%s',
+            'SMS development backend accepted message to phone=%s length=%s',
             _masked_phone(destination),
             len(message),
         )
-        return SmsResult(provider='console', status='accepted')
+        logger.warning(
+            'DEVELOPMENT OTP SMS phone=%s message=%s',
+            _masked_phone(destination),
+            message,
+        )
+        return SmsResult(provider='development', status='logged')
 
     if backend == 'twilio':
         return _send_twilio_sms(destination, message)

@@ -261,6 +261,7 @@ class AuthApiTests(APITestCase):
         self.assertEqual(response.json()['role'], UserProfile.ROLE_VOLUNTEER)
         self.assertFalse(user.profile.is_verified)
 
+    @override_settings(DEBUG=True, SMS_BACKEND='development')
     def test_register_then_phone_otp_verify_returns_tokens(self):
         with patch('management.views_api.secrets.randbelow', return_value=123456):
             register = self.client.post(reverse('register'), {
@@ -286,6 +287,39 @@ class AuthApiTests(APITestCase):
         user = get_user_model().objects.get(username='otpuser')
         user.profile.refresh_from_db()
         self.assertTrue(user.profile.is_verified)
+
+    @override_settings(DEBUG=True, SMS_BACKEND='development')
+    def test_development_sms_backend_logs_otp_without_returning_it(self):
+        with patch('management.views_api.secrets.randbelow', return_value=654321):
+            with self.assertLogs('management.sms', level='WARNING') as logs:
+                response = self.client.post(reverse('register'), {
+                    'username': 'devotp',
+                    'email': 'devotp@example.com',
+                    'password': 'StrongPass123!',
+                    'password_confirm': 'StrongPass123!',
+                    'role': UserProfile.ROLE_DONOR,
+                    'phone_number': '0912345678',
+                }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(response.json()['requires_phone_verification'])
+        self.assertNotIn('654321', response.content.decode('utf-8'))
+        self.assertIn('654321', '\n'.join(logs.output))
+
+    @override_settings(DEBUG=False, SMS_BACKEND='development')
+    def test_development_sms_backend_is_rejected_in_production(self):
+        response = self.client.post(reverse('register'), {
+            'username': 'proddevotp',
+            'email': 'proddevotp@example.com',
+            'password': 'StrongPass123!',
+            'password_confirm': 'StrongPass123!',
+            'role': UserProfile.ROLE_DONOR,
+            'phone_number': '0912345678',
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
+        self.assertEqual(response.json()['code'], 'sms_not_configured')
+        self.assertFalse(get_user_model().objects.filter(username='proddevotp').exists())
 
     def test_unverified_phone_login_requires_otp(self):
         user = get_user_model().objects.create_user(

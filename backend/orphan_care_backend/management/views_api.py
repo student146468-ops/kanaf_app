@@ -280,12 +280,11 @@ def _sms_error_response(exc):
         logger.error('Phone OTP SMS configuration error: %s', exc)
         return Response(
             {
-                'detail': 'خدمة SMS غير مهيأة. أضف بيانات Twilio في ملف البيئة ثم أعد المحاولة.',
+                'detail': 'خدمة إرسال OTP غير مهيأة للبيئة الحالية. استخدم SMS_BACKEND=development مع DEBUG=True أثناء التطوير، أو اضبط مزود SMS حقيقي في الإنتاج.',
                 'code': 'sms_not_configured',
                 'missing_settings': [
-                    'TWILIO_ACCOUNT_SID',
-                    'TWILIO_AUTH_TOKEN',
-                    'TWILIO_FROM_NUMBER or TWILIO_MESSAGING_SERVICE_SID',
+                    'DEBUG=True with SMS_BACKEND=development for local testing',
+                    'or production SMS provider credentials such as Twilio',
                 ],
             },
             status=status.HTTP_503_SERVICE_UNAVAILABLE,

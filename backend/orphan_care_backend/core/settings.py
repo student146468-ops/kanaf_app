@@ -223,7 +223,8 @@ EMAIL_TIMEOUT = int(config('EMAIL_TIMEOUT', default='10'))
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='no-reply@kanaf.app')
 
 # ============ إعدادات SMS / OTP ============
-# للتطوير والاختبارات: console لا يرسل رسالة حقيقية ويكتفي بالـ logging.
+# للتطوير والاختبارات: development يطبع OTP في اللوج ولا يرسل SMS حقيقياً.
+# هذا الوضع ممنوع داخل management.sms عندما DEBUG=False.
 # للإنتاج: اضبط SMS_BACKEND=twilio مع بيانات Twilio أدناه.
 SMS_BACKEND = config('SMS_BACKEND', default='console' if DEBUG else 'twilio')
 SMS_DEFAULT_COUNTRY_CODE = config('SMS_DEFAULT_COUNTRY_CODE', default='+218')
