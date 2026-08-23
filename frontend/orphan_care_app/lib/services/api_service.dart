@@ -120,7 +120,7 @@ class ApiService {
 
   Future<Map<String, dynamic>> login(String email, String password) async {
     const path = '/auth/login/';
-    final requestData = {'email': email, 'password': password};
+    final requestData = {'email': email.trim(), 'password': password.trim()};
     _logAuthRequest('POST', path, requestData);
     try {
       final response = await _dio.post(
@@ -307,7 +307,7 @@ class ApiService {
   /// الحسابات)، فنجاح هذه الدالة يعني «تم قبول الطلب» لا «البريد موجود».
   Future<void> requestPasswordReset(String email) async {
     try {
-      await _dio.post('/auth/password-reset/', data: {'email': email});
+      await _dio.post('/auth/password-reset/', data: {'email': email.trim()});
     } on DioException catch (e) {
       throw ApiServiceException(
         _errorMessage(e, 'تعذر إرسال رمز الاستعادة حالياً. حاول مرة أخرى.'),
@@ -327,10 +327,10 @@ class ApiService {
   }) async {
     try {
       await _dio.post('/auth/password-reset/confirm/', data: {
-        'email': email,
-        'code': code,
-        'password': password,
-        'password_confirm': passwordConfirm,
+        'email': email.trim(),
+        'code': code.trim(),
+        'password': password.trim(),
+        'password_confirm': passwordConfirm.trim(),
       });
     } on DioException catch (e) {
       throw ApiServiceException(

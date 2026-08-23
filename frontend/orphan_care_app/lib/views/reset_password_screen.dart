@@ -213,7 +213,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           ),
           // نفس قواعد الخادم في `_is_valid_registration_password`.
           validator: (value) {
-            final password = value ?? '';
+            final password = value?.trim() ?? '';
             if (password.isEmpty) return 'أدخل كلمة المرور';
             if (password.length < 8) return 'كلمة المرور أقل من ٨ خانات';
             if (!RegExp(r'[A-Za-z]').hasMatch(password) ||
@@ -250,8 +250,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
             ),
           ),
           validator: (value) {
-            if (value == null || value.isEmpty) return 'أعد إدخال كلمة المرور';
-            if (value != _passwordController.text) {
+            final confirmation = value?.trim() ?? '';
+            if (confirmation.isEmpty) return 'أعد إدخال كلمة المرور';
+            if (confirmation != _passwordController.text.trim()) {
               return 'كلمة المرور وتأكيدها غير متطابقين';
             }
             return null;
@@ -271,8 +272,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       await _apiService.confirmPasswordReset(
         email: _emailController.text.trim(),
         code: _codeController.text.trim(),
-        password: _passwordController.text,
-        passwordConfirm: _confirmController.text,
+        password: _passwordController.text.trim(),
+        passwordConfirm: _confirmController.text.trim(),
       );
       if (!mounted) return;
       setState(() => _isLoading = false);

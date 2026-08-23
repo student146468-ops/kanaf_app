@@ -1286,6 +1286,24 @@ class PasswordResetApiTests(BrevoEmailMockMixin, APITestCase):
         self.assertEqual(old.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertEqual(new.status_code, status.HTTP_200_OK)
 
+    def test_reset_and_login_trim_hidden_password_whitespace(self):
+        self._request_code()
+        code = self._latest_code()
+
+        response = self._confirm(code, password=f'  {self.NEW_PASSWORD}\n')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password(self.NEW_PASSWORD))
+        self.assertFalse(self.user.check_password(f'  {self.NEW_PASSWORD}\n'))
+
+        login = self.client.post(
+            reverse('token_obtain_pair'),
+            {'email': f' {self.user.email.upper()} ', 'password': f'\t{self.NEW_PASSWORD} '},
+            format='json',
+        )
+        self.assertEqual(login.status_code, status.HTTP_200_OK)
+
     def test_code_cannot_be_reused(self):
         self._request_code()
         code = self._latest_code()

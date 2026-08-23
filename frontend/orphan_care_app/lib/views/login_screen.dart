@@ -223,7 +223,7 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       final response = await _apiService.login(
         _emailController.text.trim(),
-        _passwordController.text,
+        _passwordController.text.trim(),
       );
       if (!mounted) return;
       setState(() => _isLoading = false);

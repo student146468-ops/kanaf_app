@@ -87,6 +87,10 @@ def _is_valid_registration_password(password):
     )
 
 
+def _normalize_password_input(value):
+    return str(value or '').strip()
+
+
 def _mask_email(email):
     email = str(email or '')
     if '@' not in email:
@@ -611,8 +615,8 @@ class RegisterView(APIView):
     def post(self, request):
         username = request.data.get('username', '').strip()
         email = request.data.get('email', '').strip().lower()
-        password = request.data.get('password', '')
-        password_confirm = request.data.get('password_confirm', '')
+        password = _normalize_password_input(request.data.get('password'))
+        password_confirm = _normalize_password_input(request.data.get('password_confirm'))
         first_name = request.data.get('first_name', '').strip()
         last_name = request.data.get('last_name', '').strip()
         phone_number = request.data.get('phone_number', '')
@@ -848,7 +852,7 @@ class LoginView(APIView):
     )
     def post(self, request):
         username_or_email = (request.data.get('username') or request.data.get('email') or '').strip()
-        password = request.data.get('password', '')
+        password = _normalize_password_input(request.data.get('password'))
 
         if not username_or_email or not password:
             return Response({'detail': _('username/email and password are required')}, status=status.HTTP_400_BAD_REQUEST)
@@ -929,9 +933,9 @@ class ChangePasswordView(APIView):
     )
     def post(self, request):
         user = request.user
-        current_password = request.data.get('current_password') or ''
-        new_password = request.data.get('new_password') or ''
-        new_password_confirm = request.data.get('new_password_confirm') or ''
+        current_password = _normalize_password_input(request.data.get('current_password'))
+        new_password = _normalize_password_input(request.data.get('new_password'))
+        new_password_confirm = _normalize_password_input(request.data.get('new_password_confirm'))
 
         errors = {}
         if not current_password:
@@ -1127,8 +1131,8 @@ class PasswordResetConfirmView(APIView):
     def post(self, request):
         email = (request.data.get('email') or '').strip()
         code = (request.data.get('code') or '').strip()
-        password = request.data.get('password') or ''
-        password_confirm = request.data.get('password_confirm') or ''
+        password = _normalize_password_input(request.data.get('password'))
+        password_confirm = _normalize_password_input(request.data.get('password_confirm'))
 
         errors = {}
         if not email:
@@ -1161,6 +1165,7 @@ class PasswordResetConfirmView(APIView):
 
         user.set_password(password)
         user.save(update_fields=['password'])
+        _revoke_other_sessions(user)
         logger.info('Password reset completed for user id=%s', user.id)
 
         return Response(
