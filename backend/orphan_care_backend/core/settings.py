@@ -221,6 +221,11 @@ EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 EMAIL_USE_TLS = config_bool('EMAIL_USE_TLS', default=True)
 EMAIL_TIMEOUT = int(config('EMAIL_TIMEOUT', default='10'))
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='no-reply@kanaf.app')
+BREVO_API_KEY = config('BREVO_API_KEY', default='')
+BREVO_API_URL = config('BREVO_API_URL', default='https://api.brevo.com/v3/smtp/email')
+BREVO_SENDER_EMAIL = config('BREVO_SENDER_EMAIL', default=DEFAULT_FROM_EMAIL)
+BREVO_SENDER_NAME = config('BREVO_SENDER_NAME', default='Kanaf')
+BREVO_TIMEOUT = int(config('BREVO_TIMEOUT', default='15'))
 
 # ============ إعدادات SMS / OTP ============
 # للتطوير والاختبارات: development يطبع OTP في اللوج ولا يرسل SMS حقيقياً.

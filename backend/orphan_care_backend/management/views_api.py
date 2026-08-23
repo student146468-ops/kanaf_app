@@ -1,12 +1,13 @@
 """Active REST API views for the Kanaf backend."""
+from email.utils import parseaddr
 import hashlib
 import logging
 import re
 import secrets
 
+import requests
 from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model
-from django.core.mail import send_mail
 from django.db import IntegrityError, connection
 from django.db.models import Count, F, Q, Sum
 from django.db.models.deletion import ProtectedError
@@ -65,6 +66,10 @@ PHONE_VALIDATION_MESSAGE = 'رقم الهاتف يجب أن يتكون من 10 �
 PASSWORD_VALIDATION_MESSAGE = 'كلمة المرور ضعيفة. يجب أن تتكون من 8 خانات على الأقل وتحتوي على حروف وأرقام.'
 
 
+class BrevoEmailDeliveryError(RuntimeError):
+    """Raised when Brevo cannot accept a transactional email request."""
+
+
 def _is_valid_phone_number(phone_number):
     if not isinstance(phone_number, str):
         return False
@@ -79,6 +84,94 @@ def _is_valid_registration_password(password):
         and re.search(r'[A-Za-z]', password)
         and re.search(r'[0-9]', password)
     )
+
+
+def _mask_email(email):
+    email = str(email or '')
+    if '@' not in email:
+        return '***'
+    local, domain = email.split('@', 1)
+    if len(local) <= 2:
+        local = f'{local[:1]}***'
+    else:
+        local = f'{local[:2]}***{local[-1:]}'
+    return f'{local}@{domain}'
+
+
+def _brevo_sender_email():
+    configured = getattr(settings, 'BREVO_SENDER_EMAIL', '') or settings.DEFAULT_FROM_EMAIL
+    _, parsed_email = parseaddr(configured)
+    return parsed_email or configured
+
+
+def _send_brevo_email(*, subject, text_content, recipient_email, recipient_name=''):
+    api_key = getattr(settings, 'BREVO_API_KEY', '')
+    if not api_key:
+        raise BrevoEmailDeliveryError('BREVO_API_KEY is not configured.')
+
+    recipient = {'email': recipient_email}
+    if recipient_name:
+        recipient['name'] = recipient_name
+
+    payload = {
+        'sender': {
+            'email': _brevo_sender_email(),
+            'name': getattr(settings, 'BREVO_SENDER_NAME', 'Kanaf'),
+        },
+        'to': [recipient],
+        'subject': subject,
+        'textContent': text_content,
+    }
+    headers = {
+        'accept': 'application/json',
+        'api-key': api_key,
+        'content-type': 'application/json',
+    }
+
+    response = None
+    try:
+        response = requests.post(
+            getattr(settings, 'BREVO_API_URL', 'https://api.brevo.com/v3/smtp/email'),
+            headers=headers,
+            json=payload,
+            timeout=getattr(settings, 'BREVO_TIMEOUT', 15),
+        )
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as exc:
+        response = exc.response or response
+        response_body = str(getattr(response, 'text', ''))[:1000] if response is not None else ''
+        logger.error(
+            'Brevo email rejected recipient=%s status=%s body=%s',
+            _mask_email(recipient_email),
+            getattr(response, 'status_code', 'unknown') if response is not None else 'unknown',
+            response_body,
+        )
+        raise BrevoEmailDeliveryError('Brevo rejected the email request.') from exc
+    except requests.exceptions.RequestException as exc:
+        logger.exception(
+            'Brevo email request failed recipient=%s error=%s',
+            _mask_email(recipient_email),
+            exc,
+        )
+        raise BrevoEmailDeliveryError('Could not reach Brevo email API.') from exc
+
+    message_id = ''
+    try:
+        message_id = str(response.json().get('messageId') or '')
+    except ValueError:
+        logger.warning(
+            'Brevo email accepted but returned non-JSON response recipient=%s status=%s',
+            _mask_email(recipient_email),
+            response.status_code,
+        )
+
+    logger.info(
+        'Brevo email accepted recipient=%s status=%s message_id=%s',
+        _mask_email(recipient_email),
+        response.status_code,
+        message_id,
+    )
+    return message_id
 
 
 def _without_verification_data(queryset):
@@ -140,12 +233,11 @@ def _send_password_reset_email(user, code):
         'فريق كَنَفْ'
     )
     try:
-        send_mail(
+        _send_brevo_email(
             subject=subject,
-            message=body,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[user.email],
-            fail_silently=False,
+            text_content=body,
+            recipient_email=user.email,
+            recipient_name=user.get_full_name() or user.username,
         )
     except Exception:
         # فشل الإرسال لا يجوز أن يسرّب للمستخدم أن البريد مسجّل، ولا أن
@@ -945,17 +1037,16 @@ def _notify_email_changed(user, previous_email):
     if not previous_email:
         return
     try:
-        send_mail(
+        _send_brevo_email(
             subject='تم تغيير البريد الإلكتروني - كَنَفْ',
-            message=(
+            text_content=(
                 f'مرحباً {user.get_full_name() or user.username},\n\n'
                 f'تم تغيير البريد الإلكتروني لحسابك إلى: {user.email}\n\n'
                 'إن لم تكن أنت من أجرى هذا التغيير فتواصل مع الإدارة فوراً.\n\n'
                 'فريق كَنَفْ'
             ),
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[previous_email],
-            fail_silently=False,
+            recipient_email=previous_email,
+            recipient_name=user.get_full_name() or user.username,
         )
     except Exception:
         logger.exception('Failed to notify previous email for user id=%s', user.id)

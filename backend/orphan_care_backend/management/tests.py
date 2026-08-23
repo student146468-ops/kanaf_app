@@ -1,9 +1,8 @@
 import re
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from django.contrib.auth import get_user_model
 from django.conf import settings
-from django.core import mail
 from django.core.cache import cache
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
@@ -29,6 +28,34 @@ from management.models import (
 )
 
 User = get_user_model()
+
+
+def _successful_brevo_response():
+    response = Mock()
+    response.status_code = 201
+    response.text = '{"messageId":"test-message-id"}'
+    response.json.return_value = {'messageId': 'test-message-id'}
+    response.raise_for_status.return_value = None
+    return response
+
+
+class BrevoEmailMockMixin:
+    def start_brevo_email_mock(self):
+        self.sent_brevo_emails = []
+        self.brevo_post_patcher = patch('management.views_api.requests.post')
+        self.mock_brevo_post = self.brevo_post_patcher.start()
+        self.addCleanup(self.brevo_post_patcher.stop)
+
+        def capture_brevo_email(*args, **kwargs):
+            self.sent_brevo_emails.append({
+                'url': args[0] if args else '',
+                'headers': kwargs.get('headers') or {},
+                'json': kwargs.get('json') or {},
+                'timeout': kwargs.get('timeout'),
+            })
+            return _successful_brevo_response()
+
+        self.mock_brevo_post.side_effect = capture_brevo_email
 
 
 @override_settings(STORAGES={
@@ -72,6 +99,7 @@ class ManagementWebRoutingTests(TestCase):
         self.assertContains(response, 'منظومة كنف')
 
 
+@override_settings(DEBUG=True, SMS_BACKEND='development')
 class AuthApiTests(APITestCase):
     def test_health_endpoint_reports_database(self):
         response = self.client.get(reverse('health'))
@@ -1128,7 +1156,12 @@ class ManagementModelTests(TestCase):
         self.assertEqual(volunteer.points, 10)
 
 
-class PasswordResetApiTests(APITestCase):
+@override_settings(
+    BREVO_API_KEY='test-brevo-key',
+    BREVO_SENDER_EMAIL='no-reply@example.com',
+    BREVO_SENDER_NAME='Kanaf',
+)
+class PasswordResetApiTests(BrevoEmailMockMixin, APITestCase):
     """اختبارات مسار استعادة كلمة المرور.
 
     المسار كان واجهة وهمية بالكامل في التطبيق (تأخير 1.5 ثانية ثم رسالة
@@ -1143,7 +1176,7 @@ class PasswordResetApiTests(APITestCase):
         # تفريغ ذاكرة الحدّ (throttle) بين الاختبارات، وإلا تراكمت
         # الطلبات في LocMemCache وفشلت الاختبارات المتأخرة بـ 429.
         cache.clear()
-        mail.outbox = []
+        self.start_brevo_email_mock()
         self.user = User.objects.create_user(
             username='reset@example.com',
             email='reset@example.com',
@@ -1176,8 +1209,9 @@ class PasswordResetApiTests(APITestCase):
         الرمز مخزّن كبصمة فقط، فقراءته من البريد هي الطريقة الوحيدة،
         وهذا نفسه يتحقق من أن الإرسال يحدث فعلاً.
         """
-        self.assertEqual(len(mail.outbox), 1, 'لم تُرسل رسالة استعادة')
-        match = re.search(r'\b(\d{6})\b', mail.outbox[0].body)
+        self.assertEqual(len(self.sent_brevo_emails), 1, 'لم تُرسل رسالة استعادة')
+        text_content = self.sent_brevo_emails[-1]['json'].get('textContent', '')
+        match = re.search(r'\b(\d{6})\b', text_content)
         self.assertIsNotNone(match, 'الرسالة لا تحتوي رمزاً من 6 أرقام')
         return match.group(1)
 
@@ -1187,7 +1221,10 @@ class PasswordResetApiTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         code = self._latest_code()
         self.assertEqual(len(code), 6)
-        self.assertEqual(mail.outbox[0].to, [self.user.email])
+        self.assertEqual(
+            self.sent_brevo_emails[-1]['json']['to'][0]['email'],
+            self.user.email,
+        )
         self.assertEqual(
             PasswordResetCode.objects.filter(user=self.user).count(), 1
         )
@@ -1204,13 +1241,13 @@ class PasswordResetApiTests(APITestCase):
     def test_unknown_email_returns_same_generic_response(self):
         known = self._request_code()
         cache.clear()
-        mail.outbox = []
+        self.sent_brevo_emails = []
         unknown = self._request_code(email='nobody@example.com')
 
         # تطابق الاستجابتين يمنع جرد الحسابات (account enumeration).
         self.assertEqual(unknown.status_code, status.HTTP_200_OK)
         self.assertEqual(unknown.json(), known.json())
-        self.assertEqual(len(mail.outbox), 0)
+        self.assertEqual(len(self.sent_brevo_emails), 0)
 
     def test_confirm_with_valid_code_changes_password(self):
         self._request_code()
@@ -1297,7 +1334,7 @@ class PasswordResetApiTests(APITestCase):
         first_code = self._latest_code()
 
         cache.clear()
-        mail.outbox = []
+        self.sent_brevo_emails = []
         self._request_code()
         second_code = self._latest_code()
         self.assertNotEqual(first_code, second_code)
@@ -1345,7 +1382,12 @@ class PasswordResetApiTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
-class AccountSecurityApiTests(APITestCase):
+@override_settings(
+    BREVO_API_KEY='test-brevo-key',
+    BREVO_SENDER_EMAIL='no-reply@example.com',
+    BREVO_SENDER_NAME='Kanaf',
+)
+class AccountSecurityApiTests(BrevoEmailMockMixin, APITestCase):
     """تغيير كلمة المرور والبريد من داخل الحساب.
 
     كانت شاشة تغيير كلمة المرور تحمل `TODO: Connect password update to
@@ -1358,7 +1400,7 @@ class AccountSecurityApiTests(APITestCase):
 
     def setUp(self):
         cache.clear()
-        mail.outbox = []
+        self.start_brevo_email_mock()
         self.user = User.objects.create_user(
             username='owner@example.com',
             email='owner@example.com',
@@ -1475,8 +1517,11 @@ class AccountSecurityApiTests(APITestCase):
     def test_change_email_notifies_previous_address(self):
         self._change_email('fresh@example.com')
 
-        self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].to, ['owner@example.com'])
+        self.assertEqual(len(self.sent_brevo_emails), 1)
+        self.assertEqual(
+            self.sent_brevo_emails[0]['json']['to'][0]['email'],
+            'owner@example.com',
+        )
 
     def test_change_email_requires_current_password(self):
         response = self._change_email('fresh@example.com', current='WrongPass999')
