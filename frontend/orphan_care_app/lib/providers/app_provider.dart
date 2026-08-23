@@ -4,6 +4,7 @@ import '../models/donation_model.dart';
 import '../models/donation_request.dart';
 import '../models/need_model.dart';
 import '../models/orphan_model.dart';
+import '../models/volunteer_opportunity_model.dart';
 import '../models/volunteer_model.dart';
 import '../services/api_failure.dart';
 import '../services/api_service.dart';
@@ -52,6 +53,10 @@ class AppProvider extends ChangeNotifier {
   List<NeedModel> get needs => _needs;
   List<Map<String, dynamic>> get volunteerOpportunities =>
       _volunteerOpportunities;
+  List<VolunteerOpportunityModel> get volunteerOpportunityModels =>
+      _volunteerOpportunities
+          .map(VolunteerOpportunityModel.fromJson)
+          .toList(growable: false);
   List<Map<String, dynamic>> get volunteerApplications =>
       _volunteerApplications;
   List<Map<String, dynamic>> get careHomes => _careHomes;
@@ -112,6 +117,7 @@ class AppProvider extends ChangeNotifier {
       ));
       _donations.insert(0, created);
       _myDonations.insert(0, created);
+      await fetchNeeds(notifyLoading: false);
       return created;
     });
   }
@@ -182,6 +188,7 @@ class AppProvider extends ChangeNotifier {
     return _save(() async {
       await _apiService.applyToVolunteerOpportunity(opportunityId, data);
       await fetchVolunteerOpportunities(notifyLoading: false);
+      await fetchVolunteerApplications(notifyLoading: false);
     });
   }
 

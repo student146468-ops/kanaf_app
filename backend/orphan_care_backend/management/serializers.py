@@ -1,3 +1,4 @@
+import re
 from decimal import Decimal, InvalidOperation
 
 from rest_framework import serializers
@@ -20,6 +21,16 @@ from .models import (
 # حد أعلى للتبرع الواحد. ليس سقفاً على كرم المتبرع، بل حاجز ضد
 # القيم الخاطئة (خطأ إدخال أو تلاعب). مطابق لـ _maxDonationAmount في التطبيق.
 MAX_DONATION_AMOUNT = Decimal('1000000')
+
+
+def _decimal_from_text(value):
+    match = re.search(r'\d+(?:\.\d+)?', str(value or '').replace(',', ''))
+    if not match:
+        return None
+    try:
+        return Decimal(match.group(0))
+    except InvalidOperation:
+        return None
 
 
 def _validate_required_text(value, field_name):
@@ -166,6 +177,11 @@ class InventorySerializer(serializers.ModelSerializer):
 
 
 class NeedSerializer(serializers.ModelSerializer):
+    care_home_name = serializers.CharField(source='care_home.name', read_only=True)
+    care_home_location = serializers.CharField(source='care_home.address', read_only=True)
+    progress_percent = serializers.SerializerMethodField()
+    remaining_quantity = serializers.SerializerMethodField()
+
     class Meta:
         model = Need
         fields = '__all__'
@@ -178,6 +194,20 @@ class NeedSerializer(serializers.ModelSerializer):
         if value is None or value < 0:
             raise serializers.ValidationError('fulfilled_quantity must be zero or greater.')
         return value
+
+    def get_progress_percent(self, obj) -> int | None:
+        target = _decimal_from_text(obj.required_quantity)
+        if target is None or target <= 0:
+            return None
+        progress = (Decimal(obj.fulfilled_quantity) / target) * Decimal('100')
+        return int(min(progress, Decimal('100')).quantize(Decimal('1')))
+
+    def get_remaining_quantity(self, obj) -> float | None:
+        target = _decimal_from_text(obj.required_quantity)
+        if target is None:
+            return None
+        remaining = max(target - Decimal(obj.fulfilled_quantity), Decimal('0'))
+        return float(remaining)
 
 
 class SponsorSerializer(serializers.ModelSerializer):
@@ -204,6 +234,10 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
 class VolunteerOpportunitySerializer(serializers.ModelSerializer):
     applications_count = serializers.SerializerMethodField()
+    care_home_name = serializers.CharField(source='care_home.name', read_only=True)
+    care_home_location = serializers.CharField(source='care_home.address', read_only=True)
+    capacity_percent = serializers.SerializerMethodField()
+    remaining_slots = serializers.SerializerMethodField()
 
     class Meta:
         model = VolunteerOpportunity
@@ -225,6 +259,15 @@ class VolunteerOpportunitySerializer(serializers.ModelSerializer):
 
     def get_applications_count(self, obj) -> int:
         return obj.applications.count()
+
+    def get_capacity_percent(self, obj) -> int:
+        if not obj.required_volunteers:
+            return 0
+        progress = (obj.current_volunteers / obj.required_volunteers) * 100
+        return int(min(progress, 100))
+
+    def get_remaining_slots(self, obj) -> int:
+        return max(obj.required_volunteers - obj.current_volunteers, 0)
 
 
 class VolunteerApplicationSerializer(serializers.ModelSerializer):

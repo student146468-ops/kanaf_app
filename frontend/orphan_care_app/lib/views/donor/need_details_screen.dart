@@ -78,8 +78,9 @@ class _NeedDetailsScreenState extends State<NeedDetailsScreen> {
             isEmpty: !isReady,
             errorMessage: provider.errorMessage,
             errorKind: provider.errorKind,
-            onRetry:
-                _needId == null ? null : () => provider.fetchNeedDetails(_needId!),
+            onRetry: _needId == null
+                ? null
+                : () => provider.fetchNeedDetails(_needId!),
             emptyIcon: Icons.search_off_rounded,
             emptyTitle: 'تعذر العثور على الاحتياج',
             emptyMessage: 'قد يكون اكتمل أو أُرشف من قِبل الدار.',
@@ -264,6 +265,13 @@ class _ProgressCard extends StatelessWidget {
                   value: _number(need.fulfilledQuantity),
                 ),
               ),
+              if (need.remainingQuantity != null)
+                Expanded(
+                  child: _Figure(
+                    label: 'المتبقي',
+                    value: _number(need.remainingQuantity!),
+                  ),
+                ),
             ],
           ),
         ],
@@ -328,6 +336,10 @@ class _FactsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final rows = <Widget>[
+      if ((need.careHomeName ?? '').isNotEmpty)
+        KanafDetailRow(label: 'دار الرعاية', value: need.careHomeName!),
+      if ((need.careHomeLocation ?? '').isNotEmpty)
+        KanafDetailRow(label: 'الموقع', value: need.careHomeLocation!),
       KanafDetailRow(label: 'الأولوية', value: need.priorityLabel),
       KanafDetailRow(label: 'التصنيف', value: need.categoryLabel),
       if (need.needType.isNotEmpty)

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../models/volunteer_opportunity_model.dart';
 import '../../providers/app_provider_scope.dart';
 import '../../router/kanaf_router.dart';
 import '../../theme/kanaf_motion.dart';
@@ -8,18 +9,6 @@ import '../../theme/kanaf_tokens.dart';
 import '../../widgets/kanaf_layout.dart';
 import '../../widgets/kanaf_states.dart';
 
-/// البحث عن فرص التطوع.
-///
-/// أُصلح فيها عيبان قاتلان:
-///
-/// 1. `if (_selectedFilter == 'ط§ظ„ظƒظ„')` — سلسلة «الكل» مشوّهة بترميز
-///    خاطئ، فلم تكن تساوي القيمة الابتدائية أبداً. النتيجة أن الشاشة
-///    كانت تسقط إلى فرع التصفية وتبحث عن فرص عنوانها يحوي كلمة
-///    «الكل» حرفياً، فتعرض **صفر نتائج** عند فتحها.
-/// 2. التصنيفات «تعليم/أنشطة/إغاثة» كانت تُطابَق ضد `status` الذي لا
-///    يحمل إلا `open`/`closed`/`completed`. لا يوجد حقل تصنيف في
-///    `VolunteerOpportunity` أصلاً، فاستُبدلت بتصفية حسب الحالة —
-///    وهي المعلومة الموجودة فعلاً.
 class SearchFilterView extends StatefulWidget {
   const SearchFilterView({super.key});
 
@@ -30,8 +19,10 @@ class SearchFilterView extends StatefulWidget {
 class _SearchFilterViewState extends State<SearchFilterView> {
   final _searchController = TextEditingController();
   _OpportunityScope _scope = _OpportunityScope.open;
+  String _category = _allCategory;
   String _query = '';
 
+  static const String _allCategory = 'الكل';
   static final DateFormat _dateFormat = DateFormat('d MMM y', 'ar');
 
   @override
@@ -55,8 +46,8 @@ class _SearchFilterViewState extends State<SearchFilterView> {
   @override
   Widget build(BuildContext context) {
     final provider = AppProviderScope.of(context);
-    final scoped = _scope.apply(provider.volunteerOpportunities);
-    final visible = _applyQuery(scoped);
+    final all = provider.volunteerOpportunityModels;
+    final visible = _applyCategory(_applyQuery(_scope.apply(all)));
 
     return Scaffold(
       appBar: AppBar(
@@ -69,26 +60,26 @@ class _SearchFilterViewState extends State<SearchFilterView> {
           child: Column(
             children: [
               _buildSearchField(),
-              _buildScopes(provider.volunteerOpportunities),
+              _buildScopes(all),
+              _buildCategories(all),
               Expanded(
                 child: RefreshIndicator(
                   onRefresh: provider.fetchVolunteerOpportunities,
                   child: KanafAsyncView(
                     isLoading: provider.isLoading,
                     isEmpty: visible.isEmpty,
-                    errorMessage: provider.volunteerOpportunities.isEmpty
-                        ? provider.errorMessage
-                        : null,
+                    errorMessage: all.isEmpty ? provider.errorMessage : null,
+                    errorKind: provider.errorKind,
                     onRetry: provider.fetchVolunteerOpportunities,
                     emptyIcon: _query.isEmpty
                         ? Icons.handshake_outlined
                         : Icons.search_off_rounded,
                     emptyTitle: _query.isEmpty
                         ? 'لا توجد فرص في هذا التصنيف'
-                        : 'لا نتائج لـ «$_query»',
+                        : 'لا نتائج لـ "$_query"',
                     emptyMessage: _query.isEmpty
                         ? 'ستظهر الفرص هنا فور نشرها من دور الرعاية.'
-                        : 'جرّب كلمة أخرى أو وسّع التصنيف.',
+                        : 'جرب كلمة أخرى أو وسع التصفية.',
                     builder: (context) => ListView.separated(
                       physics: const AlwaysScrollableScrollPhysics(),
                       padding: const EdgeInsets.fromLTRB(
@@ -131,7 +122,7 @@ class _SearchFilterViewState extends State<SearchFilterView> {
         textInputAction: TextInputAction.search,
         onChanged: (value) => setState(() => _query = value.trim()),
         decoration: InputDecoration(
-          hintText: 'ابحث بالعنوان أو المكان',
+          hintText: 'ابحث بالعنوان أو المكان أو المهارة',
           prefixIcon: const Icon(Icons.search_rounded),
           suffixIcon: _query.isEmpty
               ? null
@@ -148,14 +139,14 @@ class _SearchFilterViewState extends State<SearchFilterView> {
     );
   }
 
-  Widget _buildScopes(List<Map<String, dynamic>> all) {
+  Widget _buildScopes(List<VolunteerOpportunityModel> all) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.fromLTRB(
         KanafSpacing.pageInset,
         KanafSpacing.md,
         KanafSpacing.pageInset,
-        KanafSpacing.md,
+        KanafSpacing.sm,
       ),
       child: Row(
         children: [
@@ -173,15 +164,55 @@ class _SearchFilterViewState extends State<SearchFilterView> {
     );
   }
 
-  /// بحث نصي على الحقول التي يرسلها الخادم فعلاً.
-  List<Map<String, dynamic>> _applyQuery(List<Map<String, dynamic>> items) {
+  Widget _buildCategories(List<VolunteerOpportunityModel> all) {
+    final categories = <String>{
+      _allCategory,
+      ...all.map((item) => item.categoryLabel),
+    }.toList();
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.fromLTRB(
+        KanafSpacing.pageInset,
+        0,
+        KanafSpacing.pageInset,
+        KanafSpacing.md,
+      ),
+      child: Row(
+        children: [
+          for (final category in categories)
+            Padding(
+              padding: const EdgeInsetsDirectional.only(end: KanafSpacing.sm),
+              child: ChoiceChip(
+                label: Text(category),
+                selected: _category == category,
+                onSelected: (_) => setState(() => _category = category),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  List<VolunteerOpportunityModel> _applyQuery(
+    List<VolunteerOpportunityModel> items,
+  ) {
     if (_query.isEmpty) return items;
     final needle = _query.toLowerCase();
     return items.where((item) {
-      bool has(String key) =>
-          (item[key]?.toString().toLowerCase() ?? '').contains(needle);
-      return has('title') || has('description') || has('location');
+      return item.title.toLowerCase().contains(needle) ||
+          item.description.toLowerCase().contains(needle) ||
+          item.location.toLowerCase().contains(needle) ||
+          item.requiredSkills.toLowerCase().contains(needle) ||
+          (item.careHomeName ?? '').toLowerCase().contains(needle);
     }).toList();
+  }
+
+  List<VolunteerOpportunityModel> _applyCategory(
+    List<VolunteerOpportunityModel> items,
+  ) {
+    if (_category == _allCategory) return items;
+    return items.where((item) => item.categoryLabel == _category).toList();
   }
 }
 
@@ -194,13 +225,13 @@ enum _OpportunityScope {
 
   final String label;
 
-  List<Map<String, dynamic>> apply(List<Map<String, dynamic>> items) {
+  List<VolunteerOpportunityModel> apply(List<VolunteerOpportunityModel> items) {
     return switch (this) {
       _OpportunityScope.all => items,
       _OpportunityScope.open =>
-        items.where((o) => o['status'] == 'open').toList(),
+        items.where((opportunity) => opportunity.status == 'open').toList(),
       _OpportunityScope.closed =>
-        items.where((o) => o['status'] != 'open').toList(),
+        items.where((opportunity) => opportunity.status != 'open').toList(),
     };
   }
 }
@@ -208,29 +239,20 @@ enum _OpportunityScope {
 class _ResultCard extends StatelessWidget {
   const _ResultCard({required this.data, required this.dateFormat});
 
-  final Map<String, dynamic> data;
+  final VolunteerOpportunityModel data;
   final DateFormat dateFormat;
 
   @override
   Widget build(BuildContext context) {
     final scheme = context.colors;
-    final title = data['title']?.toString() ?? 'فرصة تطوع';
-    final location = data['location']?.toString() ?? '';
-    final status = data['status']?.toString() ?? 'open';
-    final start = DateTime.tryParse(data['start_date']?.toString() ?? '');
-    final required = int.tryParse(
-          data['required_volunteers']?.toString() ?? '',
-        ) ??
-        0;
-    final current =
-        int.tryParse(data['current_volunteers']?.toString() ?? '') ?? 0;
-    final remaining = (required - current).clamp(0, required);
+    final dateText =
+        data.startDate == null ? null : dateFormat.format(data.startDate!);
 
     return KanafCard(
       onTap: () => Navigator.pushNamed(
         context,
         KanafRoutes.volunteerOpportunityDetails,
-        arguments: data,
+        arguments: data.toRouteArguments(),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -245,67 +267,100 @@ class _ResultCard extends StatelessWidget {
                   color: scheme.primary.withOpacity(0.12),
                   borderRadius: KanafRadii.sm,
                 ),
-                child: Icon(
-                  Icons.handshake_outlined,
-                  size: 22,
-                  color: scheme.primary,
-                ),
+                child: Icon(data.icon, size: 22, color: scheme.primary),
               ),
               const SizedBox(width: KanafSpacing.md),
               Expanded(
-                child: Text(
-                  title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: context.texts.titleSmall,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      data.title.isEmpty ? 'فرصة تطوع' : data.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.texts.titleSmall,
+                    ),
+                    const SizedBox(height: KanafSpacing.xxs),
+                    Text(data.categoryLabel, style: context.texts.bodySmall),
+                  ],
                 ),
               ),
               const SizedBox(width: KanafSpacing.sm),
-              KanafStatusChip(status: status, compact: true),
+              KanafStatusChip(status: data.status, compact: true),
             ],
           ),
           const SizedBox(height: KanafSpacing.md),
-          Row(
+          Wrap(
+            spacing: KanafSpacing.xs,
+            runSpacing: KanafSpacing.xs,
             children: [
-              if (location.isNotEmpty) ...[
-                Icon(
-                  Icons.location_on_outlined,
-                  size: 15,
-                  color: scheme.onSurfaceVariant,
+              if (data.location.isNotEmpty)
+                _MetaChip(
+                  icon: Icons.location_on_outlined,
+                  label: data.location,
                 ),
-                const SizedBox(width: KanafSpacing.xs),
-                Flexible(
-                  child: Text(
-                    location,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.texts.labelSmall,
-                  ),
+              if (dateText != null)
+                _MetaChip(icon: Icons.event_outlined, label: dateText),
+              if ((data.careHomeName ?? '').isNotEmpty)
+                _MetaChip(
+                  icon: Icons.home_work_outlined,
+                  label: data.careHomeName!,
                 ),
-                const SizedBox(width: KanafSpacing.md),
-              ],
-              if (start != null) ...[
-                Icon(
-                  Icons.event_outlined,
-                  size: 15,
-                  color: scheme.onSurfaceVariant,
-                ),
-                const SizedBox(width: KanafSpacing.xs),
-                Text(
-                  dateFormat.format(start),
-                  style: context.texts.labelSmall,
-                ),
-              ],
-              const Spacer(),
-              if (required > 0)
-                Text(
-                  remaining == 0 ? 'مكتملة' : 'متبقٍ $remaining',
-                  style: context.texts.labelSmall?.copyWith(
-                    color: remaining == 0 ? scheme.error : scheme.primary,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+              _MetaChip(
+                icon: Icons.groups_outlined,
+                label: data.effectiveRemainingSlots == 0
+                    ? 'اكتمل العدد'
+                    : 'متبقي ${data.effectiveRemainingSlots}',
+              ),
             ],
+          ),
+          if (data.requiredVolunteers > 0) ...[
+            const SizedBox(height: KanafSpacing.md),
+            ClipRRect(
+              borderRadius: KanafRadii.pill,
+              child: LinearProgressIndicator(
+                value: data.capacityRatio,
+                minHeight: 6,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _MetaChip extends StatelessWidget {
+  const _MetaChip({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colors;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: KanafSpacing.sm,
+        vertical: KanafSpacing.xs,
+      ),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withOpacity(0.62),
+        borderRadius: KanafRadii.pill,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: scheme.primary),
+          const SizedBox(width: KanafSpacing.xxs),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 180),
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: context.texts.labelSmall,
+            ),
           ),
         ],
       ),

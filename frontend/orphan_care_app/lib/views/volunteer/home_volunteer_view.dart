@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../models/volunteer_opportunity_model.dart';
 import '../../providers/app_provider_scope.dart';
 import '../../router/kanaf_router.dart';
 import '../../theme/kanaf_motion.dart';
@@ -9,12 +10,6 @@ import '../../widgets/kanaf_layout.dart';
 import '../../widgets/kanaf_nav_shell.dart';
 import '../../widgets/kanaf_states.dart';
 
-/// رئيسية المتطوع — فرص التطوع المتاحة.
-///
-/// أُعيد بناؤها على Material 3 مع `NavigationBar`. البطاقة تعرض الآن
-/// **مدى امتلاء الفرصة** (`current_volunteers` من `required_volunteers`)
-/// وهي بيانات يرسلها الخادم ولم تكن الواجهة تعرضها إطلاقاً — فلم يكن
-/// المتطوع يعرف إن كانت الفرصة على وشك الاكتمال قبل أن يتقدّم لها.
 class HomeVolunteerView extends StatefulWidget {
   const HomeVolunteerView({super.key});
 
@@ -43,7 +38,7 @@ class _HomeVolunteerViewState extends State<HomeVolunteerView> {
   @override
   Widget build(BuildContext context) {
     final provider = AppProviderScope.of(context);
-    final all = provider.volunteerOpportunities;
+    final all = provider.volunteerOpportunityModels;
     final visible = _filter.apply(all);
 
     return Scaffold(
@@ -59,7 +54,7 @@ class _HomeVolunteerViewState extends State<HomeVolunteerView> {
           ),
           KanafNotificationButton(
             unreadCount: provider.notifications
-                .where((n) => n['is_read'] != true)
+                .where((notification) => notification['is_read'] != true)
                 .length,
             route: KanafRoutes.volunteerNotifications,
           ),
@@ -93,7 +88,7 @@ class _HomeVolunteerViewState extends State<HomeVolunteerView> {
                         : 'لا نتائج لهذا التصنيف',
                     emptyMessage: all.isEmpty
                         ? 'ستظهر هنا الفرص فور نشرها من دور الرعاية.'
-                        : 'جرّب تصنيفاً آخر لعرض بقية الفرص.',
+                        : 'جرب تصنيفاً آخر لعرض بقية الفرص.',
                     builder: (context) => ListView.separated(
                       physics: const AlwaysScrollableScrollPhysics(),
                       padding: const EdgeInsets.fromLTRB(
@@ -123,7 +118,7 @@ class _HomeVolunteerViewState extends State<HomeVolunteerView> {
     );
   }
 
-  Widget _buildFilters(List<Map<String, dynamic>> all) {
+  Widget _buildFilters(List<VolunteerOpportunityModel> all) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.fromLTRB(
@@ -158,13 +153,13 @@ enum _OpportunityFilter {
 
   final String label;
 
-  List<Map<String, dynamic>> apply(List<Map<String, dynamic>> items) {
+  List<VolunteerOpportunityModel> apply(List<VolunteerOpportunityModel> items) {
     return switch (this) {
       _OpportunityFilter.all => items,
       _OpportunityFilter.open =>
-        items.where((o) => o['status'] == 'open').toList(),
+        items.where((opportunity) => opportunity.status == 'open').toList(),
       _OpportunityFilter.closed =>
-        items.where((o) => o['status'] != 'open').toList(),
+        items.where((opportunity) => opportunity.status != 'open').toList(),
     };
   }
 }
@@ -172,26 +167,21 @@ enum _OpportunityFilter {
 class _OpportunityCard extends StatelessWidget {
   const _OpportunityCard({required this.data, required this.dateFormat});
 
-  final Map<String, dynamic> data;
+  final VolunteerOpportunityModel data;
   final DateFormat dateFormat;
 
   @override
   Widget build(BuildContext context) {
     final scheme = context.colors;
-    final title = data['title']?.toString() ?? 'فرصة تطوع';
-    final description = data['description']?.toString() ?? '';
-    final location = data['location']?.toString() ?? '';
-    final status = data['status']?.toString() ?? 'open';
-    final required = _intOf(data['required_volunteers']) ?? 0;
-    final current = _intOf(data['current_volunteers']) ?? 0;
-    final startDate = DateTime.tryParse(data['start_date']?.toString() ?? '');
-    final isFull = required > 0 && current >= required;
+    final title = data.title.isEmpty ? 'فرصة تطوع' : data.title;
+    final dateText =
+        data.startDate == null ? null : dateFormat.format(data.startDate!);
 
     return KanafCard(
       onTap: () => Navigator.pushNamed(
         context,
         KanafRoutes.volunteerOpportunityDetails,
-        arguments: data,
+        arguments: data.toRouteArguments(),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -206,87 +196,97 @@ class _OpportunityCard extends StatelessWidget {
                   color: scheme.primary.withOpacity(0.12),
                   borderRadius: KanafRadii.sm,
                 ),
-                child: Icon(
-                  Icons.handshake_outlined,
-                  size: 22,
-                  color: scheme.primary,
-                ),
+                child: Icon(data.icon, size: 22, color: scheme.primary),
               ),
               const SizedBox(width: KanafSpacing.md),
               Expanded(
-                child: Text(
-                  title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: context.texts.titleSmall,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.texts.titleSmall,
+                    ),
+                    const SizedBox(height: KanafSpacing.xxs),
+                    Text(data.categoryLabel, style: context.texts.bodySmall),
+                  ],
                 ),
               ),
               const SizedBox(width: KanafSpacing.sm),
-              KanafStatusChip(status: status, compact: true),
+              KanafStatusChip(status: data.status, compact: true),
             ],
           ),
-          if (description.isNotEmpty) ...[
+          if (data.description.isNotEmpty) ...[
             const SizedBox(height: KanafSpacing.md),
             Text(
-              description,
+              data.description,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: context.texts.bodySmall,
             ),
           ],
           const SizedBox(height: KanafSpacing.md),
-          Row(
+          Wrap(
+            spacing: KanafSpacing.xs,
+            runSpacing: KanafSpacing.xs,
             children: [
-              if (location.isNotEmpty) ...[
-                Icon(
-                  Icons.location_on_outlined,
-                  size: 15,
-                  color: scheme.onSurfaceVariant,
+              if ((data.careHomeName ?? '').isNotEmpty)
+                _OpportunityMetaChip(
+                  icon: Icons.home_work_outlined,
+                  label: data.careHomeName!,
                 ),
-                const SizedBox(width: KanafSpacing.xs),
-                Flexible(
-                  child: Text(
-                    location,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.texts.labelSmall,
-                  ),
+              if (data.location.isNotEmpty)
+                _OpportunityMetaChip(
+                  icon: Icons.location_on_outlined,
+                  label: data.location,
                 ),
-                const SizedBox(width: KanafSpacing.md),
-              ],
-              if (startDate != null) ...[
-                Icon(
-                  Icons.event_outlined,
-                  size: 15,
-                  color: scheme.onSurfaceVariant,
+              if (dateText != null)
+                _OpportunityMetaChip(
+                  icon: Icons.event_outlined,
+                  label: dateText,
                 ),
-                const SizedBox(width: KanafSpacing.xs),
-                Text(
-                  dateFormat.format(startDate),
-                  style: context.texts.labelSmall,
-                ),
-              ],
             ],
           ),
-          if (required > 0) ...[
+          if (data.skills.isNotEmpty) ...[
+            const SizedBox(height: KanafSpacing.md),
+            Wrap(
+              spacing: KanafSpacing.xs,
+              runSpacing: KanafSpacing.xs,
+              children: [
+                for (final skill in data.skills.take(3))
+                  Chip(
+                    visualDensity: VisualDensity.compact,
+                    avatar: const Icon(
+                      Icons.workspace_premium_outlined,
+                      size: 16,
+                    ),
+                    label: Text(skill),
+                  ),
+              ],
+            ),
+          ],
+          if (data.requiredVolunteers > 0) ...[
             const Divider(height: KanafSpacing.xxl),
-            // مدى الامتلاء: بيانات يرسلها الخادم ولم تكن تُعرض إطلاقاً.
             Row(
               children: [
                 Expanded(
                   child: ClipRRect(
                     borderRadius: KanafRadii.pill,
                     child: LinearProgressIndicator(
-                      value: (current / required).clamp(0.0, 1.0),
+                      value: data.capacityRatio,
                       minHeight: 6,
                     ),
                   ),
                 ),
                 const SizedBox(width: KanafSpacing.md),
                 Text(
-                  isFull ? 'مكتملة' : '$current من $required',
+                  data.isFull
+                      ? 'مكتملة'
+                      : '${data.currentVolunteers} من ${data.requiredVolunteers}',
                   style: context.texts.labelSmall?.copyWith(
-                    color: isFull ? scheme.error : scheme.onSurfaceVariant,
+                    color: data.isFull ? scheme.error : scheme.onSurfaceVariant,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -297,10 +297,42 @@ class _OpportunityCard extends StatelessWidget {
       ),
     );
   }
+}
 
-  static int? _intOf(dynamic value) {
-    if (value == null) return null;
-    if (value is int) return value;
-    return int.tryParse(value.toString());
+class _OpportunityMetaChip extends StatelessWidget {
+  const _OpportunityMetaChip({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colors;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: KanafSpacing.sm,
+        vertical: KanafSpacing.xs,
+      ),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withOpacity(0.62),
+        borderRadius: KanafRadii.pill,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: scheme.primary),
+          const SizedBox(width: KanafSpacing.xxs),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 190),
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: context.texts.labelSmall,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

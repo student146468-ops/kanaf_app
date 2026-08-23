@@ -14,6 +14,10 @@ class NeedModel {
   final DateTime? deadline;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final String? careHomeName;
+  final String? careHomeLocation;
+  final int? progressPercent;
+  final double? remainingQuantity;
 
   /// معرّف الدار صاحبة الاحتياج — يتيح للمتبرع تصفح احتياجات دار بعينها.
   final int? careHomeId;
@@ -33,6 +37,10 @@ class NeedModel {
     this.createdAt,
     this.updatedAt,
     this.careHomeId,
+    this.careHomeName,
+    this.careHomeLocation,
+    this.progressPercent,
+    this.remainingQuantity,
   });
 
   factory NeedModel.fromJson(Map<String, dynamic> json) {
@@ -51,6 +59,10 @@ class NeedModel {
       createdAt: _asDate(json['created_at']),
       updatedAt: _asDate(json['updated_at']),
       careHomeId: json['care_home'] == null ? null : _asInt(json['care_home']),
+      careHomeName: _asNullableString(json['care_home_name']),
+      careHomeLocation: _asNullableString(json['care_home_location']),
+      progressPercent: _asNullableInt(json['progress_percent']),
+      remainingQuantity: _asNullableDouble(json['remaining_quantity']),
     );
   }
 
@@ -59,6 +71,9 @@ class NeedModel {
   /// `required_quantity` نص حر في الخادم («٥٠ كرتونة»)، فلا يصح
   /// افتراض أنه رقم — ولا عرض شريط تقدّم لا معنى له.
   double? get progress {
+    if (progressPercent != null) {
+      return (progressPercent!.clamp(0, 100) / 100).toDouble();
+    }
     final match =
         RegExp(r'\d+(\.\d+)?').firstMatch(requiredQuantity.replaceAll(',', ''));
     final target = double.tryParse(match?.group(0) ?? '');
@@ -118,9 +133,26 @@ class NeedModel {
     return int.tryParse(value?.toString() ?? '') ?? 0;
   }
 
+  static int? _asNullableInt(dynamic value) {
+    if (value == null || value.toString().isEmpty) return null;
+    if (value is int) return value;
+    return int.tryParse(value.toString());
+  }
+
   static double _asDouble(dynamic value) {
     if (value is num) return value.toDouble();
     return double.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  static double? _asNullableDouble(dynamic value) {
+    if (value == null || value.toString().isEmpty) return null;
+    if (value is num) return value.toDouble();
+    return double.tryParse(value.toString());
+  }
+
+  static String? _asNullableString(dynamic value) {
+    final text = value?.toString().trim();
+    return text == null || text.isEmpty ? null : text;
   }
 
   static DateTime? _asDate(dynamic value) {

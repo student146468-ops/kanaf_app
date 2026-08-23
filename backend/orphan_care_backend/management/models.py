@@ -306,6 +306,7 @@ class VolunteerOpportunity(models.Model):
 
     title = models.CharField(max_length=200, db_index=True)
     description = models.TextField()
+    required_skills = models.CharField(max_length=300, blank=True)
     # الدار المالكة للفرصة. بدونها لا يمكن لمدير الدار تصفية الطلبات
     # الواردة على فرصه هو، وكانت شاشة «إدارة المتطوعين» بلا مصدر بيانات.
     care_home = models.ForeignKey(

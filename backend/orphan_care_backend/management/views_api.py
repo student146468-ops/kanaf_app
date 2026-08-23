@@ -1332,13 +1332,23 @@ class InventoryViewSet(SafeDestroyMixin, viewsets.ModelViewSet):
 
 class NeedViewSet(SafeDestroyMixin, viewsets.ModelViewSet):
     queryset = _without_verification_data(
-        Need.objects.exclude(status=Need.STATUS_ARCHIVED)
+        Need.objects.select_related('care_home').exclude(
+            status=Need.STATUS_ARCHIVED
+        )
     )
     serializer_class = NeedSerializer
     permission_classes = [StaffDeletePermission]
     pagination_class = None
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ['title', 'description', 'category', 'priority', 'status']
+    search_fields = [
+        'title',
+        'description',
+        'category',
+        'priority',
+        'status',
+        'care_home__name',
+        'care_home__address',
+    ]
     ordering_fields = ['id', 'title', 'priority', 'deadline', 'created_at']
     ordering = ['-created_at']
 
@@ -1382,7 +1392,15 @@ class VolunteerOpportunityViewSet(SafeDestroyMixin, viewsets.ModelViewSet):
     protected_delete_detail = 'Cannot delete this volunteer opportunity because it has saved applications.'
     pagination_class = None
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ['title', 'description', 'location', 'status']
+    search_fields = [
+        'title',
+        'description',
+        'required_skills',
+        'location',
+        'status',
+        'care_home__name',
+        'care_home__address',
+    ]
     ordering_fields = ['id', 'title', 'start_date', 'status']
     ordering = ['-start_date', '-created_at']
 

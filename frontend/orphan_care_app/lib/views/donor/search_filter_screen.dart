@@ -31,8 +31,10 @@ class SearchFilterScreen extends StatefulWidget {
 class _SearchFilterScreenState extends State<SearchFilterScreen> {
   final _searchController = TextEditingController();
   _NeedFilter _filter = _NeedFilter.all;
+  String _selectedCategory = _allCategory;
   String _query = '';
 
+  static const String _allCategory = 'الكل';
   static final DateFormat _dateFormat = DateFormat('d MMM y', 'ar');
 
   @override
@@ -57,7 +59,7 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
   Widget build(BuildContext context) {
     final provider = AppProviderScope.of(context);
     final all = provider.needs;
-    final visible = _applyQuery(_filter.apply(all));
+    final visible = _applyCategory(_applyQuery(_filter.apply(all)));
 
     return Scaffold(
       appBar: AppBar(
@@ -97,6 +99,7 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
                 ),
               ),
               _buildFilters(all),
+              _buildCategories(all),
               Expanded(
                 child: RefreshIndicator(
                   onRefresh: provider.fetchNeeds,
@@ -167,6 +170,38 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
     );
   }
 
+  Widget _buildCategories(List<NeedModel> all) {
+    final categories = <String>{
+      _allCategory,
+      ...all
+          .map((need) => need.categoryLabel)
+          .where((label) => label.trim().isNotEmpty),
+    }.toList();
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.fromLTRB(
+        KanafSpacing.pageInset,
+        0,
+        KanafSpacing.pageInset,
+        KanafSpacing.md,
+      ),
+      child: Row(
+        children: [
+          for (final category in categories)
+            Padding(
+              padding: const EdgeInsetsDirectional.only(end: KanafSpacing.sm),
+              child: ChoiceChip(
+                label: Text(category),
+                selected: _selectedCategory == category,
+                onSelected: (_) => setState(() => _selectedCategory = category),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   List<NeedModel> _applyQuery(List<NeedModel> items) {
     if (_query.isEmpty) return items;
     final needle = _query.toLowerCase();
@@ -176,6 +211,13 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
           need.categoryLabel.contains(_query) ||
           need.category.toLowerCase().contains(needle);
     }).toList();
+  }
+
+  List<NeedModel> _applyCategory(List<NeedModel> items) {
+    if (_selectedCategory == _allCategory) return items;
+    return items
+        .where((need) => need.categoryLabel == _selectedCategory)
+        .toList();
   }
 }
 
@@ -258,6 +300,32 @@ class _NeedCard extends StatelessWidget {
               ),
             ],
           ),
+          const SizedBox(height: KanafSpacing.md),
+          Wrap(
+            spacing: KanafSpacing.xs,
+            runSpacing: KanafSpacing.xs,
+            children: [
+              if ((need.careHomeName ?? '').isNotEmpty)
+                _NeedMetaChip(
+                  icon: Icons.home_work_outlined,
+                  label: need.careHomeName!,
+                ),
+              if ((need.careHomeLocation ?? '').isNotEmpty)
+                _NeedMetaChip(
+                  icon: Icons.location_on_outlined,
+                  label: need.careHomeLocation!,
+                ),
+              _NeedMetaChip(
+                icon: Icons.flag_outlined,
+                label:
+                    'المطلوب: ${need.requiredQuantity.isEmpty ? 'غير محدد' : need.requiredQuantity}',
+              ),
+              _NeedMetaChip(
+                icon: Icons.done_all_rounded,
+                label: 'المتحقق: ${_formatNumber(need.fulfilledQuantity)}',
+              ),
+            ],
+          ),
           if (progress != null) ...[
             const SizedBox(height: KanafSpacing.md),
             Row(
@@ -296,6 +364,79 @@ class _NeedCard extends StatelessWidget {
               ],
             ),
           ],
+          const SizedBox(height: KanafSpacing.lg),
+          Row(
+            children: [
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: need.status == 'open'
+                      ? () => Navigator.pushNamed(
+                            context,
+                            KanafRoutes.financialDonation,
+                            arguments: {'need_id': need.id},
+                          )
+                      : null,
+                  icon: const Icon(Icons.payments_outlined),
+                  label: const Text('ساهم الآن'),
+                ),
+              ),
+              const SizedBox(width: KanafSpacing.sm),
+              IconButton.outlined(
+                tooltip: 'تبرع عيني',
+                onPressed: need.status == 'open'
+                    ? () => Navigator.pushNamed(
+                          context,
+                          KanafRoutes.inkindDonation,
+                          arguments: {'need_id': need.id},
+                        )
+                    : null,
+                icon: const Icon(Icons.inventory_2_outlined),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  static String _formatNumber(double value) {
+    if (value == value.roundToDouble()) return value.round().toString();
+    return value.toStringAsFixed(1);
+  }
+}
+
+class _NeedMetaChip extends StatelessWidget {
+  const _NeedMetaChip({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colors;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: KanafSpacing.sm,
+        vertical: KanafSpacing.xs,
+      ),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withOpacity(0.62),
+        borderRadius: KanafRadii.pill,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: scheme.primary),
+          const SizedBox(width: KanafSpacing.xxs),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 220),
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: context.texts.labelSmall,
+            ),
+          ),
         ],
       ),
     );
