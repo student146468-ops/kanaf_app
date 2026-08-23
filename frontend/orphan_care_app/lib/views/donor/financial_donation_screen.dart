@@ -66,6 +66,12 @@ class _FinancialDonationScreenState extends State<FinancialDonationScreen> {
     return !_isProcessing && amount != null && amount > 0;
   }
 
+  Map<String, dynamic>? get _targetHome {
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args is Map) return Map<String, dynamic>.from(args);
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -93,19 +99,26 @@ class _FinancialDonationScreenState extends State<FinancialDonationScreen> {
                       index: 0,
                       child: _buildModeSelector(),
                     ),
+                    if (_targetHome != null) ...[
+                      const SizedBox(height: KanafSpacing.lg),
+                      KanafStaggeredEntrance(
+                        index: 1,
+                        child: _buildTargetSection(_targetHome!),
+                      ),
+                    ],
                     const SizedBox(height: KanafSpacing.xxl),
                     KanafStaggeredEntrance(
-                      index: 1,
+                      index: 2,
                       child: _buildAmountSection(),
                     ),
                     const SizedBox(height: KanafSpacing.xxl),
                     KanafStaggeredEntrance(
-                      index: 2,
+                      index: 3,
                       child: _buildPaymentSection(),
                     ),
                     const SizedBox(height: KanafSpacing.lg),
                     KanafStaggeredEntrance(
-                      index: 3,
+                      index: 4,
                       child: _buildSecurityNote(),
                     ),
                   ],
@@ -133,6 +146,51 @@ class _FinancialDonationScreenState extends State<FinancialDonationScreen> {
   }
 
   // ── الأقسام ──────────────────────────────────────────────────
+
+  Widget _buildTargetSection(Map<String, dynamic> home) {
+    final scheme = context.colors;
+    final name = home['name']?.toString() ?? 'دار رعاية';
+    final address = home['address']?.toString() ?? '';
+
+    return KanafCard(
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: scheme.primary.withOpacity(0.12),
+              borderRadius: KanafRadii.sm,
+            ),
+            child: Icon(Icons.apartment_rounded, color: scheme.primary),
+          ),
+          const SizedBox(width: KanafSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('الدار المستهدفة', style: context.texts.bodySmall),
+                const SizedBox(height: KanafSpacing.xxs),
+                Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.texts.titleSmall,
+                ),
+                if (address.isNotEmpty)
+                  Text(
+                    address,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: context.texts.bodySmall,
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildModeSelector() {
     // SegmentedButton هو المكوّن الأصلي في M3 لاختيار واحد من قليل.
@@ -337,6 +395,10 @@ class _FinancialDonationScreenState extends State<FinancialDonationScreen> {
                   label: 'وسيلة الدفع',
                   value: _selectedPaymentMethod,
                 ),
+                KanafDetailRow(
+                  label: 'الدار',
+                  value: _targetHome?['name']?.toString() ?? 'صندوق كنف العام',
+                ),
                 const SizedBox(height: KanafSpacing.xxl),
                 FilledButton.icon(
                   onPressed: () => Navigator.pop(sheetContext, true),
@@ -376,7 +438,22 @@ class _FinancialDonationScreenState extends State<FinancialDonationScreen> {
 
     // `created == null` تعني أن الخادم لم يؤكد الحفظ — لا شاشة نجاح إطلاقاً.
     if (created == null) {
-      _showError(provider.errorMessage ?? 'تعذر حفظ التبرع حالياً.');
+      Navigator.pushNamed(
+        context,
+        KanafRoutes.donationSuccess,
+        arguments: {
+          'type': 'تبرع مالي',
+          'status': 'failed',
+          'summary': '${_amountFormat.format(amount)} دينار ليبي عبر '
+              '$_selectedPaymentMethod',
+          'amount': amount,
+          'payment_method': _selectedPaymentMethod,
+          'donation_mode': _selectedDonationMode,
+          'target': _targetHome?['name']?.toString() ?? 'صندوق كنف العام',
+          'error': provider.errorMessage ?? 'تعذر حفظ التبرع حالياً.',
+          'retryRoute': KanafRoutes.financialDonation,
+        },
+      );
       return;
     }
 
@@ -388,24 +465,14 @@ class _FinancialDonationScreenState extends State<FinancialDonationScreen> {
         // الرقم المرجعي هو المعرّف الحقيقي في قاعدة البيانات.
         'reference': 'KNF-${created.id}',
         'status': created.status,
+        'amount': amount,
+        'payment_method': _selectedPaymentMethod,
+        'donation_mode': _selectedDonationMode,
+        'target': _targetHome?['name']?.toString() ?? 'صندوق كنف العام',
+        'date': DateTime.now().toIso8601String(),
         'summary': '${_amountFormat.format(amount)} د.ل عبر '
             '$_selectedPaymentMethod',
       },
-    );
-  }
-
-  void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        // الأخطاء تحتاج وقتاً للقراءة، والمستخدم يملك إغلاقها.
-        duration: const Duration(seconds: 6),
-        action: SnackBarAction(
-          label: 'حسناً',
-          onPressed: () =>
-              ScaffoldMessenger.of(context).hideCurrentSnackBar(),
-        ),
-      ),
     );
   }
 }

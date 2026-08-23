@@ -9,6 +9,11 @@ class DonationModel {
   final String? quantity;
   final String? needTitle;
   final String? category;
+  final String? paymentMethod;
+  final String? donationMode;
+  final String? contact;
+  final String? notes;
+  final DateTime? updatedAt;
   final DateTime? donationDate;
   final DateTime? createdAt;
 
@@ -23,6 +28,11 @@ class DonationModel {
     this.quantity,
     this.needTitle,
     this.category,
+    this.paymentMethod,
+    this.donationMode,
+    this.contact,
+    this.notes,
+    this.updatedAt,
     this.donationDate,
     this.createdAt,
   });
@@ -63,6 +73,11 @@ class DonationModel {
       quantity: _nullableStringValue(json['quantity']),
       needTitle: _nullableStringValue(json['need_title']),
       category: _nullableStringValue(json['category']),
+      paymentMethod: _nullableStringValue(json['payment_method']),
+      donationMode: _nullableStringValue(json['donation_mode']),
+      contact: _nullableStringValue(json['contact']),
+      notes: _nullableStringValue(json['notes']),
+      updatedAt: _nullableDateTimeValue(json['updated_at']),
       donationDate: _nullableDateTimeValue(json['donation_date']),
       createdAt: _nullableDateTimeValue(json['created_at']),
     );
@@ -80,6 +95,11 @@ class DonationModel {
       'quantity': quantity,
       'need_title': needTitle,
       'category': category,
+      'payment_method': paymentMethod,
+      'donation_mode': donationMode,
+      'contact': contact,
+      'notes': notes,
+      'updated_at': updatedAt?.toIso8601String(),
       'donation_date': donationDate?.toIso8601String(),
       'created_at': createdAt?.toIso8601String(),
     };
@@ -96,6 +116,11 @@ class DonationModel {
     String? quantity,
     String? needTitle,
     String? category,
+    String? paymentMethod,
+    String? donationMode,
+    String? contact,
+    String? notes,
+    DateTime? updatedAt,
     DateTime? donationDate,
     DateTime? createdAt,
   }) {
@@ -110,6 +135,11 @@ class DonationModel {
       quantity: quantity ?? this.quantity,
       needTitle: needTitle ?? this.needTitle,
       category: category ?? this.category,
+      paymentMethod: paymentMethod ?? this.paymentMethod,
+      donationMode: donationMode ?? this.donationMode,
+      contact: contact ?? this.contact,
+      notes: notes ?? this.notes,
+      updatedAt: updatedAt ?? this.updatedAt,
       donationDate: donationDate ?? this.donationDate,
       createdAt: createdAt ?? this.createdAt,
     );

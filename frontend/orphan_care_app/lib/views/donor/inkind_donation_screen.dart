@@ -112,7 +112,8 @@ class _InkindDonationScreenState extends State<InkindDonationScreen> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.send_outlined),
-                  label: Text(_isProcessing ? 'جاري الإرسال...' : 'إرسال الطلب'),
+                  label:
+                      Text(_isProcessing ? 'جاري الإرسال...' : 'إرسال الطلب'),
                 ),
               ),
             ],
@@ -234,7 +235,17 @@ class _InkindDonationScreenState extends State<InkindDonationScreen> {
 
     // `created == null` تعني أن الخادم لم يؤكد الحفظ — لا شاشة نجاح إطلاقاً.
     if (created == null) {
-      _showError(provider.errorMessage ?? 'تعذر حفظ التبرع حالياً.');
+      Navigator.pushNamed(
+        context,
+        KanafRoutes.donationSuccess,
+        arguments: {
+          'type': 'تبرع عيني',
+          'status': 'failed',
+          'summary': '${category.title} — $quantity',
+          'error': provider.errorMessage ?? 'تعذر حفظ التبرع حالياً.',
+          'retryRoute': KanafRoutes.inkindDonation,
+        },
+      );
       return;
     }
 
@@ -246,6 +257,7 @@ class _InkindDonationScreenState extends State<InkindDonationScreen> {
         // الرقم المرجعي هو المعرّف الحقيقي في قاعدة البيانات.
         'reference': 'KNF-${created.id}',
         'status': created.status,
+        'date': DateTime.now().toIso8601String(),
         'summary': '${category.title} — $quantity',
       },
     );

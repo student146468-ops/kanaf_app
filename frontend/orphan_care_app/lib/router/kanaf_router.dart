@@ -4,6 +4,7 @@ import '../theme/kanaf_motion.dart';
 import '../views/about/about_app_screen.dart';
 import '../views/discovery_search/explore_orphanages_screen.dart';
 import '../views/donor/donation_history_screen.dart';
+import '../views/donor/donation_receipt_screen.dart';
 import '../views/donor/donation_success_screen.dart';
 import '../views/donor/financial_donation_screen.dart';
 import '../views/donor/inkind_donation_screen.dart';
@@ -53,6 +54,7 @@ abstract final class KanafRoutes {
   static const String inkindDonation = '/inkind_donation';
   static const String donationSuccess = '/donation_success';
   static const String donationHistory = '/donation_history';
+  static const String donationReceipt = '/donation_receipt';
   static const String needDetails = '/need_details';
   static const String orphanageProfile = '/orphanage_profile';
   static const String donorProfile = '/profile';
@@ -134,6 +136,8 @@ abstract final class KanafRouter {
         return ((_) => const DonationSuccessScreen(), reveal);
       case KanafRoutes.donationHistory:
         return ((_) => const DonationHistoryScreen(), push);
+      case KanafRoutes.donationReceipt:
+        return ((_) => const DonationReceiptScreen(), push);
       case KanafRoutes.donorNotifications:
         return ((_) => const NotificationsScreen(), push);
       case KanafRoutes.searchFilter:

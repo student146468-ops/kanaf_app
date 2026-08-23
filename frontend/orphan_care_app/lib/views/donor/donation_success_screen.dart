@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 
 import '../../router/kanaf_router.dart';
 import '../../theme/kanaf_tokens.dart';
@@ -23,6 +24,16 @@ class DonationSuccessScreen extends StatelessWidget {
     final type = args?['type']?.toString() ?? 'تبرع';
     final summary = args?['summary']?.toString();
     final status = args?['status']?.toString() ?? 'pending';
+    final amount = args?['amount'];
+    final paymentMethod = args?['payment_method']?.toString();
+    final donationMode = args?['donation_mode']?.toString();
+    final target = args?['target']?.toString();
+    final error = args?['error']?.toString();
+    final retryRoute = args?['retryRoute']?.toString();
+    final date =
+        DateTime.tryParse(args?['date']?.toString() ?? '') ?? DateTime.now();
+    final state = _DonationResultState.fromStatus(status);
+    final amountText = _amountText(amount);
 
     return Scaffold(
       body: KanafBackdrop(
@@ -34,17 +45,16 @@ class DonationSuccessScreen extends StatelessWidget {
                   padding: const EdgeInsets.all(KanafSpacing.pageInset),
                   children: [
                     const SizedBox(height: KanafSpacing.xxl),
-                    const _SuccessSeal(),
+                    _ResultSeal(state: state),
                     const SizedBox(height: KanafSpacing.xxl),
                     Text(
-                      'تم تسجيل مساهمتك',
+                      state.title,
                       textAlign: TextAlign.center,
                       style: context.texts.headlineMedium,
                     ),
                     const SizedBox(height: KanafSpacing.md),
                     Text(
-                      'وصلت مساهمتك إلى المنظومة بنجاح. ستراجعها دار الرعاية '
-                      'وتصلك التحديثات في سجل تبرعاتك.',
+                      error ?? state.message,
                       textAlign: TextAlign.center,
                       style: context.texts.bodyMedium?.copyWith(
                         color: context.colors.onSurfaceVariant,
@@ -63,6 +73,31 @@ class DonationSuccessScreen extends StatelessWidget {
                             ),
                           ),
                           KanafDetailRow(label: 'النوع', value: type),
+                          KanafDetailRow(
+                            label: 'التاريخ',
+                            value: DateFormat('d MMMM y • h:mm a', 'ar')
+                                .format(date),
+                          ),
+                          if (amountText != null)
+                            KanafDetailRow(
+                              label: 'المبلغ',
+                              value: amountText,
+                              valueStyle: context.texts.titleMedium?.copyWith(
+                                color: context.colors.primary,
+                              ),
+                            ),
+                          if (_notBlank(donationMode))
+                            KanafDetailRow(
+                              label: 'نوع التبرع',
+                              value: _modeLabel(donationMode!),
+                            ),
+                          if (_notBlank(paymentMethod))
+                            KanafDetailRow(
+                              label: 'طريقة الدفع',
+                              value: paymentMethod!,
+                            ),
+                          if (_notBlank(target))
+                            KanafDetailRow(label: 'الهدف', value: target!),
                           if (summary != null)
                             KanafDetailRow(label: 'التفاصيل', value: summary),
                           if (reference != null) ...[
@@ -79,13 +114,29 @@ class DonationSuccessScreen extends StatelessWidget {
                 child: Column(
                   children: [
                     FilledButton.icon(
-                      onPressed: () => Navigator.pushNamedAndRemoveUntil(
-                        context,
-                        KanafRoutes.donationHistory,
-                        (route) => route.settings.name == KanafRoutes.donorHome,
+                      onPressed: state == _DonationResultState.failed &&
+                              retryRoute != null
+                          ? () => Navigator.pushReplacementNamed(
+                                context,
+                                retryRoute,
+                              )
+                          : () => Navigator.pushNamedAndRemoveUntil(
+                                context,
+                                KanafRoutes.donationHistory,
+                                (route) =>
+                                    route.settings.name ==
+                                    KanafRoutes.donorHome,
+                              ),
+                      icon: Icon(
+                        state == _DonationResultState.failed
+                            ? Icons.refresh_rounded
+                            : Icons.receipt_long_outlined,
                       ),
-                      icon: const Icon(Icons.receipt_long_outlined),
-                      label: const Text('عرض سجل تبرعاتي'),
+                      label: Text(
+                        state == _DonationResultState.failed
+                            ? 'إعادة المحاولة'
+                            : 'عرض سجل تبرعاتي',
+                      ),
                     ),
                     const SizedBox(height: KanafSpacing.sm),
                     TextButton(
@@ -107,19 +158,66 @@ class DonationSuccessScreen extends StatelessWidget {
       ),
     );
   }
+
+  static bool _notBlank(String? value) =>
+      value != null && value.trim().isNotEmpty;
+
+  static String? _amountText(dynamic amount) {
+    final value =
+        amount is num ? amount.toDouble() : double.tryParse('$amount');
+    if (value == null) return null;
+    return '${NumberFormat.decimalPattern('ar').format(value)} دينار ليبي';
+  }
+
+  static String _modeLabel(String value) {
+    final normalized = value.toLowerCase();
+    return normalized.contains('month') || normalized.contains('شهري')
+        ? 'شهري'
+        : 'مرة واحدة';
+  }
 }
 
-/// خاتم النجاح: حلقة برتقالية حول علامة صحّ خضراء.
-/// لمسة كَنَفْ تظهر في الحلقة، والدلالة (النجاح) تبقى خضراء
-/// لأن اللون الدلالي أهم من الهوية في لحظة التأكيد.
-class _SuccessSeal extends StatefulWidget {
-  const _SuccessSeal();
+enum _DonationResultState {
+  success(
+    'تم تسجيل مساهمتك',
+    'تمت العملية بنجاح وحُفظت تفاصيلها في سجل تبرعاتك.',
+  ),
+  pending(
+    'تم تسجيل مساهمتك',
+    'وصلت مساهمتك إلى المنظومة. ستراجعها دار الرعاية وتظهر تحديثاتها في السجل.',
+  ),
+  failed(
+    'تعذر إكمال التبرع',
+    'لم يتم تسجيل العملية. راجع السبب وحاول مرة أخرى.',
+  );
+
+  const _DonationResultState(this.title, this.message);
+
+  final String title;
+  final String message;
+
+  static _DonationResultState fromStatus(String status) {
+    final normalized = status.trim().toLowerCase();
+    if (normalized == 'failed' || normalized == 'failure') {
+      return _DonationResultState.failed;
+    }
+    if (normalized == 'completed' || normalized == 'accepted') {
+      return _DonationResultState.success;
+    }
+    return _DonationResultState.pending;
+  }
+}
+
+class _ResultSeal extends StatefulWidget {
+  const _ResultSeal({required this.state});
+
+  final _DonationResultState state;
 
   @override
-  State<_SuccessSeal> createState() => _SuccessSealState();
+  State<_ResultSeal> createState() => _ResultSealState();
 }
 
-class _SuccessSealState extends State<_SuccessSeal>
+class _ResultSealState extends State<_ResultSeal>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(
     duration: KanafDuration.slow,
@@ -135,6 +233,25 @@ class _SuccessSealState extends State<_SuccessSeal>
   @override
   Widget build(BuildContext context) {
     final semantic = context.semantic;
+    final scheme = context.colors;
+    final (Color container, Color foreground, IconData icon) =
+        switch (widget.state) {
+      _DonationResultState.success => (
+          semantic.successContainer,
+          semantic.success,
+          Icons.check_rounded,
+        ),
+      _DonationResultState.pending => (
+          semantic.warningContainer,
+          semantic.onWarningContainer,
+          Icons.hourglass_top_rounded,
+        ),
+      _DonationResultState.failed => (
+          scheme.errorContainer,
+          scheme.onErrorContainer,
+          Icons.close_rounded,
+        ),
+    };
     final ring = CurvedAnimation(
       parent: _controller,
       curve: const Interval(0, 0.65, curve: KanafCurves.emphasizedDecelerate),
@@ -169,13 +286,13 @@ class _SuccessSealState extends State<_SuccessSeal>
                 width: 92,
                 height: 92,
                 decoration: BoxDecoration(
-                  color: semantic.successContainer,
+                  color: container,
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  Icons.check_rounded,
+                  icon,
                   size: 52,
-                  color: semantic.success,
+                  color: foreground,
                 ),
               ),
             ),
