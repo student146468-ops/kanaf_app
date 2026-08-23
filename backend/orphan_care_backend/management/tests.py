@@ -1304,6 +1304,29 @@ class PasswordResetApiTests(BrevoEmailMockMixin, APITestCase):
         )
         self.assertEqual(login.status_code, status.HTTP_200_OK)
 
+    def test_login_prefers_email_match_after_reset_when_username_conflicts(self):
+        conflicting_identifier = 'shared-login@example.com'
+        User.objects.create_user(
+            username=conflicting_identifier,
+            email='different-owner@example.com',
+            password='OtherPass123',
+        )
+        self.user.username = 'real-reset-user'
+        self.user.email = conflicting_identifier
+        self.user.save(update_fields=['username', 'email'])
+
+        self._request_code(email=conflicting_identifier)
+        code = self._latest_code()
+        response = self._confirm(code, email=conflicting_identifier)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        login = self.client.post(
+            reverse('token_obtain_pair'),
+            {'email': conflicting_identifier, 'password': self.NEW_PASSWORD},
+            format='json',
+        )
+        self.assertEqual(login.status_code, status.HTTP_200_OK)
+
     def test_code_cannot_be_reused(self):
         self._request_code()
         code = self._latest_code()

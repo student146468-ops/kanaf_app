@@ -857,9 +857,14 @@ class LoginView(APIView):
         if not username_or_email or not password:
             return Response({'detail': _('username/email and password are required')}, status=status.HTTP_400_BAD_REQUEST)
 
-        user = User.objects.filter(username__iexact=username_or_email).first()
-        if user is None:
+        if '@' in username_or_email:
             user = User.objects.filter(email__iexact=username_or_email).first()
+            if user is None:
+                user = User.objects.filter(username__iexact=username_or_email).first()
+        else:
+            user = User.objects.filter(username__iexact=username_or_email).first()
+            if user is None:
+                user = User.objects.filter(email__iexact=username_or_email).first()
         if user is None:
             return Response({'detail': _('invalid credentials')}, status=status.HTTP_401_UNAUTHORIZED)
 
