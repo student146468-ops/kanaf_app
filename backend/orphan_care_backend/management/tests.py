@@ -1,5 +1,6 @@
+import json
 import re
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.conf import settings
@@ -30,32 +31,39 @@ from management.models import (
 User = get_user_model()
 
 
-def _successful_brevo_response():
-    response = Mock()
-    response.status_code = 201
-    response.text = '{"messageId":"test-message-id"}'
-    response.json.return_value = {'messageId': 'test-message-id'}
-    response.raise_for_status.return_value = None
-    return response
+class _SuccessfulBrevoResponse:
+    status = 201
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, traceback):
+        return False
+
+    def getcode(self):
+        return self.status
+
+    def read(self):
+        return b'{"messageId":"test-message-id"}'
 
 
 class BrevoEmailMockMixin:
     def start_brevo_email_mock(self):
         self.sent_brevo_emails = []
-        self.brevo_post_patcher = patch('management.views_api.requests.post')
-        self.mock_brevo_post = self.brevo_post_patcher.start()
+        self.brevo_post_patcher = patch('management.views_api.urlrequest.urlopen')
+        self.mock_brevo_urlopen = self.brevo_post_patcher.start()
         self.addCleanup(self.brevo_post_patcher.stop)
 
-        def capture_brevo_email(*args, **kwargs):
+        def capture_brevo_email(request, *args, **kwargs):
             self.sent_brevo_emails.append({
-                'url': args[0] if args else '',
-                'headers': kwargs.get('headers') or {},
-                'json': kwargs.get('json') or {},
+                'url': request.full_url,
+                'headers': dict(request.header_items()),
+                'json': json.loads(request.data.decode('utf-8')),
                 'timeout': kwargs.get('timeout'),
             })
-            return _successful_brevo_response()
+            return _SuccessfulBrevoResponse()
 
-        self.mock_brevo_post.side_effect = capture_brevo_email
+        self.mock_brevo_urlopen.side_effect = capture_brevo_email
 
 
 @override_settings(STORAGES={

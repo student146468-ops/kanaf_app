@@ -1,11 +1,12 @@
 """Active REST API views for the Kanaf backend."""
 from email.utils import parseaddr
 import hashlib
+import json
 import logging
 import re
 import secrets
+from urllib import error as urlerror, request as urlrequest
 
-import requests
 from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model
 from django.db import IntegrityError, connection
@@ -128,26 +129,30 @@ def _send_brevo_email(*, subject, text_content, recipient_email, recipient_name=
         'content-type': 'application/json',
     }
 
-    response = None
     try:
-        response = requests.post(
+        request_body = json.dumps(payload).encode('utf-8')
+        brevo_request = urlrequest.Request(
             getattr(settings, 'BREVO_API_URL', 'https://api.brevo.com/v3/smtp/email'),
+            data=request_body,
             headers=headers,
-            json=payload,
-            timeout=getattr(settings, 'BREVO_TIMEOUT', 15),
+            method='POST',
         )
-        response.raise_for_status()
-    except requests.exceptions.HTTPError as exc:
-        response = exc.response or response
-        response_body = str(getattr(response, 'text', ''))[:1000] if response is not None else ''
+        with urlrequest.urlopen(
+            brevo_request,
+            timeout=getattr(settings, 'BREVO_TIMEOUT', 15),
+        ) as response:
+            status_code = getattr(response, 'status', response.getcode())
+            response_body = response.read().decode('utf-8', errors='replace')
+    except urlerror.HTTPError as exc:
+        response_body = exc.read().decode('utf-8', errors='replace')
         logger.error(
             'Brevo email rejected recipient=%s status=%s body=%s',
             _mask_email(recipient_email),
-            getattr(response, 'status_code', 'unknown') if response is not None else 'unknown',
-            response_body,
+            exc.code,
+            response_body[:1000],
         )
         raise BrevoEmailDeliveryError('Brevo rejected the email request.') from exc
-    except requests.exceptions.RequestException as exc:
+    except urlerror.URLError as exc:
         logger.exception(
             'Brevo email request failed recipient=%s error=%s',
             _mask_email(recipient_email),
@@ -157,18 +162,18 @@ def _send_brevo_email(*, subject, text_content, recipient_email, recipient_name=
 
     message_id = ''
     try:
-        message_id = str(response.json().get('messageId') or '')
-    except ValueError:
+        message_id = str(json.loads(response_body).get('messageId') or '')
+    except json.JSONDecodeError:
         logger.warning(
             'Brevo email accepted but returned non-JSON response recipient=%s status=%s',
             _mask_email(recipient_email),
-            response.status_code,
+            status_code,
         )
 
     logger.info(
         'Brevo email accepted recipient=%s status=%s message_id=%s',
         _mask_email(recipient_email),
-        response.status_code,
+        status_code,
         message_id,
     )
     return message_id
