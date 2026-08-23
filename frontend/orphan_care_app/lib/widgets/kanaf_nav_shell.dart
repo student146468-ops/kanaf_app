@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../providers/app_provider_scope.dart';
 import '../theme/kanaf_tokens.dart';
 
 /// وجهة في شريط التنقل السفلي.
@@ -117,7 +118,6 @@ abstract final class KanafNavDestinations {
       route: '/volunteer_profile',
     ),
   ];
-
 }
 
 /// زر إشعارات مع شارة عدد غير المقروء.
@@ -137,7 +137,7 @@ class KanafNotificationButton extends StatelessWidget {
 
     return IconButton(
       tooltip: 'الإشعارات',
-      onPressed: () => Navigator.pushNamed(context, route),
+      onPressed: () => _openNotifications(context),
       icon: Badge(
         // الشارة تظهر فقط عند وجود غير مقروء — لا نقطة دائمة بلا معنى.
         isLabelVisible: unreadCount > 0,
@@ -147,5 +147,14 @@ class KanafNotificationButton extends StatelessWidget {
         child: const Icon(Icons.notifications_outlined),
       ),
     );
+  }
+
+  Future<void> _openNotifications(BuildContext context) async {
+    final provider = AppProviderScope.read(context);
+    await provider.fetchNotifications(notifyLoading: false);
+    if (!context.mounted) return;
+    await Navigator.pushNamed(context, route);
+    if (!context.mounted) return;
+    await provider.fetchNotifications(notifyLoading: false);
   }
 }

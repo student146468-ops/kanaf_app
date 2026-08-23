@@ -107,8 +107,7 @@ class AppProvider extends ChangeNotifier {
   /// لعرضه كرقم مرجعي، فلا يمكنها تلفيق رقم محلياً.
   Future<DonationModel?> submitDonation(DonationRequest request) {
     return _saveResult(() async {
-      final created =
-          DonationModel.fromJson(await _apiService.createDonation(
+      final created = DonationModel.fromJson(await _apiService.createDonation(
         request.toJson(),
       ));
       _donations.insert(0, created);
@@ -218,12 +217,12 @@ class AppProvider extends ChangeNotifier {
     }, notifyLoading: notifyLoading);
   }
 
-  Future<void> fetchNotifications() async {
+  Future<void> fetchNotifications({bool notifyLoading = true}) async {
     await _load(() async {
       final data = await _apiService.getNotifications();
       _notifications =
           data.map((item) => Map<String, dynamic>.from(item as Map)).toList();
-    });
+    }, notifyLoading: notifyLoading);
   }
 
   Future<bool> markNotificationRead(int id) {

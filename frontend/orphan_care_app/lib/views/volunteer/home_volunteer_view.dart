@@ -36,6 +36,7 @@ class _HomeVolunteerViewState extends State<HomeVolunteerView> {
       if (provider.volunteerOpportunities.isEmpty && !provider.isLoading) {
         provider.fetchVolunteerOpportunities();
       }
+      provider.fetchNotifications(notifyLoading: false);
     });
   }
 

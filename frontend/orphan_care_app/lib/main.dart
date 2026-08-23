@@ -5,6 +5,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'providers/app_provider.dart';
 import 'providers/app_provider_scope.dart';
 import 'router/kanaf_router.dart';
+import 'theme/kanaf_locale_controller.dart';
 import 'theme/kanaf_theme.dart';
 import 'theme/kanaf_theme_controller.dart';
 import 'utils/session_guard.dart';
@@ -15,11 +16,13 @@ Future<void> main() async {
   // تهيئة بيانات التواريخ العربية قبل الإقلاع. بدونها يرمي
   // `DateFormat(..., 'ar')` استثناء LocaleDataException عند أول
   // شاشة تعرض تاريخاً.
-  initializeDateFormatting('ar');
+  await initializeDateFormatting('ar');
+  await initializeDateFormatting('en');
 
   // استرجاع وضع الثيم المحفوظ قبل أول إطار، فلا يومض المظهر الفاتح
   // للحظة أمام مستخدم اختار الوضع الداكن.
   await KanafThemeController.instance.load();
+  await KanafLocaleController.instance.load();
 
   final provider = AppProvider();
 
@@ -46,15 +49,18 @@ class KanafApp extends StatelessWidget {
     // `MaterialApp` فلا يُعاد بناء شجرة الشاشات الحالية يدوياً.
     return ValueListenableBuilder<ThemeMode>(
       valueListenable: KanafThemeController.instance,
-      builder: (context, themeMode, _) => KanafSessionGuard(
-        navigatorKey: _navigatorKey,
-        provider: provider,
-        child: _buildApp(themeMode),
+      builder: (context, themeMode, _) => ValueListenableBuilder<Locale>(
+        valueListenable: KanafLocaleController.instance,
+        builder: (context, locale, _) => KanafSessionGuard(
+          navigatorKey: _navigatorKey,
+          provider: provider,
+          child: _buildApp(themeMode, locale),
+        ),
       ),
     );
   }
 
-  Widget _buildApp(ThemeMode themeMode) {
+  Widget _buildApp(ThemeMode themeMode, Locale locale) {
     return MaterialApp(
       title: 'كَنَفْ',
       debugShowCheckedModeBanner: false,
@@ -65,7 +71,7 @@ class KanafApp extends StatelessWidget {
       // مستوى التطبيق كله. هذا يغني عن لفّ كل شاشة بـ `Directionality`
       // يدوياً — وهو ما كان يسبب اختلافات اتجاه بين الشاشات
       // ويجعل الحوارات والأوراق السفلية تخرج بالاتجاه الخطأ.
-      locale: const Locale('ar'),
+      locale: locale,
       supportedLocales: const [Locale('ar'), Locale('en')],
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,

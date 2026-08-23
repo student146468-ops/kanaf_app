@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../providers/app_provider_scope.dart';
 import '../../router/kanaf_router.dart';
 import '../../services/api_service.dart';
+import '../../theme/kanaf_locale_controller.dart';
 import '../../theme/kanaf_motion.dart';
 import '../../theme/kanaf_theme_controller.dart';
 import '../../theme/kanaf_tokens.dart';
@@ -55,7 +56,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
               KanafSpacing.xxxl,
             ),
             children: [
-              KanafStaggeredEntrance(index: 0, child: _AccountHeader(user: user)),
+              KanafStaggeredEntrance(
+                index: 0,
+                child: _AccountHeader(user: user),
+              ),
               const SizedBox(height: KanafSpacing.xxl),
               KanafStaggeredEntrance(
                 index: 1,
@@ -65,7 +69,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     _SettingsTile(
                       icon: Icons.alternate_email_rounded,
                       title: 'تغيير البريد الإلكتروني',
-                      subtitle: user['email']?.toString() ?? 'إدارة بريد الحساب',
+                      subtitle:
+                          user['email']?.toString() ?? 'إدارة بريد الحساب',
                       onTap: () => Navigator.pushNamed(
                         context,
                         KanafRoutes.changeEmail,
@@ -104,13 +109,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ),
                     const Divider(height: 1, indent: KanafSpacing.lg),
-                    const _SettingsTile(
-                      icon: Icons.language_rounded,
-                      title: 'اللغة',
-                      subtitle: 'العربية',
-                      // لا لغة أخرى مدعومة بعد، فالمدخل معطّل بصدق
-                      // بدل عرض رسالة «قريباً» عند كل نقرة.
-                      onTap: null,
+                    ValueListenableBuilder<Locale>(
+                      valueListenable: KanafLocaleController.instance,
+                      builder: (context, locale, _) {
+                        final isArabic = locale.languageCode == 'ar';
+                        return _SettingsTile(
+                          icon: Icons.language_rounded,
+                          title: isArabic ? 'اللغة' : 'Language',
+                          subtitle:
+                              KanafLocaleController.instance.languageLabel,
+                          onTap: _showLanguageDialog,
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -212,6 +222,47 @@ class _SettingsScreenState extends State<SettingsScreen> {
       KanafRoutes.login,
       (route) => false,
     );
+  }
+
+  Future<void> _showLanguageDialog() async {
+    final current = KanafLocaleController.instance.value.languageCode;
+    final selected = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('اللغة / Language'),
+        contentPadding: const EdgeInsets.only(top: KanafSpacing.sm),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            RadioListTile<String>(
+              value: 'ar',
+              groupValue: current,
+              onChanged: (value) => Navigator.pop(dialogContext, value),
+              secondary: const Icon(Icons.translate_rounded),
+              title: const Text('العربية'),
+              subtitle: const Text('واجهة عربية واتجاه من اليمين إلى اليسار'),
+            ),
+            RadioListTile<String>(
+              value: 'en',
+              groupValue: current,
+              onChanged: (value) => Navigator.pop(dialogContext, value),
+              secondary: const Icon(Icons.language_rounded),
+              title: const Text('English'),
+              subtitle: const Text('English locale and left-to-right layout'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('إلغاء'),
+          ),
+        ],
+      ),
+    );
+
+    if (selected == null || !mounted) return;
+    await KanafLocaleController.instance.setLocale(Locale(selected));
   }
 }
 

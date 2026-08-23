@@ -48,6 +48,7 @@ class _SupporterHomeScreenState extends State<SupporterHomeScreen>
       if (provider.needs.isEmpty && !provider.isLoading) {
         provider.fetchNeeds();
       }
+      provider.fetchNotifications(notifyLoading: false);
     });
   }
 
