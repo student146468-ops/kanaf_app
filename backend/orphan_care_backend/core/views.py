@@ -10,7 +10,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
-from management.models import Donation, InventoryItem, Orphan, Sponsor, Volunteer, VolunteerApplication
+from management.models import CareHome, Donation, InventoryItem, Need, Orphan, Sponsor, Volunteer, VolunteerApplication
 from management.serializers import DonationSerializer, InventorySerializer, OrphanSerializer, SponsorSerializer, VolunteerSerializer
 
 logger = logging.getLogger(__name__)
@@ -100,6 +100,16 @@ def orphans_list(request):
             context,
         )
     return render(request, 'orphans.html', context)
+
+
+@staff_required
+def needs_list(request):
+    context = {
+        'care_homes': CareHome.objects.all(),
+        'need_status_choices': Need.STATUS_CHOICES,
+        'need_priority_choices': Need.PRIORITY_CHOICES,
+    }
+    return render(request, 'needs.html', context)
 
 
 @staff_required

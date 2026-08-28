@@ -1076,6 +1076,9 @@
             <a href="{% url 'orphans_list' %}" class="{% if request.resolver_match.url_name == 'orphans_list' %}active{% endif %}">
                 <i class="fas fa-children"></i> الأيتام
             </a>
+            <a href="{% url 'needs_list' %}" class="{% if request.resolver_match.url_name == 'needs_list' %}active{% endif %}">
+                <i class="fas fa-list-check"></i> الاحتياجات
+            </a>
             <a href="{% url 'sponsors_list' %}" class="{% if request.resolver_match.url_name == 'sponsors_list' %}active{% endif %}">
                 <i class="fas fa-user-group"></i> المتبرعون
             </a>
@@ -1120,6 +1123,7 @@
                 <h2>
                     {% if request.resolver_match.url_name == 'dashboard' %}مرحبًا بك في منظومة كنف
                     {% elif request.resolver_match.url_name == 'orphans_list' %}إدارة الأيتام
+                    {% elif request.resolver_match.url_name == 'needs_list' %}إدارة الاحتياجات
                     {% elif request.resolver_match.url_name == 'sponsors_list' %}إدارة المتبرعين
                     {% elif request.resolver_match.url_name == 'donations_list' %}التبرعات المالية
                     {% elif request.resolver_match.url_name == 'inventory_view' %}التبرعات العينية

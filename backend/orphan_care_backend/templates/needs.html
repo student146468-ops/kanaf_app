@@ -1,0 +1,473 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="page-shell" id="needsApp" dir="rtl">
+    <div class="panel">
+        <h3 class="panel-title">
+            إدارة الاحتياجات
+            <span class="panel-kicker"><i class="fas fa-list-check"></i></span>
+        </h3>
+
+        <div id="needsAlert" class="needs-alert" hidden></div>
+
+        <form id="needForm" class="form-grid" autocomplete="off">
+            {% csrf_token %}
+            <input type="hidden" id="needId" name="need_id">
+
+            <div>
+                <label for="needTitle">اسم الاحتياج</label>
+                <input id="needTitle" name="title" type="text" required placeholder="مثال: سلة غذائية">
+            </div>
+
+            <div>
+                <label for="needCategory">التصنيف</label>
+                <input id="needCategory" name="category" type="text" required placeholder="مواد غذائية، ملابس، تعليم...">
+            </div>
+
+            <div>
+                <label for="needRequiredQuantity">الكمية المطلوبة</label>
+                <input id="needRequiredQuantity" name="required_quantity" type="number" min="1" step="1" required placeholder="0">
+            </div>
+
+            <div>
+                <label for="needFulfilledQuantity">الكمية المتوفرة</label>
+                <input id="needFulfilledQuantity" name="fulfilled_quantity" type="number" min="0" step="1" value="0">
+            </div>
+
+            <div>
+                <label for="needPriority">الأولوية</label>
+                <select id="needPriority" name="priority" required>
+                    {% for value, label in need_priority_choices %}
+                    <option value="{{ value }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label for="needStatus">الحالة</label>
+                <select id="needStatus" name="status" required>
+                    {% for value, label in need_status_choices %}
+                    <option value="{{ value }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label for="needCareHome">دار الرعاية</label>
+                <select id="needCareHome" name="care_home" required>
+                    <option value="">اختر دار الرعاية</option>
+                    {% for care_home in care_homes %}
+                    <option value="{{ care_home.id }}">{{ care_home.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label for="needImageUrl">رابط الصورة</label>
+                <input id="needImageUrl" name="image_url" type="url" placeholder="https://example.com/image.jpg">
+            </div>
+
+            <div class="needs-form-wide">
+                <label for="needDescription">الوصف</label>
+                <textarea id="needDescription" name="description" rows="3" placeholder="اكتب وصفًا مختصرًا للاحتياج"></textarea>
+            </div>
+
+            <div class="needs-actions">
+                <button id="needSubmitButton" type="submit">
+                    <i class="fas fa-plus"></i>
+                    إضافة احتياج
+                </button>
+                <button id="needCancelButton" class="needs-secondary-button" type="button" hidden>
+                    إلغاء التعديل
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="panel content-card">
+        <h3 class="panel-title">
+            قائمة الاحتياجات
+            <span class="panel-kicker" id="needsCount">0</span>
+        </h3>
+
+        <div id="needsList" class="needs-list" aria-live="polite">
+            <div class="empty-state">جارٍ تحميل الاحتياجات...</div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .needs-alert {
+        margin-bottom: 14px;
+        border-radius: 14px;
+        padding: 12px 14px;
+        font-weight: 900;
+        background: rgba(255, 229, 209, 0.78);
+        color: var(--orange-800);
+        border: 1px solid rgba(255, 122, 0, 0.24);
+    }
+
+    .needs-alert.error {
+        background: rgba(254, 226, 226, 0.84);
+        color: #991b1b;
+        border-color: rgba(220, 38, 38, 0.20);
+    }
+
+    .needs-form-wide {
+        grid-column: 1 / -1;
+    }
+
+    textarea {
+        width: 100%;
+        padding: 12px 14px;
+        border: 1px solid rgba(255,255,255,0.64);
+        border-radius: 14px;
+        outline: none;
+        color: var(--text);
+        background: rgba(255, 248, 242, 0.56);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.68), 0 8px 18px rgba(126, 50, 0, 0.08);
+        font-family: inherit;
+        font-weight: 800;
+        resize: vertical;
+    }
+
+    textarea:focus {
+        border-color: rgba(255, 122, 0, 0.72);
+        background: rgba(255, 255, 255, 0.72);
+        box-shadow: 0 0 0 4px rgba(255, 122, 0, 0.16), inset 0 1px 0 rgba(255,255,255,0.86);
+    }
+
+    .needs-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .needs-secondary-button {
+        min-height: 50px;
+        border: 1px solid rgba(126, 50, 0, 0.18);
+        border-radius: 15px;
+        padding: 12px 18px;
+        color: var(--orange-800);
+        background: rgba(255, 248, 242, 0.72);
+        font-family: inherit;
+        font-weight: 900;
+        cursor: pointer;
+    }
+
+    .needs-list {
+        display: grid;
+        gap: 12px;
+        padding: 0 12px 14px;
+    }
+
+    .need-card {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 16px;
+        padding: 16px;
+        border-radius: 18px;
+        background: rgba(255, 248, 242, 0.54);
+        border: 1px solid rgba(255,255,255,0.54);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.62), 0 12px 22px rgba(126, 50, 0, 0.08);
+    }
+
+    .need-card h4 {
+        margin: 0 0 6px;
+        color: #331807;
+        font-size: 1.08rem;
+        font-weight: 900;
+    }
+
+    .need-card p {
+        margin: 0;
+        color: var(--muted);
+        font-weight: 800;
+        line-height: 1.8;
+    }
+
+    .need-meta {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+    }
+
+    .need-card-actions {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .need-icon-button {
+        width: 42px;
+        height: 42px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 0;
+        border-radius: 14px;
+        cursor: pointer;
+        color: #ffffff;
+        background: linear-gradient(145deg, #ff9e3d, var(--orange-600));
+        box-shadow: 0 5px 0 #bd4100, 0 10px 18px rgba(175, 58, 0, 0.18);
+    }
+
+    .need-icon-button.archive {
+        background: linear-gradient(145deg, #7f1d1d, #b91c1c);
+        box-shadow: 0 5px 0 #5f1313, 0 10px 18px rgba(127, 29, 29, 0.18);
+    }
+
+    .need-progress {
+        width: 100%;
+        height: 8px;
+        margin-top: 14px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: rgba(126, 50, 0, 0.12);
+    }
+
+    .need-progress span {
+        display: block;
+        height: 100%;
+        width: 0;
+        border-radius: inherit;
+        background: linear-gradient(90deg, var(--orange-600), #ffb36b);
+    }
+
+    @media (max-width: 760px) {
+        .need-card {
+            grid-template-columns: 1fr;
+        }
+
+        .need-card-actions {
+            justify-content: flex-start;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const apiUrl = "{% url 'need-list' %}";
+        const form = document.getElementById('needForm');
+        const list = document.getElementById('needsList');
+        const alertBox = document.getElementById('needsAlert');
+        const submitButton = document.getElementById('needSubmitButton');
+        const cancelButton = document.getElementById('needCancelButton');
+        const countBadge = document.getElementById('needsCount');
+        const csrfToken = form.querySelector('input[name="csrfmiddlewaretoken"]').value;
+        let editingId = null;
+
+        const labels = {
+            open: 'مفتوح',
+            completed: 'مكتمل',
+            archived: 'مؤرشف',
+            low: 'منخفضة',
+            medium: 'متوسطة',
+            urgent: 'عاجلة'
+        };
+
+        function setAlert(message, isError) {
+            if (!message) {
+                alertBox.hidden = true;
+                alertBox.textContent = '';
+                alertBox.classList.remove('error');
+                return;
+            }
+            alertBox.hidden = false;
+            alertBox.textContent = message;
+            alertBox.classList.toggle('error', Boolean(isError));
+        }
+
+        function formatApiError(body) {
+            if (!body) return 'تعذر تنفيذ العملية. حاول مرة أخرى.';
+            if (typeof body === 'string') return body;
+            if (body.detail) return body.detail;
+            return Object.entries(body).map(function ([field, value]) {
+                const detail = Array.isArray(value) ? value.join('، ') : String(value);
+                return field + ': ' + detail;
+            }).join(' | ');
+        }
+
+        async function parseResponse(response) {
+            const raw = await response.text();
+            let body = raw;
+            try {
+                body = raw ? JSON.parse(raw) : null;
+            } catch (error) {
+                body = raw;
+            }
+            if (!response.ok) {
+                throw new Error(formatApiError(body));
+            }
+            return body;
+        }
+
+        function payloadFromForm() {
+            const payload = {
+                title: document.getElementById('needTitle').value.trim(),
+                description: document.getElementById('needDescription').value.trim(),
+                category: document.getElementById('needCategory').value.trim(),
+                required_quantity: document.getElementById('needRequiredQuantity').value.trim(),
+                fulfilled_quantity: document.getElementById('needFulfilledQuantity').value || '0',
+                priority: document.getElementById('needPriority').value,
+                status: document.getElementById('needStatus').value,
+                image_url: document.getElementById('needImageUrl').value.trim()
+            };
+            const careHome = document.getElementById('needCareHome').value;
+            if (careHome) {
+                payload.care_home = Number(careHome);
+            }
+            return payload;
+        }
+
+        function resetForm() {
+            editingId = null;
+            form.reset();
+            document.getElementById('needFulfilledQuantity').value = '0';
+            document.getElementById('needStatus').value = 'open';
+            submitButton.innerHTML = '<i class="fas fa-plus"></i> إضافة احتياج';
+            cancelButton.hidden = true;
+        }
+
+        function startEdit(need) {
+            editingId = need.id;
+            document.getElementById('needTitle').value = need.title || '';
+            document.getElementById('needDescription').value = need.description || '';
+            document.getElementById('needCategory').value = need.category || '';
+            document.getElementById('needRequiredQuantity').value = need.required_quantity || '';
+            document.getElementById('needFulfilledQuantity').value = need.fulfilled_quantity || 0;
+            document.getElementById('needPriority').value = need.priority || 'medium';
+            document.getElementById('needStatus').value = need.status || 'open';
+            document.getElementById('needImageUrl').value = need.image_url || '';
+            if (need.care_home) {
+                document.getElementById('needCareHome').value = need.care_home;
+            }
+            submitButton.innerHTML = '<i class="fas fa-floppy-disk"></i> حفظ التعديل';
+            cancelButton.hidden = false;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function renderNeeds(needs) {
+            countBadge.textContent = needs.length;
+            if (!needs.length) {
+                list.innerHTML = '<div class="empty-state">لا توجد احتياجات مسجلة حاليًا.</div>';
+                return;
+            }
+
+            list.innerHTML = '';
+            needs.forEach(function (need) {
+                const progress = Math.max(0, Math.min(Number(need.progress_percent || 0), 100));
+                const card = document.createElement('article');
+                card.className = 'need-card';
+                card.innerHTML = `
+                    <div>
+                        <h4></h4>
+                        <p class="need-description"></p>
+                        <div class="need-meta">
+                            <span class="badge need-care-home"></span>
+                            <span class="badge need-category"></span>
+                            <span class="badge need-priority"></span>
+                            <span class="badge need-status"></span>
+                            <span class="badge need-quantity"></span>
+                        </div>
+                        <div class="need-progress"><span style="width: ${progress}%"></span></div>
+                    </div>
+                    <div class="need-card-actions">
+                        <button type="button" class="need-icon-button edit" title="تعديل" aria-label="تعديل"><i class="fas fa-pen"></i></button>
+                        <button type="button" class="need-icon-button archive" title="أرشفة" aria-label="أرشفة"><i class="fas fa-box-archive"></i></button>
+                    </div>
+                `;
+
+                card.querySelector('h4').textContent = need.title || 'بدون عنوان';
+                card.querySelector('.need-description').textContent = need.description || 'لا يوجد وصف.';
+                card.querySelector('.need-care-home').textContent = need.care_home_name || 'دار رعاية غير محددة';
+                card.querySelector('.need-category').textContent = need.category || 'بدون تصنيف';
+                card.querySelector('.need-priority').textContent = labels[need.priority] || need.priority || '--';
+                card.querySelector('.need-status').textContent = labels[need.status] || need.status || '--';
+                card.querySelector('.need-quantity').textContent = `المتوفر ${need.fulfilled_quantity || 0} من ${need.required_quantity || '--'}`;
+                card.querySelector('.edit').addEventListener('click', function () { startEdit(need); });
+                card.querySelector('.archive').addEventListener('click', function () { archiveNeed(need.id); });
+                list.appendChild(card);
+            });
+        }
+
+        async function loadNeeds() {
+            list.innerHTML = '<div class="empty-state">جارٍ تحميل الاحتياجات...</div>';
+            setAlert('', false);
+            try {
+                const response = await fetch(apiUrl, {
+                    headers: { 'Accept': 'application/json' },
+                    credentials: 'same-origin'
+                });
+                const needs = await parseResponse(response);
+                renderNeeds(Array.isArray(needs) ? needs : []);
+            } catch (error) {
+                list.innerHTML = '<div class="empty-state">تعذر تحميل الاحتياجات.</div>';
+                setAlert(error.message, true);
+            }
+        }
+
+        async function saveNeed(event) {
+            event.preventDefault();
+            const wasEditing = Boolean(editingId);
+            submitButton.disabled = true;
+            submitButton.textContent = wasEditing ? 'جارٍ حفظ التعديل...' : 'جارٍ إضافة الاحتياج...';
+            setAlert('', false);
+
+            try {
+                const response = await fetch(wasEditing ? `${apiUrl}${editingId}/` : apiUrl, {
+                    method: wasEditing ? 'PATCH' : 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify(payloadFromForm())
+                });
+                await parseResponse(response);
+                resetForm();
+                await loadNeeds();
+                setAlert(wasEditing ? 'تم تحديث الاحتياج بنجاح.' : 'تمت إضافة الاحتياج بنجاح.', false);
+            } catch (error) {
+                setAlert(error.message, true);
+            } finally {
+                submitButton.disabled = false;
+                if (editingId) {
+                    submitButton.innerHTML = '<i class="fas fa-floppy-disk"></i> حفظ التعديل';
+                } else {
+                    submitButton.innerHTML = '<i class="fas fa-plus"></i> إضافة احتياج';
+                }
+            }
+        }
+
+        async function archiveNeed(id) {
+            if (!window.confirm('هل تريد أرشفة هذا الاحتياج؟')) {
+                return;
+            }
+            setAlert('', false);
+            try {
+                const response = await fetch(`${apiUrl}${id}/archive/`, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    credentials: 'same-origin'
+                });
+                await parseResponse(response);
+                await loadNeeds();
+                setAlert('تمت أرشفة الاحتياج بنجاح.', false);
+            } catch (error) {
+                setAlert(error.message, true);
+            }
+        }
+
+        form.addEventListener('submit', saveNeed);
+        cancelButton.addEventListener('click', resetForm);
+        loadNeeds();
+    });
+</script>
+{% endblock %}
