@@ -22,8 +22,11 @@
         </div>
         {% endif %}
 
-        <form method="POST" class="form-grid" autocomplete="off">
+        <div id="opportunityAlert" class="opportunity-alert" hidden></div>
+
+        <form id="opportunityForm" method="POST" class="form-grid" autocomplete="off">
             {% csrf_token %}
+            <input type="hidden" id="opportunityId" name="opportunity_id">
 
             <div>
                 <label for="opportunityTitle">عنوان الفرصة</label>
@@ -106,9 +109,12 @@
             </div>
 
             <div class="opportunity-actions">
-                <button type="submit" {% if care_homes_count == 0 %}disabled{% endif %}>
+                <button id="opportunitySubmitButton" type="submit" {% if care_homes_count == 0 %}disabled{% endif %}>
                     <i class="fas fa-plus"></i>
                     إضافة فرصة تطوع
+                </button>
+                <button id="opportunityCancelButton" class="opportunity-secondary-button" type="button" hidden>
+                    إلغاء التعديل
                 </button>
             </div>
         </form>
@@ -131,11 +137,25 @@
                         <th>المتطوعون</th>
                         <th>الطلبات</th>
                         <th>الحالة</th>
+                        <th style="text-align: center;">الإجراءات</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for opportunity in opportunities %}
-                    <tr>
+                    <tr
+                        data-id="{{ opportunity.id }}"
+                        data-title="{{ opportunity.title|escape }}"
+                        data-description="{{ opportunity.description|escape }}"
+                        data-category="{{ opportunity.category }}"
+                        data-care-home="{{ opportunity.care_home_id }}"
+                        data-required-volunteers="{{ opportunity.required_volunteers }}"
+                        data-required-skills="{{ opportunity.required_skills|escape }}"
+                        data-location="{{ opportunity.location|escape }}"
+                        data-start-date="{{ opportunity.start_date|date:'Y-m-d\TH:i' }}"
+                        data-end-date="{{ opportunity.end_date|date:'Y-m-d\TH:i' }}"
+                        data-status="{{ opportunity.status }}"
+                        data-image-url="{{ opportunity.image_url|escape }}"
+                    >
                         <td class="name-cell">{{ opportunity.title }}</td>
                         <td>{{ opportunity.care_home.name }}</td>
                         <td>
@@ -157,10 +177,20 @@
                                 {% else %}{{ opportunity.status }}{% endif %}
                             </span>
                         </td>
+                        <td style="text-align: center;">
+                            <div class="opportunity-row-actions">
+                                <button type="button" class="opportunity-icon-button edit" data-action="edit-opportunity" title="تعديل" aria-label="تعديل">
+                                    <i class="fas fa-pen"></i>
+                                </button>
+                                <button type="button" class="opportunity-icon-button delete" data-action="delete-opportunity" title="حذف" aria-label="حذف">
+                                    <i class="fas fa-trash-can"></i>
+                                </button>
+                            </div>
+                        </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="7" class="empty-state">لا توجد فرص تطوع مسجلة حاليًا.</td>
+                        <td colspan="8" class="empty-state">لا توجد فرص تطوع مسجلة حاليًا.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -216,5 +246,205 @@
         gap: 10px;
         flex-wrap: wrap;
     }
+
+    .opportunity-secondary-button {
+        min-height: 50px;
+        border: 1px solid rgba(126, 50, 0, 0.18);
+        border-radius: 15px;
+        padding: 12px 18px;
+        color: var(--orange-800);
+        background: rgba(255, 248, 242, 0.72);
+        font-family: inherit;
+        font-weight: 900;
+        cursor: pointer;
+    }
+
+    .opportunity-row-actions {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        flex-wrap: nowrap;
+    }
+
+    .opportunity-icon-button {
+        width: 42px;
+        height: 42px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 0;
+        border-radius: 14px;
+        cursor: pointer;
+        color: #ffffff;
+        background: linear-gradient(145deg, #ff9e3d, var(--orange-600));
+        box-shadow: 0 5px 0 #bd4100, 0 10px 18px rgba(175, 58, 0, 0.18);
+    }
+
+    .opportunity-icon-button.delete {
+        background: linear-gradient(145deg, #7f1d1d, #b91c1c);
+        box-shadow: 0 5px 0 #5f1313, 0 10px 18px rgba(127, 29, 29, 0.18);
+    }
 </style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const apiUrl = "{% url 'volunteer_opportunity-list' %}";
+        const form = document.getElementById('opportunityForm');
+        const alertBox = document.getElementById('opportunityAlert');
+        const submitButton = document.getElementById('opportunitySubmitButton');
+        const cancelButton = document.getElementById('opportunityCancelButton');
+        const csrfToken = form.querySelector('input[name="csrfmiddlewaretoken"]').value;
+        let editingId = null;
+
+        function setAlert(message, isError) {
+            if (!message) {
+                alertBox.hidden = true;
+                alertBox.textContent = '';
+                alertBox.classList.remove('error');
+                return;
+            }
+            alertBox.hidden = false;
+            alertBox.textContent = message;
+            alertBox.classList.toggle('error', Boolean(isError));
+        }
+
+        function formatApiError(body) {
+            if (!body) return 'تعذر تنفيذ العملية. حاول مرة أخرى.';
+            if (typeof body === 'string') return body;
+            if (body.detail) return body.detail;
+            return Object.entries(body).map(function ([field, value]) {
+                const detail = Array.isArray(value) ? value.join('، ') : String(value);
+                return field + ': ' + detail;
+            }).join(' | ');
+        }
+
+        async function parseResponse(response) {
+            const raw = await response.text();
+            let body = raw;
+            try {
+                body = raw ? JSON.parse(raw) : null;
+            } catch (error) {
+                body = raw;
+            }
+            if (!response.ok) {
+                throw new Error(formatApiError(body));
+            }
+            return body;
+        }
+
+        function payloadFromForm() {
+            const payload = {
+                title: document.getElementById('opportunityTitle').value.trim(),
+                description: document.getElementById('opportunityDescription').value.trim(),
+                category: document.getElementById('opportunityCategory').value,
+                care_home: Number(document.getElementById('opportunityCareHome').value),
+                required_volunteers: Number(document.getElementById('opportunityRequiredVolunteers').value),
+                required_skills: document.getElementById('opportunitySkills').value.trim(),
+                location: document.getElementById('opportunityLocation').value.trim(),
+                start_date: document.getElementById('opportunityStartDate').value || null,
+                end_date: document.getElementById('opportunityEndDate').value || null,
+                status: document.getElementById('opportunityStatus').value,
+                image_url: document.getElementById('opportunityImageUrl').value.trim()
+            };
+            return payload;
+        }
+
+        function resetForm() {
+            editingId = null;
+            form.reset();
+            document.getElementById('opportunityRequiredVolunteers').value = '1';
+            document.getElementById('opportunityStatus').value = 'open';
+            document.getElementById('opportunityId').value = '';
+            submitButton.innerHTML = '<i class="fas fa-plus"></i> إضافة فرصة تطوع';
+            cancelButton.hidden = true;
+            setAlert('', false);
+        }
+
+        function startEdit(row) {
+            editingId = row.dataset.id;
+            document.getElementById('opportunityId').value = editingId;
+            document.getElementById('opportunityTitle').value = row.dataset.title || '';
+            document.getElementById('opportunityDescription').value = row.dataset.description || '';
+            document.getElementById('opportunityCategory').value = row.dataset.category || 'general';
+            document.getElementById('opportunityCareHome').value = row.dataset.careHome || '';
+            document.getElementById('opportunityRequiredVolunteers').value = row.dataset.requiredVolunteers || '1';
+            document.getElementById('opportunitySkills').value = row.dataset.requiredSkills || '';
+            document.getElementById('opportunityLocation').value = row.dataset.location || '';
+            document.getElementById('opportunityStartDate').value = row.dataset.startDate || '';
+            document.getElementById('opportunityEndDate').value = row.dataset.endDate || '';
+            document.getElementById('opportunityStatus').value = row.dataset.status || 'open';
+            document.getElementById('opportunityImageUrl').value = row.dataset.imageUrl || '';
+            submitButton.innerHTML = '<i class="fas fa-floppy-disk"></i> حفظ التعديل';
+            cancelButton.hidden = false;
+            setAlert('', false);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        async function saveOpportunity(event) {
+            event.preventDefault();
+            const wasEditing = Boolean(editingId);
+            submitButton.disabled = true;
+            submitButton.textContent = wasEditing ? 'جاري حفظ التعديل...' : 'جاري إضافة فرصة التطوع...';
+            setAlert('', false);
+
+            try {
+                const response = await fetch(wasEditing ? `${apiUrl}${editingId}/` : apiUrl, {
+                    method: wasEditing ? 'PATCH' : 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify(payloadFromForm())
+                });
+                await parseResponse(response);
+                window.location.reload();
+            } catch (error) {
+                setAlert(error.message, true);
+                submitButton.disabled = false;
+                submitButton.innerHTML = wasEditing
+                    ? '<i class="fas fa-floppy-disk"></i> حفظ التعديل'
+                    : '<i class="fas fa-plus"></i> إضافة فرصة تطوع';
+            }
+        }
+
+        async function deleteOpportunity(row) {
+            const title = row.dataset.title || 'فرصة التطوع';
+            if (!window.confirm(`هل تريد حذف "${title}"؟`)) {
+                return;
+            }
+            setAlert('', false);
+            try {
+                const response = await fetch(`${apiUrl}${row.dataset.id}/`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    credentials: 'same-origin'
+                });
+                await parseResponse(response);
+                row.remove();
+                window.location.reload();
+            } catch (error) {
+                setAlert(error.message, true);
+            }
+        }
+
+        form.addEventListener('submit', saveOpportunity);
+        cancelButton.addEventListener('click', resetForm);
+        document.querySelectorAll('[data-action="edit-opportunity"]').forEach(function (button) {
+            button.addEventListener('click', function () {
+                startEdit(button.closest('tr'));
+            });
+        });
+        document.querySelectorAll('[data-action="delete-opportunity"]').forEach(function (button) {
+            button.addEventListener('click', function () {
+                deleteOpportunity(button.closest('tr'));
+            });
+        });
+    });
+</script>
 {% endblock %}

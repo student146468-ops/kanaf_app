@@ -1475,6 +1475,53 @@ class ManagementVolunteerOpportunitiesDashboardTests(TestCase):
         self.assertEqual(opportunity.required_volunteers, 3)
         self.assertEqual(opportunity.status, VolunteerOpportunity.STATUS_OPEN)
 
+    def test_volunteer_opportunities_dashboard_renders_edit_and_delete_actions(self):
+        VolunteerOpportunity.objects.create(
+            title='Dashboard editable opportunity',
+            description='Visible management row',
+            category=VolunteerOpportunity.CATEGORY_GENERAL,
+            care_home=self.care_home,
+            required_volunteers=2,
+        )
+
+        response = self.client.get(reverse('volunteer_opportunities_list'))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertContains(response, 'data-action="edit-opportunity"')
+        self.assertContains(response, 'data-action="delete-opportunity"')
+        self.assertContains(response, reverse('volunteer_opportunity-list'))
+
+    def test_staff_can_update_and_delete_volunteer_opportunity_from_dashboard_api(self):
+        opportunity = VolunteerOpportunity.objects.create(
+            title='Dashboard API opportunity',
+            description='Before update',
+            category=VolunteerOpportunity.CATEGORY_GENERAL,
+            care_home=self.care_home,
+            required_volunteers=2,
+        )
+
+        update_response = self.client.patch(
+            reverse('volunteer_opportunity-detail', args=[opportunity.pk]),
+            data=json.dumps({
+                'title': 'Dashboard API opportunity updated',
+                'description': 'After update',
+                'required_volunteers': 4,
+            }),
+            content_type='application/json',
+        )
+
+        self.assertEqual(update_response.status_code, status.HTTP_200_OK)
+        opportunity.refresh_from_db()
+        self.assertEqual(opportunity.title, 'Dashboard API opportunity updated')
+        self.assertEqual(opportunity.required_volunteers, 4)
+
+        delete_response = self.client.delete(
+            reverse('volunteer_opportunity-detail', args=[opportunity.pk]),
+        )
+
+        self.assertEqual(delete_response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(VolunteerOpportunity.objects.filter(pk=opportunity.pk).exists())
+
 
 class ManagementModelTests(TestCase):
     def test_create_orphan(self):
