@@ -19,7 +19,7 @@
     </div>
 
     <div class="content-card">
-        <div class="panel" style="box-shadow: none; border: 0; background: transparent; padding-bottom: 0;">
+        <div class="panel embedded-panel">
             <h3 class="panel-title">سجل التبرعات</h3>
         </div>
         <div class="table-wrap">
@@ -32,7 +32,7 @@
                         <th>المبلغ / الكمية</th>
                         <th>تاريخ الإنشاء</th>
                         <th>الحالة</th>
-                        <th style="text-align: center;">الإجراءات</th>
+                        <th class="text-center">الإجراءات</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -69,8 +69,8 @@
                                 {% else %}{{ d.status }}{% endif %}
                             </span>
                         </td>
-                        <td style="text-align: center;">
-                            <form method="POST" action="{% url 'update_donation_status' d.id %}" style="display: inline-flex; gap: 8px; align-items: center; margin-inline-end: 8px;">
+                        <td class="text-center">
+                            <form method="POST" action="{% url 'update_donation_status' d.id %}" class="table-action-form">
                                 {% csrf_token %}
                                 <select name="status" aria-label="حالة التبرع">
                                     {% for value, label in donation_status_choices %}
@@ -85,7 +85,7 @@
                                 </select>
                                 <button type="submit"><i class="fas fa-floppy-disk"></i> حفظ</button>
                             </form>
-                            <form method="POST" action="{% url 'delete_donation' d.id %}" class="delete-form" data-delete-name="{{ d }}" style="display: inline;">
+                            <form method="POST" action="{% url 'delete_donation' d.id %}" class="delete-form inline-form" data-delete-name="{{ d }}">
                                 {% csrf_token %}
                                 <input type="hidden" name="confirm_delete" value="">
                                 <button type="submit" class="delete-button"><i class="fas fa-trash"></i> حذف</button>

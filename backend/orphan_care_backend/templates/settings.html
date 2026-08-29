@@ -1,20 +1,37 @@
 {% extends 'base.html' %}
+
 {% block content %}
-<div style="direction: rtl; padding: 20px; font-family: 'Tajawal', sans-serif;">
-    <h2 style="color: #1e293b;">⚙️ إعدادات المنظومة</h2>
-    <div style="background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-        <div style="margin-bottom: 20px;">
-            <label style="font-weight: bold; display: block; margin-bottom: 10px;">اسم المؤسسة:</label>
-            <input type="text" value="جمعية رعاية الأيتام" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd;">
-        </div>
-        <div style="margin-bottom: 20px;">
-            <label style="font-weight: bold; display: block; margin-bottom: 10px;">لغة النظام:</label>
-            <select style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd;">
-                <option>العربية</option>
-                <option>English</option>
-            </select>
-        </div>
-        <button style="background: #1e293b; color: white; padding: 12px 30px; border: none; border-radius: 10px; cursor: pointer;">حفظ الإعدادات</button>
+<section class="page-shell">
+    <div class="panel">
+        <h3 class="panel-title">
+            إعدادات المنظومة
+            <span class="panel-kicker"><i class="fas fa-gear"></i></span>
+        </h3>
+
+        <form class="form-grid">
+            <div>
+                <label for="organizationName">اسم المؤسسة</label>
+                <input id="organizationName" type="text" value="جمعية رعاية الأيتام">
+            </div>
+            <div>
+                <label for="systemLanguage">لغة النظام</label>
+                <select id="systemLanguage">
+                    <option>العربية</option>
+                    <option>English</option>
+                </select>
+            </div>
+            <button type="button"><i class="fas fa-floppy-disk"></i> حفظ الإعدادات</button>
+        </form>
     </div>
-</div>
+
+    <div class="content-card settings-note">
+        <div class="list-item">
+            <span class="list-icon"><i class="fas fa-circle-info"></i></span>
+            <div>
+                <strong>إعدادات عامة</strong>
+                <span>هذه الصفحة تستخدم نفس تنسيق لوحة كنف الموحد دون تغيير منطق النظام الحالي.</span>
+            </div>
+        </div>
+    </div>
+</section>
 {% endblock %}

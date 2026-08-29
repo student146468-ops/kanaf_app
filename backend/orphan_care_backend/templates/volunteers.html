@@ -16,7 +16,7 @@
             </div>
             <button type="submit"><i class="fas fa-user-plus"></i> إضافة متطوع</button>
         </form>
-        <div style="margin-top: 14px;">
+        <div class="form-footer">
             <a class="btn-3d" href="{% url 'volunteer_applications_list' %}">
                 <i class="fas fa-list-check"></i> طلبات التطوع
             </a>
@@ -24,7 +24,7 @@
     </div>
 
     <div class="content-card">
-        <div class="panel" style="box-shadow: none; border: 0; background: transparent; padding-bottom: 0;">
+        <div class="panel embedded-panel">
             <h3 class="panel-title">قائمة المتطوعين النشطين</h3>
         </div>
         <div class="table-wrap">
@@ -34,7 +34,7 @@
                         <th>الاسم</th>
                         <th>التخصص</th>
                         <th>النقاط</th>
-                        <th style="text-align: center;">إجراءات</th>
+                        <th class="text-center">إجراءات</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -43,8 +43,8 @@
                         <td class="name-cell">{{ v.name }}</td>
                         <td>{{ v.specialty }}</td>
                         <td><span class="badge">{{ v.points }} نقطة</span></td>
-                        <td style="text-align: center;">
-                            <form method="POST" action="{% url 'delete_volunteer' v.id %}" class="delete-form" data-delete-name="{{ v.name }}" style="display: inline;">
+                        <td class="text-center">
+                            <form method="POST" action="{% url 'delete_volunteer' v.id %}" class="delete-form inline-form" data-delete-name="{{ v.name }}">
                                 {% csrf_token %}
                                 <input type="hidden" name="confirm_delete" value="">
                                 <button type="submit" class="delete-button"><i class="fas fa-trash"></i> حذف</button>

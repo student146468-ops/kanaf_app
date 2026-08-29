@@ -3,7 +3,7 @@
 {% block content %}
 <section class="page-shell">
     <div class="content-card">
-        <div class="panel" style="box-shadow: none; border: 0; background: transparent; padding-bottom: 0;">
+        <div class="panel embedded-panel">
             <h3 class="panel-title">طلبات التطوع</h3>
         </div>
         <div class="table-wrap">
@@ -15,7 +15,7 @@
                         <th>تاريخ التقديم</th>
                         <th>الرسالة</th>
                         <th>الحالة</th>
-                        <th style="text-align: center;">الإجراءات</th>
+                        <th class="text-center">الإجراءات</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -34,8 +34,8 @@
                                 {% else %}{{ application.status }}{% endif %}
                             </span>
                         </td>
-                        <td style="text-align: center;">
-                            <form method="POST" action="{% url 'update_volunteer_application_status' application.id %}" style="display: inline-flex; gap: 8px; align-items: center;">
+                        <td class="text-center">
+                            <form method="POST" action="{% url 'update_volunteer_application_status' application.id %}" class="table-action-form">
                                 {% csrf_token %}
                                 <select name="status" aria-label="حالة طلب التطوع">
                                     {% for value, label in application_status_choices %}

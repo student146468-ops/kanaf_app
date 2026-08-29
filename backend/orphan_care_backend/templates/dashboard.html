@@ -64,7 +64,7 @@
                 <div class="empty-state">لا توجد تبرعات حديثة.</div>
                 {% endfor %}
             </div>
-            <a class="btn-3d" href="{% url 'donations_list' %}" style="width: 100%; margin-top: 14px;">عرض جميع التبرعات</a>
+            <a class="btn-3d full-width-action" href="{% url 'donations_list' %}">عرض جميع التبرعات</a>
         </section>
 
         <section class="panel">
@@ -78,12 +78,12 @@
             <div class="mini-card">
                 <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
                 <div>
-                    <span style="color: var(--muted); font-weight: 800;">متوسط يومي</span>
-                    <strong style="display: block; font-size: 1.2rem;">2,678 د.ل</strong>
+                    <span class="metric-label">متوسط يومي</span>
+                    <strong class="metric-value">2,678 د.ل</strong>
                 </div>
                 <div>
-                    <span style="color: var(--muted); font-weight: 800;">إجمالي هذا الأسبوع</span>
-                    <strong style="display: block; font-size: 1.2rem;">18,750 د.ل</strong>
+                    <span class="metric-label">إجمالي هذا الأسبوع</span>
+                    <strong class="metric-value">18,750 د.ل</strong>
                 </div>
             </div>
         </section>
@@ -104,7 +104,7 @@
                 <div class="empty-state">لا توجد طلبات تطوع حديثة.</div>
                 {% endfor %}
             </div>
-            <a class="btn-3d" href="{% url 'volunteer_applications_list' %}" style="width: 100%; margin-top: 14px;">عرض جميع الطلبات</a>
+            <a class="btn-3d full-width-action" href="{% url 'volunteer_applications_list' %}">عرض جميع الطلبات</a>
         </section>
     </div>
 

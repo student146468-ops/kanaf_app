@@ -1,39 +1,60 @@
 {% extends 'base.html' %}
+
 {% block content %}
-<div style="direction: rtl; padding: 30px; font-family: 'Tajawal', sans-serif; background-color: #f8fafc; min-height: 100vh;">
-    
-    <h2 style="color: #1e293b; margin-bottom: 30px; border-right: 5px solid #4338ca; padding-right: 15px;">📊 التقارير والإحصائيات العامة</h2>
-    
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 25px;">
-        
-        <div style="background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); transition: 0.3s; border-bottom: 5px solid #4338ca;">
-            <p style="color: #64748b; font-size: 1.1rem; margin: 0;">إجمالي الأيتام</p>
-            <h1 style="color: #1e293b; font-size: 2.5rem; margin: 15px 0;">{{ total_orphans }}</h1>
-            <span style="color: #4338ca; font-size: 0.9rem;">👤 طفل مسجل</span>
-        </div>
-
-        <div style="background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border-bottom: 5px solid #f59e0b;">
-            <p style="color: #64748b; font-size: 1.1rem; margin: 0;">المتطوعين</p>
-            <h1 style="color: #1e293b; font-size: 2.5rem; margin: 15px 0;">{{ total_volunteers }}</h1>
-            <span style="color: #f59e0b; font-size: 0.9rem;">🤝 متطوع نشط</span>
-        </div>
-
-        <div style="background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border-bottom: 5px solid #10b981;">
-            <p style="color: #64748b; font-size: 1.1rem; margin: 0;">عمليات التبرع</p>
-            <h1 style="color: #1e293b; font-size: 2.5rem; margin: 15px 0;">{{ total_donations }}</h1>
-            <span style="color: #10b981; font-size: 0.9rem;">🎁 عملية مسجلة</span>
-        </div>
-
-        <div style="background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border-bottom: 5px solid #ec4899;">
-            <p style="color: #64748b; font-size: 1.1rem; margin: 0;">الكفلاء</p>
-            <h1 style="color: #1e293b; font-size: 2.5rem; margin: 15px 0;">{{ total_sponsors }}</h1>
-            <span style="color: #ec4899; font-size: 0.9rem;">💖 كفيل مسجل</span>
-        </div>
-
+<section class="page-shell">
+    <div class="panel">
+        <h3 class="panel-title">
+            التقارير والإحصائيات العامة
+            <span class="panel-kicker"><i class="fas fa-chart-column"></i></span>
+        </h3>
+        <p class="section-note">الأرقام يتم تحديثها تلقائيًا بمجرد إضافة بيانات جديدة في الأقسام الأخرى.</p>
     </div>
 
-    <div style="margin-top: 40px; background: #eff6ff; padding: 20px; border-radius: 15px; color: #1e40af; border: 1px dashed #bfdbfe;">
-        💡 **ملاحظة:** الأرقام أعلاه يتم تحديثها تلقائياً بمجرد إضافة بيانات جديدة في الأقسام الأخرى.
+    <div class="stats-grid">
+        <article class="stat-card">
+            <div>
+                <h3>إجمالي الأيتام</h3>
+                <strong>{{ total_orphans }}</strong>
+                <p>طفل مسجل</p>
+            </div>
+            <span class="stat-icon"><i class="fas fa-children"></i></span>
+        </article>
+
+        <article class="stat-card">
+            <div>
+                <h3>المتطوعون</h3>
+                <strong>{{ total_volunteers }}</strong>
+                <p>متطوع نشط</p>
+            </div>
+            <span class="stat-icon"><i class="fas fa-hand-holding-heart"></i></span>
+        </article>
+
+        <article class="stat-card">
+            <div>
+                <h3>عمليات التبرع</h3>
+                <strong>{{ total_donations }}</strong>
+                <p>عملية مسجلة</p>
+            </div>
+            <span class="stat-icon"><i class="fas fa-gift"></i></span>
+        </article>
+
+        <article class="stat-card">
+            <div>
+                <h3>الكفلاء</h3>
+                <strong>{{ total_sponsors }}</strong>
+                <p>كفيل مسجل</p>
+            </div>
+            <span class="stat-icon"><i class="fas fa-user-group"></i></span>
+        </article>
+
+        <article class="stat-card">
+            <div>
+                <h3>أصناف المخزن</h3>
+                <strong>{{ total_items }}</strong>
+                <p>صنف متاح</p>
+            </div>
+            <span class="stat-icon"><i class="fas fa-box-open"></i></span>
+        </article>
     </div>
-</div>
+</section>
 {% endblock %}
