@@ -17,6 +17,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import extend_schema, inline_serializer
 from rest_framework import filters, serializers, status, viewsets
+from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, BasePermission, IsAuthenticated
 from rest_framework.response import Response
@@ -26,6 +27,7 @@ from rest_framework_simplejwt.token_blacklist.models import (
     BlacklistedToken,
     OutstandingToken,
 )
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import Donation, InventoryItem, Need, Orphan, Sponsor, Volunteer
@@ -456,6 +458,24 @@ class CareHomeManagerWritePermission(BasePermission):
         if request.method in ('GET', 'HEAD', 'OPTIONS'):
             return True
         return user_manages_care_home(request.user, getattr(obj, 'care_home', None))
+
+
+class NeedWritePermission(BasePermission):
+    message = 'Only care home managers can manage needs.'
+
+    def has_permission(self, request, view):
+        if not (request.user and request.user.is_authenticated):
+            return False
+        if request.method in ('GET', 'HEAD', 'OPTIONS'):
+            return True
+        return request.user.is_staff or care_home_for_user(request.user) is not None
+
+    def has_object_permission(self, request, view, obj):
+        if request.method in ('GET', 'HEAD', 'OPTIONS'):
+            return True
+        if request.user.is_staff:
+            return True
+        return user_manages_care_home(request.user, obj.care_home)
 
 
 class SafeDestroyMixin:
@@ -1337,7 +1357,8 @@ class NeedViewSet(SafeDestroyMixin, viewsets.ModelViewSet):
         )
     )
     serializer_class = NeedSerializer
-    permission_classes = [StaffDeletePermission]
+    authentication_classes = [JWTAuthentication, SessionAuthentication]
+    permission_classes = [NeedWritePermission]
     pagination_class = None
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = [
@@ -1352,13 +1373,46 @@ class NeedViewSet(SafeDestroyMixin, viewsets.ModelViewSet):
     ordering_fields = ['id', 'title', 'priority', 'deadline', 'created_at']
     ordering = ['-created_at']
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        status_filter = self.request.query_params.get('status')
+        care_home_filter = self.request.query_params.get('care_home')
+        mine = self.request.query_params.get('mine')
+
+        if status_filter:
+            queryset = queryset.filter(status=status_filter)
+        if care_home_filter:
+            queryset = queryset.filter(care_home_id=care_home_filter)
+        if mine in {'1', 'true', 'True'}:
+            care_home = care_home_for_user(self.request.user)
+            queryset = queryset.none() if care_home is None else queryset.filter(care_home=care_home)
+
+        return queryset
+
     def perform_create(self, serializer):
+        care_home = (
+            serializer.validated_data.get('care_home')
+            if self.request.user.is_staff
+            else care_home_for_user(self.request.user)
+        )
+        if care_home is None:
+            raise serializers.ValidationError({'care_home': 'care_home is required.'})
         # نربط الاحتياج بدار منشئه تلقائياً حتى يظهر في ملف الدار
         # وفي تصفح المتبرع، بدل أن يبقى معلّقاً بلا صاحب.
         serializer.save(
             created_by=self.request.user,
-            care_home=care_home_for_user(self.request.user),
+            care_home=care_home,
         )
+
+    def perform_update(self, serializer):
+        instance = self.get_object()
+        if self.request.user.is_staff:
+            care_home = serializer.validated_data.get('care_home', instance.care_home)
+            if care_home is None:
+                raise serializers.ValidationError({'care_home': 'care_home is required.'})
+            serializer.save(care_home=care_home)
+            return
+        serializer.save(care_home=instance.care_home)
 
     def destroy(self, request, *args, **kwargs):
         need = self.get_object()
