@@ -1,26 +1,87 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../l10n/kanaf_localizations.dart';
 import '../../models/volunteer_opportunity_model.dart';
+import '../../providers/app_provider_scope.dart';
 import '../../router/kanaf_router.dart';
 import '../../theme/kanaf_motion.dart';
 import '../../theme/kanaf_tokens.dart';
 import '../../widgets/kanaf_layout.dart';
 import '../../widgets/kanaf_states.dart';
 
-class VolunteerOpportunityDetailsView extends StatelessWidget {
+class VolunteerOpportunityDetailsView extends StatefulWidget {
   const VolunteerOpportunityDetailsView({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final opportunity = VolunteerOpportunityModel.fromJson(
+  State<VolunteerOpportunityDetailsView> createState() =>
+      _VolunteerOpportunityDetailsViewState();
+}
+
+class _VolunteerOpportunityDetailsViewState
+    extends State<VolunteerOpportunityDetailsView> {
+  VolunteerOpportunityModel? _routeOpportunity;
+  int? _requestedId;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final routeOpportunity = VolunteerOpportunityModel.fromJson(
       _readArguments(context),
     );
-    final title = opportunity.title.isEmpty ? 'فرصة تطوع' : opportunity.title;
+    _routeOpportunity = routeOpportunity.id == 0 ? null : routeOpportunity;
+    final id = _routeOpportunity?.id;
+    if (id != null && _requestedId != id) {
+      _requestedId = id;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        AppProviderScope.of(context).fetchVolunteerOpportunityDetails(id);
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = AppProviderScope.of(context);
+    final fetched = provider.selectedVolunteerOpportunity;
+    final routeOpportunity = _routeOpportunity;
+    final opportunity = fetched?.id == routeOpportunity?.id
+        ? fetched!
+        : routeOpportunity ?? fetched;
+    final isEmpty = opportunity == null;
+
+    if (isEmpty) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(context.tr('volunteer.detailsTitle')),
+          leading: const BackButton(),
+        ),
+        body: KanafBackdrop(
+          child: KanafAsyncView(
+            isLoading: provider.isLoadingVolunteerOpportunityDetails,
+            isEmpty: isEmpty,
+            errorMessage: provider.volunteerOpportunityDetailsErrorMessage,
+            errorKind: provider.volunteerOpportunityDetailsErrorKind,
+            onRetry: _requestedId == null
+                ? null
+                : () =>
+                    provider.fetchVolunteerOpportunityDetails(_requestedId!),
+            emptyIcon: Icons.handshake_outlined,
+            emptyTitle: context.tr('volunteer.defaultOpportunity'),
+            emptyMessage: context.tr('volunteer.missingOpportunity'),
+            builder: (_) => const SizedBox.shrink(),
+          ),
+        ),
+      );
+    }
+
+    final title = opportunity.title.isEmpty
+        ? context.tr('volunteer.defaultOpportunity')
+        : opportunity.title;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('تفاصيل الفرصة'),
+        title: Text(context.tr('volunteer.detailsTitle')),
         leading: const BackButton(),
       ),
       body: KanafBackdrop(
@@ -37,8 +98,35 @@ class VolunteerOpportunityDetailsView extends StatelessWidget {
                     KanafSpacing.xxl,
                   ),
                   children: [
+                    if (provider.isLoadingVolunteerOpportunityDetails)
+                      const Padding(
+                        padding: EdgeInsets.only(bottom: KanafSpacing.md),
+                        child: KanafSkeleton(height: 4),
+                      ),
+                    if (provider.volunteerOpportunityDetailsErrorMessage !=
+                        null) ...[
+                      KanafFailureState(
+                        message:
+                            provider.volunteerOpportunityDetailsErrorMessage!,
+                        kind: provider.volunteerOpportunityDetailsErrorKind,
+                        onRetry: _requestedId == null
+                            ? null
+                            : () => provider.fetchVolunteerOpportunityDetails(
+                                _requestedId!),
+                      ),
+                      const SizedBox(height: KanafSpacing.lg),
+                    ],
+                    if ((opportunity.imageUrl ?? '').isNotEmpty) ...[
+                      KanafStaggeredEntrance(
+                        index: 0,
+                        child: _OpportunityImage(
+                          imageUrl: opportunity.imageUrl!,
+                        ),
+                      ),
+                      const SizedBox(height: KanafSpacing.lg),
+                    ],
                     KanafStaggeredEntrance(
-                      index: 0,
+                      index: 1,
                       child: _HeaderCard(
                         opportunity: opportunity,
                         title: title,
@@ -46,25 +134,25 @@ class VolunteerOpportunityDetailsView extends StatelessWidget {
                     ),
                     const SizedBox(height: KanafSpacing.lg),
                     KanafStaggeredEntrance(
-                      index: 1,
+                      index: 2,
                       child: _CapacityCard(opportunity: opportunity),
                     ),
                     const SizedBox(height: KanafSpacing.lg),
                     KanafStaggeredEntrance(
-                      index: 2,
+                      index: 3,
                       child: _DetailsCard(opportunity: opportunity),
                     ),
                     if (opportunity.skills.isNotEmpty) ...[
                       const SizedBox(height: KanafSpacing.lg),
                       KanafStaggeredEntrance(
-                        index: 3,
+                        index: 4,
                         child: _SkillsSection(skills: opportunity.skills),
                       ),
                     ],
                     if (opportunity.description.isNotEmpty) ...[
                       const SizedBox(height: KanafSpacing.lg),
                       KanafStaggeredEntrance(
-                        index: 4,
+                        index: 5,
                         child: _DescriptionSection(
                           description: opportunity.description,
                         ),
@@ -84,10 +172,16 @@ class VolunteerOpportunityDetailsView extends StatelessWidget {
                       : null,
                   icon: const Icon(Icons.volunteer_activism_outlined),
                   label: Text(
-                    switch ((opportunity.isOpen, opportunity.isFull)) {
-                      (false, _) => 'الفرصة مغلقة',
-                      (true, true) => 'اكتمل العدد',
-                      _ => 'تطوع الآن',
+                    switch ((
+                      opportunity.myApplicationStatus,
+                      opportunity.isOpen,
+                      opportunity.isFull
+                    )) {
+                      (final applicationStatus?, _, _) =>
+                        _applicationStatusLabel(context, applicationStatus),
+                      (_, false, _) => context.tr('volunteer.filterClosed'),
+                      (_, true, true) => context.tr('volunteer.capacityFull'),
+                      _ => context.tr('volunteer.applyButton'),
                     },
                   ),
                 ),
@@ -106,6 +200,34 @@ class VolunteerOpportunityDetailsView extends StatelessWidget {
     }
     if (args is Map) return Map<String, dynamic>.from(args);
     return const {};
+  }
+}
+
+class _OpportunityImage extends StatelessWidget {
+  const _OpportunityImage({required this.imageUrl});
+
+  final String imageUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colors;
+    return ClipRRect(
+      borderRadius: KanafRadii.lg,
+      child: AspectRatio(
+        aspectRatio: 16 / 9,
+        child: Image.network(
+          imageUrl,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => ColoredBox(
+            color: scheme.surfaceContainerHighest,
+            child: Icon(
+              Icons.image_not_supported_outlined,
+              color: scheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -143,6 +265,8 @@ class _HeaderCard extends StatelessWidget {
                   runSpacing: KanafSpacing.xs,
                   children: [
                     KanafStatusChip(status: opportunity.status),
+                    if (opportunity.hasApplication)
+                      KanafStatusChip(status: opportunity.myApplicationStatus!),
                     Chip(
                       visualDensity: VisualDensity.compact,
                       label: Text(opportunity.categoryLabel),
@@ -156,6 +280,16 @@ class _HeaderCard extends StatelessWidget {
       ),
     );
   }
+}
+
+String _applicationStatusLabel(BuildContext context, String status) {
+  return switch (status.trim().toLowerCase()) {
+    'accepted' || 'approved' => context.tr('status.accepted'),
+    'completed' => context.tr('status.completed'),
+    'rejected' => context.tr('status.rejected'),
+    'pending' => context.tr('status.pending'),
+    _ => status,
+  };
 }
 
 class _CapacityCard extends StatelessWidget {
@@ -172,10 +306,19 @@ class _CapacityCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text('المتطوعون', style: context.texts.titleSmall),
+              Text(
+                context.tr('volunteer.volunteers'),
+                style: context.texts.titleSmall,
+              ),
               const Spacer(),
               Text(
-                '${opportunity.currentVolunteers} من ${opportunity.requiredVolunteers}',
+                context.tr(
+                  'volunteer.capacityCount',
+                  args: {
+                    'current': opportunity.currentVolunteers,
+                    'required': opportunity.requiredVolunteers,
+                  },
+                ),
                 style: context.texts.labelMedium?.copyWith(
                   color: scheme.onSurfaceVariant,
                 ),
@@ -193,8 +336,11 @@ class _CapacityCard extends StatelessWidget {
           const SizedBox(height: KanafSpacing.sm),
           Text(
             opportunity.effectiveRemainingSlots == 0
-                ? 'اكتمل العدد المطلوب'
-                : 'متبقي ${opportunity.effectiveRemainingSlots} مقاعد',
+                ? context.tr('volunteer.capacityFull')
+                : context.tr(
+                    'volunteer.remainingSlots',
+                    args: {'count': opportunity.effectiveRemainingSlots},
+                  ),
             style: context.texts.bodySmall,
           ),
         ],
@@ -210,35 +356,42 @@ class _DetailsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dateFormat = DateFormat('d MMMM y', 'ar');
-    final timeFormat = DateFormat('h:mm a', 'ar');
+    final locale = Localizations.localeOf(context).languageCode;
+    final dateFormat = DateFormat('d MMMM y', locale);
+    final timeFormat = DateFormat('h:mm a', locale);
     final rows = <Widget>[
       if ((opportunity.careHomeName ?? '').isNotEmpty)
-        KanafDetailRow(label: 'دار الرعاية', value: opportunity.careHomeName!),
+        KanafDetailRow(
+          label: context.tr('volunteer.detailCareHome'),
+          value: opportunity.careHomeName!,
+        ),
       if (opportunity.location.isNotEmpty)
-        KanafDetailRow(label: 'المكان', value: opportunity.location),
+        KanafDetailRow(
+          label: context.tr('volunteer.detailPlace'),
+          value: opportunity.location,
+        ),
       if ((opportunity.careHomeLocation ?? '').isNotEmpty)
         KanafDetailRow(
-          label: 'عنوان الدار',
+          label: context.tr('volunteer.detailAddress'),
           value: opportunity.careHomeLocation!,
         ),
       if (opportunity.startDate != null)
         KanafDetailRow(
-          label: 'التاريخ',
+          label: context.tr('volunteer.detailDate'),
           value: dateFormat.format(opportunity.startDate!),
         ),
       if (opportunity.startDate != null)
         KanafDetailRow(
-          label: 'الوقت',
+          label: context.tr('volunteer.detailTime'),
           value: timeFormat.format(opportunity.startDate!),
         ),
       if (opportunity.endDate != null)
         KanafDetailRow(
-          label: 'ينتهي',
+          label: context.tr('volunteer.detailEnds'),
           value: dateFormat.format(opportunity.endDate!),
         ),
       KanafDetailRow(
-        label: 'عدد الطلبات',
+        label: context.tr('volunteer.detailApplications'),
         value: opportunity.applicationsCount.toString(),
       ),
     ];
@@ -257,7 +410,7 @@ class _SkillsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const KanafSectionHeader(title: 'المهارات المطلوبة'),
+        KanafSectionHeader(title: context.tr('volunteer.skillsRequired')),
         const SizedBox(height: KanafSpacing.md),
         Wrap(
           spacing: KanafSpacing.sm,
@@ -285,7 +438,7 @@ class _DescriptionSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const KanafSectionHeader(title: 'عن الفرصة'),
+        KanafSectionHeader(title: context.tr('volunteer.aboutOpportunity')),
         const SizedBox(height: KanafSpacing.md),
         KanafCard(child: Text(description, style: context.texts.bodyMedium)),
       ],

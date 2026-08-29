@@ -5,6 +5,7 @@ import '../../router/kanaf_router.dart';
 import '../../theme/kanaf_motion.dart';
 import '../../theme/kanaf_tokens.dart';
 import '../../widgets/kanaf_layout.dart';
+import '../../l10n/kanaf_localizations.dart';
 
 /// التقديم على فرصة تطوع.
 ///
@@ -52,11 +53,16 @@ class _ApplyOpportunityViewState extends State<ApplyOpportunityView> {
   @override
   Widget build(BuildContext context) {
     final opportunity = _opportunity;
-    final title = opportunity['title']?.toString() ?? 'فرصة تطوع';
+    final title = opportunity['title']?.toString() ??
+        context.tr('volunteer.defaultOpportunity');
+    final applicationStatus =
+        opportunity['my_application_status']?.toString().trim();
+    final hasApplication =
+        applicationStatus != null && applicationStatus.isNotEmpty;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('التقديم على الفرصة'),
+        title: Text(context.tr('volunteer.applyTitle')),
         leading: const BackButton(),
       ),
       body: KanafBackdrop(
@@ -87,7 +93,7 @@ class _ApplyOpportunityViewState extends State<ApplyOpportunityView> {
               ),
               KanafActionBar(
                 child: FilledButton.icon(
-                  onPressed: _isSubmitting ? null : _submit,
+                  onPressed: _isSubmitting || hasApplication ? null : _submit,
                   icon: _isSubmitting
                       ? const SizedBox.square(
                           dimension: 18,
@@ -95,7 +101,11 @@ class _ApplyOpportunityViewState extends State<ApplyOpportunityView> {
                         )
                       : const Icon(Icons.send_outlined),
                   label: Text(
-                    _isSubmitting ? 'جاري الإرسال...' : 'إرسال الطلب',
+                    hasApplication
+                        ? _applicationStatusLabel(context, applicationStatus)
+                        : _isSubmitting
+                            ? context.tr('volunteer.submitting')
+                            : context.tr('volunteer.submitRequest'),
                   ),
                 ),
               ),
@@ -155,24 +165,24 @@ class _ApplyOpportunityViewState extends State<ApplyOpportunityView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const KanafSectionHeader(
-          title: 'طلبك',
-          subtitle: 'يصل نصك إلى دار الرعاية كما كتبته',
+        KanafSectionHeader(
+          title: context.tr('volunteer.myRequest'),
+          subtitle: context.tr('volunteer.myRequestSubtitle'),
         ),
         const SizedBox(height: KanafSpacing.md),
         TextFormField(
           controller: _reasonController,
           maxLines: 4,
           textInputAction: TextInputAction.newline,
-          decoration: const InputDecoration(
-            labelText: 'لماذا تريد التطوع في هذه الفرصة؟',
-            prefixIcon: Icon(Icons.favorite_outline_rounded),
+          decoration: InputDecoration(
+            labelText: context.tr('volunteer.whyJoin'),
+            prefixIcon: const Icon(Icons.favorite_outline_rounded),
             alignLabelWithHint: true,
           ),
           validator: (value) {
             final text = value?.trim() ?? '';
-            if (text.isEmpty) return 'اكتب سبب رغبتك في التطوع';
-            if (text.length < 10) return 'أضف تفاصيل أكثر';
+            if (text.isEmpty) return context.tr('volunteer.reasonRequired');
+            if (text.length < 10) return context.tr('volunteer.reasonTooShort');
             return null;
           },
         ),
@@ -181,10 +191,10 @@ class _ApplyOpportunityViewState extends State<ApplyOpportunityView> {
           controller: _skillsController,
           focusNode: _skillsFocus,
           maxLines: 3,
-          decoration: const InputDecoration(
-            labelText: 'مهاراتك وخبراتك (اختياري)',
-            hintText: 'مثال: تدريس رياضيات، إسعافات أولية',
-            prefixIcon: Icon(Icons.workspace_premium_outlined),
+          decoration: InputDecoration(
+            labelText: context.tr('volunteer.skillsExperience'),
+            hintText: context.tr('volunteer.skillsHint'),
+            prefixIcon: const Icon(Icons.workspace_premium_outlined),
             alignLabelWithHint: true,
           ),
         ),
@@ -198,10 +208,11 @@ class _ApplyOpportunityViewState extends State<ApplyOpportunityView> {
 
     final opportunity = _opportunity;
     final raw = opportunity['id'];
-    final opportunityId = raw is int ? raw : int.tryParse(raw?.toString() ?? '');
+    final opportunityId =
+        raw is int ? raw : int.tryParse(raw?.toString() ?? '');
 
     if (opportunityId == null) {
-      _showMessage('تعذر تحديد الفرصة. عد إلى القائمة وحاول مرة أخرى.');
+      _showMessage(context.tr('volunteer.missingOpportunity'));
       return;
     }
 
@@ -210,7 +221,7 @@ class _ApplyOpportunityViewState extends State<ApplyOpportunityView> {
     final skills = _skillsController.text.trim();
     final message = StringBuffer(_reasonController.text.trim());
     if (skills.isNotEmpty) {
-      message.write('\n\nالمهارات: $skills');
+      message.write('\n\n${context.tr('volunteer.skillsPrefix')}: $skills');
     }
 
     setState(() => _isSubmitting = true);
@@ -224,7 +235,8 @@ class _ApplyOpportunityViewState extends State<ApplyOpportunityView> {
 
     // ننتظر النتيجة الفعلية لا `errorMessage` المتقادمة.
     if (!submitted) {
-      _showMessage(provider.errorMessage ?? 'تعذر إرسال الطلب حالياً.');
+      _showMessage(
+          provider.errorMessage ?? context.tr('volunteer.applyFailed'));
       return;
     }
 
@@ -261,13 +273,12 @@ class _ApplyOpportunityViewState extends State<ApplyOpportunityView> {
               ),
               const SizedBox(height: KanafSpacing.xl),
               Text(
-                'تم إرسال طلبك',
+                sheetContext.tr('volunteer.applySuccessTitle'),
                 style: sheetContext.texts.titleLarge,
               ),
               const SizedBox(height: KanafSpacing.sm),
               Text(
-                'ستراجعه دار الرعاية ويصلك إشعار بالنتيجة. '
-                'يمكنك متابعة حالته من «جدولي».',
+                sheetContext.tr('volunteer.applySuccessMessage'),
                 textAlign: TextAlign.center,
                 style: sheetContext.texts.bodyMedium?.copyWith(
                   color: sheetContext.colors.onSurfaceVariant,
@@ -282,7 +293,7 @@ class _ApplyOpportunityViewState extends State<ApplyOpportunityView> {
                     (route) => route.settings.name == KanafRoutes.volunteerHome,
                   );
                 },
-                child: const Text('عرض جدولي'),
+                child: Text(context.tr('volunteer.viewSchedule')),
               ),
               const SizedBox(height: KanafSpacing.sm),
               TextButton(
@@ -290,7 +301,7 @@ class _ApplyOpportunityViewState extends State<ApplyOpportunityView> {
                   Navigator.pop(sheetContext);
                   Navigator.of(context).pop();
                 },
-                child: const Text('العودة للفرص'),
+                child: Text(context.tr('volunteer.backToOpportunities')),
               ),
             ],
           ),
@@ -305,10 +316,20 @@ class _ApplyOpportunityViewState extends State<ApplyOpportunityView> {
         content: Text(message),
         duration: const Duration(seconds: 6),
         action: SnackBarAction(
-          label: 'حسناً',
+          label: context.tr('common.ok'),
           onPressed: () => ScaffoldMessenger.of(context).hideCurrentSnackBar(),
         ),
       ),
     );
   }
+}
+
+String _applicationStatusLabel(BuildContext context, String status) {
+  return switch (status.trim().toLowerCase()) {
+    'accepted' || 'approved' => context.tr('status.accepted'),
+    'completed' => context.tr('status.completed'),
+    'rejected' => context.tr('status.rejected'),
+    'pending' => context.tr('status.pending'),
+    _ => status,
+  };
 }

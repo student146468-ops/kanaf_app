@@ -8,6 +8,7 @@ import '../../theme/kanaf_motion.dart';
 import '../../theme/kanaf_tokens.dart';
 import '../../widgets/kanaf_layout.dart';
 import '../../widgets/kanaf_states.dart';
+import '../../l10n/kanaf_localizations.dart';
 
 class SearchFilterView extends StatefulWidget {
   const SearchFilterView({super.key});
@@ -22,8 +23,7 @@ class _SearchFilterViewState extends State<SearchFilterView> {
   String _category = _allCategory;
   String _query = '';
 
-  static const String _allCategory = 'الكل';
-  static final DateFormat _dateFormat = DateFormat('d MMM y', 'ar');
+  static const String _allCategory = '__all__';
 
   @override
   void initState() {
@@ -48,10 +48,14 @@ class _SearchFilterViewState extends State<SearchFilterView> {
     final provider = AppProviderScope.of(context);
     final all = provider.volunteerOpportunityModels;
     final visible = _applyCategory(_applyQuery(_scope.apply(all)));
+    final dateFormat = DateFormat(
+      'd MMM y',
+      Localizations.localeOf(context).languageCode,
+    );
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('البحث عن فرص'),
+        title: Text(context.tr('volunteer.searchTitle')),
         leading: const BackButton(),
       ),
       body: KanafBackdrop(
@@ -75,11 +79,14 @@ class _SearchFilterViewState extends State<SearchFilterView> {
                         ? Icons.handshake_outlined
                         : Icons.search_off_rounded,
                     emptyTitle: _query.isEmpty
-                        ? 'لا توجد فرص في هذا التصنيف'
-                        : 'لا نتائج لـ "$_query"',
+                        ? context.tr('volunteer.noCategoryOpportunities')
+                        : context.tr(
+                            'volunteer.noSearchResults',
+                            args: {'query': _query},
+                          ),
                     emptyMessage: _query.isEmpty
-                        ? 'ستظهر الفرص هنا فور نشرها من دور الرعاية.'
-                        : 'جرب كلمة أخرى أو وسع التصفية.',
+                        ? context.tr('volunteer.searchEmptyMessage')
+                        : context.tr('volunteer.searchNoResultsMessage'),
                     builder: (context) => ListView.separated(
                       physics: const AlwaysScrollableScrollPhysics(),
                       padding: const EdgeInsets.fromLTRB(
@@ -95,7 +102,7 @@ class _SearchFilterViewState extends State<SearchFilterView> {
                         index: index,
                         child: _ResultCard(
                           data: visible[index],
-                          dateFormat: _dateFormat,
+                          dateFormat: dateFormat,
                         ),
                       ),
                     ),
@@ -122,12 +129,12 @@ class _SearchFilterViewState extends State<SearchFilterView> {
         textInputAction: TextInputAction.search,
         onChanged: (value) => setState(() => _query = value.trim()),
         decoration: InputDecoration(
-          hintText: 'ابحث بالعنوان أو المكان أو المهارة',
+          hintText: context.tr('volunteer.searchHint'),
           prefixIcon: const Icon(Icons.search_rounded),
           suffixIcon: _query.isEmpty
               ? null
               : IconButton(
-                  tooltip: 'مسح',
+                  tooltip: context.tr('common.clear'),
                   icon: const Icon(Icons.close_rounded),
                   onPressed: () {
                     _searchController.clear();
@@ -154,7 +161,9 @@ class _SearchFilterViewState extends State<SearchFilterView> {
             Padding(
               padding: const EdgeInsetsDirectional.only(end: KanafSpacing.sm),
               child: FilterChip(
-                label: Text('${option.label} (${option.apply(all).length})'),
+                label: Text(
+                  '${context.tr(option.labelKey)} (${option.apply(all).length})',
+                ),
                 selected: _scope == option,
                 onSelected: (_) => setState(() => _scope = option),
               ),
@@ -184,7 +193,11 @@ class _SearchFilterViewState extends State<SearchFilterView> {
             Padding(
               padding: const EdgeInsetsDirectional.only(end: KanafSpacing.sm),
               child: ChoiceChip(
-                label: Text(category),
+                label: Text(
+                  category == _allCategory
+                      ? context.tr('common.all')
+                      : category,
+                ),
                 selected: _category == category,
                 onSelected: (_) => setState(() => _category = category),
               ),
@@ -217,13 +230,13 @@ class _SearchFilterViewState extends State<SearchFilterView> {
 }
 
 enum _OpportunityScope {
-  open('متاحة'),
-  all('الكل'),
-  closed('مغلقة');
+  open('volunteer.filterAvailable'),
+  all('common.all'),
+  closed('volunteer.filterClosed');
 
-  const _OpportunityScope(this.label);
+  const _OpportunityScope(this.labelKey);
 
-  final String label;
+  final String labelKey;
 
   List<VolunteerOpportunityModel> apply(List<VolunteerOpportunityModel> items) {
     return switch (this) {
@@ -275,7 +288,9 @@ class _ResultCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      data.title.isEmpty ? 'فرصة تطوع' : data.title,
+                      data.title.isEmpty
+                          ? context.tr('volunteer.defaultOpportunity')
+                          : data.title,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: context.texts.titleSmall,
@@ -286,7 +301,10 @@ class _ResultCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: KanafSpacing.sm),
-              KanafStatusChip(status: data.status, compact: true),
+              KanafStatusChip(
+                status: data.myApplicationStatus ?? data.status,
+                compact: true,
+              ),
             ],
           ),
           const SizedBox(height: KanafSpacing.md),
@@ -309,8 +327,11 @@ class _ResultCard extends StatelessWidget {
               _MetaChip(
                 icon: Icons.groups_outlined,
                 label: data.effectiveRemainingSlots == 0
-                    ? 'اكتمل العدد'
-                    : 'متبقي ${data.effectiveRemainingSlots}',
+                    ? context.tr('volunteer.capacityFull')
+                    : context.tr(
+                        'volunteer.remainingSlots',
+                        args: {'count': data.effectiveRemainingSlots},
+                      ),
               ),
             ],
           ),

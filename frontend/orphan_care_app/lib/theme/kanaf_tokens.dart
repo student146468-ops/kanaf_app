@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 /// رموز التصميم (Design Tokens) لتطبيق كَنَفْ.
 ///

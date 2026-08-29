@@ -8,6 +8,7 @@ import '../../theme/kanaf_motion.dart';
 import '../../theme/kanaf_tokens.dart';
 import '../../widgets/kanaf_layout.dart';
 import '../../widgets/kanaf_states.dart';
+import '../../l10n/kanaf_localizations.dart';
 
 /// قائمة الاحتياجات والبحث فيها.
 ///
@@ -34,8 +35,7 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
   String _selectedCategory = _allCategory;
   String _query = '';
 
-  static const String _allCategory = 'الكل';
-  static final DateFormat _dateFormat = DateFormat('d MMM y', 'ar');
+  static const String _allCategory = '__all__';
 
   @override
   void initState() {
@@ -43,7 +43,7 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final provider = AppProviderScope.of(context);
-      if (provider.needs.isEmpty && !provider.isLoading) {
+      if (provider.needs.isEmpty && !provider.isLoadingNeeds) {
         provider.fetchNeeds();
       }
     });
@@ -63,7 +63,7 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('الاحتياجات'),
+        title: Text(context.tr('search.needsTitle')),
         leading: const BackButton(),
       ),
       body: KanafBackdrop(
@@ -83,12 +83,12 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
                   textInputAction: TextInputAction.search,
                   onChanged: (value) => setState(() => _query = value.trim()),
                   decoration: InputDecoration(
-                    hintText: 'ابحث بالعنوان أو التصنيف',
+                    hintText: context.tr('search.needsHint'),
                     prefixIcon: const Icon(Icons.search_rounded),
                     suffixIcon: _query.isEmpty
                         ? null
                         : IconButton(
-                            tooltip: 'مسح',
+                            tooltip: context.tr('common.clear'),
                             icon: const Icon(Icons.close_rounded),
                             onPressed: () {
                               _searchController.clear();
@@ -104,18 +104,19 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
                 child: RefreshIndicator(
                   onRefresh: provider.fetchNeeds,
                   child: KanafAsyncView(
-                    isLoading: provider.isLoading,
+                    isLoading: provider.isLoadingNeeds,
                     isEmpty: visible.isEmpty,
-                    errorMessage: all.isEmpty ? provider.errorMessage : null,
-                    errorKind: provider.errorKind,
+                    errorMessage:
+                        all.isEmpty ? provider.needsErrorMessage : null,
+                    errorKind: provider.needsErrorKind,
                     onRetry: provider.fetchNeeds,
                     emptyIcon: Icons.search_off_rounded,
                     emptyTitle: _query.isEmpty
-                        ? 'لا توجد احتياجات في هذا التصنيف'
-                        : 'لم نجد احتياجاً مطابقاً',
+                        ? context.tr('need.emptyCategoryTitle')
+                        : context.tr('search.noResultsTitle'),
                     emptyMessage: _query.isEmpty
-                        ? 'ستظهر الاحتياجات هنا فور نشرها من دور الرعاية.'
-                        : 'جرّب كلمة أبسط أو وسّع التصنيف.',
+                        ? context.tr('need.emptyCategoryMessage')
+                        : context.tr('need.noResultsMessage'),
                     builder: (context) => ListView.separated(
                       physics: const AlwaysScrollableScrollPhysics(),
                       padding: const EdgeInsets.fromLTRB(
@@ -131,7 +132,8 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
                         index: index,
                         child: _NeedCard(
                           need: visible[index],
-                          dateFormat: _dateFormat,
+                          dateFormat: DateFormat('d MMM y',
+                              Localizations.localeOf(context).languageCode),
                         ),
                       ),
                     ),
@@ -160,7 +162,9 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
             Padding(
               padding: const EdgeInsetsDirectional.only(end: KanafSpacing.sm),
               child: FilterChip(
-                label: Text('${option.label} (${option.apply(all).length})'),
+                label: Text(
+                  '${context.tr(option.labelKey)} (${option.apply(all).length})',
+                ),
                 selected: _filter == option,
                 onSelected: (_) => setState(() => _filter = option),
               ),
@@ -192,7 +196,9 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
             Padding(
               padding: const EdgeInsetsDirectional.only(end: KanafSpacing.sm),
               child: ChoiceChip(
-                label: Text(category),
+                label: Text(category == _allCategory
+                    ? context.tr('common.all')
+                    : category),
                 selected: _selectedCategory == category,
                 onSelected: (_) => setState(() => _selectedCategory = category),
               ),
@@ -222,14 +228,14 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
 }
 
 enum _NeedFilter {
-  all('الكل'),
-  urgent('عاجل'),
-  open('قيد التنفيذ'),
-  completed('مكتمل');
+  all('common.all'),
+  urgent('home.urgent'),
+  open('need.open'),
+  completed('need.completed');
 
-  const _NeedFilter(this.label);
+  const _NeedFilter(this.labelKey);
 
-  final String label;
+  final String labelKey;
 
   /// تعمل على قيم الخادم لا على النصوص المترجمة.
   List<NeedModel> apply(List<NeedModel> items) {
@@ -377,12 +383,12 @@ class _NeedCard extends StatelessWidget {
                           )
                       : null,
                   icon: const Icon(Icons.payments_outlined),
-                  label: const Text('ساهم الآن'),
+                  label: Text(context.tr('need.contributeNow')),
                 ),
               ),
               const SizedBox(width: KanafSpacing.sm),
               IconButton.outlined(
-                tooltip: 'تبرع عيني',
+                tooltip: context.tr('need.inkindDonate'),
                 onPressed: need.status == 'open'
                     ? () => Navigator.pushNamed(
                           context,

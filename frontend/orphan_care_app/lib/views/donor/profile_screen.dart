@@ -8,6 +8,7 @@ import '../../theme/kanaf_motion.dart';
 import '../../theme/kanaf_tokens.dart';
 import '../../widgets/kanaf_layout.dart';
 import '../../widgets/kanaf_nav_shell.dart';
+import '../../l10n/kanaf_localizations.dart';
 
 /// حساب المتبرع.
 ///
@@ -23,8 +24,6 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  static final NumberFormat _numberFormat = NumberFormat.decimalPattern('ar');
-
   @override
   void initState() {
     super.initState();
@@ -49,10 +48,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('حسابي'),
+        title: Text(context.tr('common.profile')),
         actions: [
           IconButton(
-            tooltip: 'الإعدادات',
+            tooltip: context.tr('common.settings'),
             onPressed: () => Navigator.pushNamed(context, KanafRoutes.settings),
             icon: const Icon(Icons.settings_outlined),
           ),
@@ -100,28 +99,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildStats(_DonationStats stats) {
     final semantic = context.semantic;
+    final locale = Localizations.localeOf(context).languageCode;
+    final numberFormat = NumberFormat.decimalPattern(locale);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const KanafSectionHeader(
-          title: 'أثرك حتى الآن',
-          subtitle: 'ملخص مساهماتك المسجّلة في المنظومة',
+        KanafSectionHeader(
+          title: context.tr('profile.impactTitle'),
+          subtitle: context.tr('profile.impactSubtitle'),
         ),
         const SizedBox(height: KanafSpacing.md),
         Row(
           children: [
             Expanded(
               child: KanafStatTile(
-                label: 'إجمالي التبرعات',
-                value: _numberFormat.format(stats.total),
+                label: context.tr('donation.total'),
+                value: numberFormat.format(stats.total),
                 icon: Icons.volunteer_activism_outlined,
               ),
             ),
             const SizedBox(width: KanafSpacing.md),
             Expanded(
               child: KanafStatTile(
-                label: 'مكتملة',
-                value: _numberFormat.format(stats.completed),
+                label: context.tr('donation.completed'),
+                value: numberFormat.format(stats.completed),
                 icon: Icons.check_circle_outline_rounded,
                 accent: semantic.success,
               ),
@@ -133,8 +134,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             Expanded(
               child: KanafStatTile(
-                label: 'قيد المراجعة',
-                value: _numberFormat.format(stats.pending),
+                label: context.tr('donation.pending'),
+                value: numberFormat.format(stats.pending),
                 icon: Icons.hourglass_top_rounded,
                 accent: semantic.warning,
               ),
@@ -142,8 +143,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(width: KanafSpacing.md),
             Expanded(
               child: KanafStatTile(
-                label: 'مجموع التبرع المالي',
-                value: '${_numberFormat.format(stats.totalAmount)} د.ل',
+                label: context.tr('donation.totalFinancial'),
+                value:
+                    '${numberFormat.format(stats.totalAmount)} ${context.tr('common.lydShort')}',
                 icon: Icons.payments_outlined,
               ),
             ),
@@ -154,47 +156,47 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildMenu() {
-    return const Column(
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        KanafSectionHeader(title: 'إدارة الحساب'),
-        SizedBox(height: KanafSpacing.md),
+        KanafSectionHeader(title: context.tr('profile.accountManagement')),
+        const SizedBox(height: KanafSpacing.md),
         KanafCard(
           padding: EdgeInsets.zero,
           child: Column(
             children: [
               _MenuTile(
                 icon: Icons.receipt_long_outlined,
-                title: 'سجل تبرعاتي',
-                subtitle: 'كل مساهماتك مع أرقامها المرجعية',
+                title: context.tr('donation.historyTitle'),
+                subtitle: context.tr('profile.donationHistorySubtitle'),
                 route: KanafRoutes.donationHistory,
               ),
-              Divider(height: 1, indent: KanafSpacing.lg),
+              const Divider(height: 1, indent: KanafSpacing.lg),
               _MenuTile(
                 icon: Icons.notifications_outlined,
-                title: 'الإشعارات',
-                subtitle: 'تحديثات تبرعاتك والاحتياجات',
+                title: context.tr('common.notifications'),
+                subtitle: context.tr('profile.notificationsSubtitle'),
                 route: KanafRoutes.donorNotifications,
               ),
-              Divider(height: 1, indent: KanafSpacing.lg),
+              const Divider(height: 1, indent: KanafSpacing.lg),
               _MenuTile(
                 icon: Icons.alternate_email_rounded,
-                title: 'تغيير البريد الإلكتروني',
-                subtitle: 'تحديث بريد الحساب',
+                title: context.tr('settings.changeEmail'),
+                subtitle: context.tr('profile.changeEmailSubtitle'),
                 route: KanafRoutes.changeEmail,
               ),
-              Divider(height: 1, indent: KanafSpacing.lg),
+              const Divider(height: 1, indent: KanafSpacing.lg),
               _MenuTile(
                 icon: Icons.lock_outline_rounded,
-                title: 'تغيير كلمة المرور',
-                subtitle: 'حماية الحساب',
+                title: context.tr('settings.changePassword'),
+                subtitle: context.tr('profile.changePasswordSubtitle'),
                 route: KanafRoutes.changePassword,
               ),
-              Divider(height: 1, indent: KanafSpacing.lg),
+              const Divider(height: 1, indent: KanafSpacing.lg),
               _MenuTile(
                 icon: Icons.settings_outlined,
-                title: 'الإعدادات',
-                subtitle: 'المظهر واللغة وتسجيل الخروج',
+                title: context.tr('common.settings'),
+                subtitle: context.tr('profile.settingsSubtitle'),
                 route: KanafRoutes.settings,
               ),
             ],
@@ -222,7 +224,9 @@ class _DonationStats {
       // الخادم يرسل الحالات بالإنجليزية (`STATUS_CHOICES`)؛ المطابقة
       // بالعربية كانت تفشل دائماً وتُبقي العدّاد صفراً.
       final status = donation.status.trim().toLowerCase();
-      if (status == 'completed' || status == 'accepted' || status == 'approved') {
+      if (status == 'completed' ||
+          status == 'accepted' ||
+          status == 'approved') {
         completed++;
       }
       amount += donation.amount ?? 0;
@@ -253,7 +257,7 @@ class _ProfileHeader extends StatelessWidget {
     final name = _firstNonEmpty(
       user,
       const ['first_name', 'full_name', 'name', 'username'],
-      fallback: 'متبرع',
+      fallback: context.tr('role.donor'),
     );
     final email = _firstNonEmpty(user, const ['email'], fallback: '');
     final phone = _firstNonEmpty(user, const ['phone_number'], fallback: '');
@@ -295,7 +299,7 @@ class _ProfileHeader extends StatelessWidget {
                         borderRadius: KanafRadii.pill,
                       ),
                       child: Text(
-                        'متبرع',
+                        context.tr('role.donor'),
                         style: context.texts.labelSmall?.copyWith(
                           color: scheme.primary,
                         ),
@@ -309,9 +313,9 @@ class _ProfileHeader extends StatelessWidget {
           if (email.isNotEmpty || phone.isNotEmpty) ...[
             const Divider(height: KanafSpacing.xxl),
             if (email.isNotEmpty)
-              KanafDetailRow(label: 'البريد', value: email),
+              KanafDetailRow(label: context.tr('profile.email'), value: email),
             if (phone.isNotEmpty)
-              KanafDetailRow(label: 'الهاتف', value: phone),
+              KanafDetailRow(label: context.tr('profile.phone'), value: phone),
           ],
         ],
       ),

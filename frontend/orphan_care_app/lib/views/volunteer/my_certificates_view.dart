@@ -7,6 +7,7 @@ import '../../theme/kanaf_tokens.dart';
 import '../../widgets/kanaf_layout.dart';
 import '../../widgets/kanaf_nav_shell.dart';
 import '../../widgets/kanaf_states.dart';
+import '../../l10n/kanaf_localizations.dart';
 
 /// شهادات المتطوع.
 ///
@@ -53,7 +54,8 @@ class _MyCertificatesViewState extends State<MyCertificatesView> {
         .toList();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('شهاداتي'), centerTitle: false),
+      appBar: AppBar(
+          title: Text(context.tr('common.myCertificates')), centerTitle: false),
       bottomNavigationBar: const KanafNavBar(
         destinations: KanafNavDestinations.volunteer,
         currentIndex: 2,
@@ -231,7 +233,8 @@ class _RatingStars extends StatelessWidget {
 
     return Column(
       children: [
-        Text('تقييم الدار', style: context.texts.labelMedium),
+        Text(context.tr('volunteer.careHomeRating'),
+            style: context.texts.labelMedium),
         const SizedBox(height: KanafSpacing.xs),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,

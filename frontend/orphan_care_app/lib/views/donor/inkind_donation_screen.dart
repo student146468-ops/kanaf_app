@@ -6,6 +6,7 @@ import '../../router/kanaf_router.dart';
 import '../../theme/kanaf_motion.dart';
 import '../../theme/kanaf_tokens.dart';
 import '../../widgets/kanaf_layout.dart';
+import '../../l10n/kanaf_localizations.dart';
 
 /// شاشة التبرع العيني.
 ///
@@ -32,26 +33,26 @@ class _InkindDonationScreenState extends State<InkindDonationScreen> {
   static const List<_DonationCategory> _categories = [
     _DonationCategory(
       id: 'food',
-      title: 'مواد غذائية',
-      description: 'سلات غذائية، حليب أطفال، معلبات، ومستلزمات مطبخ.',
+      titleKey: 'inkind.food',
+      descriptionKey: 'inkind.foodDescription',
       icon: Icons.restaurant_outlined,
     ),
     _DonationCategory(
       id: 'clothes',
-      title: 'ملابس وكسوة',
-      description: 'ملابس جديدة، أحذية، بطانيات، وأغطية موسمية.',
+      titleKey: 'inkind.clothing',
+      descriptionKey: 'inkind.clothingDescription',
       icon: Icons.checkroom_outlined,
     ),
     _DonationCategory(
       id: 'school',
-      title: 'مستلزمات تعليمية',
-      description: 'حقائب، دفاتر، أقلام، وأدوات تساعد على التعلم.',
+      titleKey: 'inkind.education',
+      descriptionKey: 'inkind.educationDescription',
       icon: Icons.school_outlined,
     ),
     _DonationCategory(
       id: 'health',
-      title: 'رعاية صحية',
-      description: 'أدوية، حفاضات، مستلزمات إسعاف، وأدوات عناية.',
+      titleKey: 'inkind.health',
+      descriptionKey: 'inkind.healthDescription',
       icon: Icons.health_and_safety_outlined,
     ),
   ];
@@ -69,7 +70,7 @@ class _InkindDonationScreenState extends State<InkindDonationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('التبرع العيني'),
+        title: Text(context.tr('inkind.title')),
         leading: const BackButton(),
       ),
       body: KanafBackdrop(
@@ -112,8 +113,9 @@ class _InkindDonationScreenState extends State<InkindDonationScreen> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.send_outlined),
-                  label:
-                      Text(_isProcessing ? 'جاري الإرسال...' : 'إرسال الطلب'),
+                  label: Text(_isProcessing
+                      ? context.tr('inkind.sending')
+                      : context.tr('inkind.submit')),
                 ),
               ),
             ],
@@ -127,9 +129,9 @@ class _InkindDonationScreenState extends State<InkindDonationScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const KanafSectionHeader(
-          title: 'نوع التبرع',
-          subtitle: 'اختر الفئة التي يقع تبرعك تحتها',
+        KanafSectionHeader(
+          title: context.tr('inkind.typeTitle'),
+          subtitle: context.tr('inkind.typeSubtitle'),
         ),
         const SizedBox(height: KanafSpacing.md),
         for (final category in _categories)
@@ -149,52 +151,55 @@ class _InkindDonationScreenState extends State<InkindDonationScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const KanafSectionHeader(title: 'تفاصيل التبرع'),
+        KanafSectionHeader(title: context.tr('inkind.detailsTitle')),
         const SizedBox(height: KanafSpacing.md),
         TextFormField(
           controller: _quantityController,
           textInputAction: TextInputAction.next,
-          decoration: const InputDecoration(
-            labelText: 'الكمية',
-            hintText: 'مثال: ٣ سلات أو ١٠ قطع',
-            prefixIcon: Icon(Icons.numbers_rounded),
+          decoration: InputDecoration(
+            labelText: context.tr('common.quantity'),
+            hintText: context.tr('inkind.quantityHint'),
+            prefixIcon: const Icon(Icons.numbers_rounded),
           ),
-          validator: (value) => _requireText(value, 'أدخل كمية التبرع'),
+          validator: (value) =>
+              _requireText(value, context.tr('inkind.quantityRequired')),
         ),
         const SizedBox(height: KanafSpacing.md),
         TextFormField(
           controller: _descriptionController,
           maxLines: 3,
           textInputAction: TextInputAction.newline,
-          decoration: const InputDecoration(
-            labelText: 'الوصف',
-            hintText: 'اكتب وصفاً مختصراً لما ستقدمه',
-            prefixIcon: Icon(Icons.description_outlined),
+          decoration: InputDecoration(
+            labelText: context.tr('common.description'),
+            hintText: context.tr('inkind.descriptionHint'),
+            prefixIcon: const Icon(Icons.description_outlined),
             alignLabelWithHint: true,
           ),
-          validator: (value) => _requireText(value, 'أدخل وصف التبرع'),
+          validator: (value) =>
+              _requireText(value, context.tr('inkind.descriptionRequired')),
         ),
         const SizedBox(height: KanafSpacing.md),
         TextFormField(
           controller: _contactController,
           keyboardType: TextInputType.phone,
           textInputAction: TextInputAction.next,
-          decoration: const InputDecoration(
-            labelText: 'وسيلة التواصل',
-            hintText: 'رقم هاتف أو بريد للتنسيق',
-            prefixIcon: Icon(Icons.call_outlined),
+          decoration: InputDecoration(
+            labelText: context.tr('inkind.contact'),
+            hintText: context.tr('inkind.contactHint'),
+            prefixIcon: const Icon(Icons.call_outlined),
           ),
-          validator: (value) => _requireText(value, 'أدخل وسيلة تواصل'),
+          validator: (value) =>
+              _requireText(value, context.tr('inkind.contactRequired')),
         ),
         const SizedBox(height: KanafSpacing.md),
         TextFormField(
           controller: _notesController,
           maxLines: 3,
           textInputAction: TextInputAction.newline,
-          decoration: const InputDecoration(
-            labelText: 'ملاحظات إضافية (اختياري)',
-            hintText: 'وقت مناسب للاستلام أو تفاصيل مهمة',
-            prefixIcon: Icon(Icons.edit_note_outlined),
+          decoration: InputDecoration(
+            labelText: context.tr('common.notes'),
+            hintText: context.tr('inkind.notesHint'),
+            prefixIcon: const Icon(Icons.edit_note_outlined),
             alignLabelWithHint: true,
           ),
         ),
@@ -215,7 +220,7 @@ class _InkindDonationScreenState extends State<InkindDonationScreen> {
     final quantity = _quantityController.text.trim();
 
     final request = DonationRequest.inKind(
-      itemType: category.title,
+      itemType: context.tr(category.titleKey),
       quantity: quantity,
       description: _descriptionController.text.trim(),
       contact: _contactController.text.trim(),
@@ -239,10 +244,10 @@ class _InkindDonationScreenState extends State<InkindDonationScreen> {
         context,
         KanafRoutes.donationSuccess,
         arguments: {
-          'type': 'تبرع عيني',
+          'type': context.tr('inkind.title'),
           'status': 'failed',
-          'summary': '${category.title} — $quantity',
-          'error': provider.errorMessage ?? 'تعذر حفظ التبرع حالياً.',
+          'summary': '${context.tr(category.titleKey)} — $quantity',
+          'error': provider.errorMessage ?? context.tr('inkind.saveFailed'),
           'retryRoute': KanafRoutes.inkindDonation,
         },
       );
@@ -253,12 +258,12 @@ class _InkindDonationScreenState extends State<InkindDonationScreen> {
       context,
       KanafRoutes.donationSuccess,
       arguments: {
-        'type': 'تبرع عيني',
+        'type': context.tr('inkind.title'),
         // الرقم المرجعي هو المعرّف الحقيقي في قاعدة البيانات.
         'reference': 'KNF-${created.id}',
         'status': created.status,
         'date': DateTime.now().toIso8601String(),
-        'summary': '${category.title} — $quantity',
+        'summary': '${context.tr(category.titleKey)} — $quantity',
       },
     );
   }
@@ -269,7 +274,7 @@ class _InkindDonationScreenState extends State<InkindDonationScreen> {
         content: Text(message),
         duration: const Duration(seconds: 6),
         action: SnackBarAction(
-          label: 'حسناً',
+          label: context.tr('common.ok'),
           onPressed: () => ScaffoldMessenger.of(context).hideCurrentSnackBar(),
         ),
       ),
@@ -280,14 +285,14 @@ class _InkindDonationScreenState extends State<InkindDonationScreen> {
 class _DonationCategory {
   const _DonationCategory({
     required this.id,
-    required this.title,
-    required this.description,
+    required this.titleKey,
+    required this.descriptionKey,
     required this.icon,
   });
 
   final String id;
-  final String title;
-  final String description;
+  final String titleKey;
+  final String descriptionKey;
   final IconData icon;
 }
 
@@ -349,7 +354,7 @@ class _CategoryTile extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      category.title,
+                      context.tr(category.titleKey),
                       style: context.texts.titleSmall?.copyWith(
                         color: selected
                             ? scheme.onPrimaryContainer
@@ -358,7 +363,7 @@ class _CategoryTile extends StatelessWidget {
                     ),
                     const SizedBox(height: KanafSpacing.xxs),
                     Text(
-                      category.description,
+                      context.tr(category.descriptionKey),
                       style: context.texts.bodySmall,
                     ),
                   ],

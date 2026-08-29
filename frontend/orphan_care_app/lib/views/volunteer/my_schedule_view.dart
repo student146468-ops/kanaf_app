@@ -7,6 +7,7 @@ import '../../theme/kanaf_tokens.dart';
 import '../../widgets/kanaf_layout.dart';
 import '../../widgets/kanaf_nav_shell.dart';
 import '../../widgets/kanaf_states.dart';
+import '../../l10n/kanaf_localizations.dart';
 
 /// جدول المتطوع — طلباته وحالتها.
 ///
@@ -23,8 +24,6 @@ class MyScheduleView extends StatefulWidget {
 
 class _MyScheduleViewState extends State<MyScheduleView> {
   _ScheduleFilter _filter = _ScheduleFilter.upcoming;
-
-  static final DateFormat _dateFormat = DateFormat('d MMMM y', 'ar');
 
   @override
   void initState() {
@@ -43,9 +42,13 @@ class _MyScheduleViewState extends State<MyScheduleView> {
     final provider = AppProviderScope.of(context);
     final all = provider.volunteerApplications;
     final visible = _filter.apply(all);
+    final dateFormat = DateFormat(
+      'd MMMM y',
+      Localizations.localeOf(context).languageCode,
+    );
 
     return Scaffold(
-      appBar: AppBar(title: const Text('جدولي')),
+      appBar: AppBar(title: Text(context.tr('common.mySchedule'))),
       bottomNavigationBar: const KanafNavBar(
         destinations: KanafNavDestinations.volunteer,
         currentIndex: 1,
@@ -69,11 +72,11 @@ class _MyScheduleViewState extends State<MyScheduleView> {
                         ? Icons.event_available_outlined
                         : Icons.filter_alt_off_outlined,
                     emptyTitle: all.isEmpty
-                        ? 'لا توجد طلبات تطوع بعد'
-                        : 'لا نتائج لهذا التصنيف',
+                        ? context.tr('volunteer.noApplicationsTitle')
+                        : context.tr('volunteer.emptyCategoryTitle'),
                     emptyMessage: all.isEmpty
-                        ? 'تصفّح الفرص المتاحة وقدّم طلبك الأول.'
-                        : 'جرّب تصنيفاً آخر لعرض بقية الطلبات.',
+                        ? context.tr('volunteer.noApplicationsMessage')
+                        : context.tr('volunteer.emptyCategoryMessage'),
                     builder: (context) => ListView.separated(
                       physics: const AlwaysScrollableScrollPhysics(),
                       padding: const EdgeInsets.fromLTRB(
@@ -89,7 +92,7 @@ class _MyScheduleViewState extends State<MyScheduleView> {
                         index: index,
                         child: _ApplicationCard(
                           data: visible[index],
-                          dateFormat: _dateFormat,
+                          dateFormat: dateFormat,
                         ),
                       ),
                     ),
@@ -118,7 +121,9 @@ class _MyScheduleViewState extends State<MyScheduleView> {
             Padding(
               padding: const EdgeInsetsDirectional.only(end: KanafSpacing.sm),
               child: FilterChip(
-                label: Text('${option.label} (${option.apply(all).length})'),
+                label: Text(
+                  '${context.tr(option.labelKey)} (${option.apply(all).length})',
+                ),
                 selected: _filter == option,
                 onSelected: (_) => setState(() => _filter = option),
               ),
@@ -130,14 +135,14 @@ class _MyScheduleViewState extends State<MyScheduleView> {
 }
 
 enum _ScheduleFilter {
-  upcoming('القادمة'),
-  pending('قيد المراجعة'),
-  completed('مكتملة'),
-  all('الكل');
+  upcoming('volunteer.filterUpcoming'),
+  pending('donation.pending'),
+  completed('donation.completed'),
+  all('common.all');
 
-  const _ScheduleFilter(this.label);
+  const _ScheduleFilter(this.labelKey);
 
-  final String label;
+  final String labelKey;
 
   List<Map<String, dynamic>> apply(List<Map<String, dynamic>> items) {
     String statusOf(Map<String, dynamic> item) =>
@@ -174,7 +179,7 @@ class _ApplicationCard extends StatelessWidget {
     final opportunity = data['opportunity'];
     final title = data['opportunity_title']?.toString() ??
         (opportunity is Map ? opportunity['title']?.toString() : null) ??
-        'فرصة تطوع';
+        context.tr('volunteer.defaultOpportunity');
     final location =
         opportunity is Map ? opportunity['location']?.toString() ?? '' : '';
 
@@ -245,7 +250,10 @@ class _ApplicationCard extends StatelessWidget {
                 ),
                 const SizedBox(width: KanafSpacing.xs),
                 Text(
-                  'قُدّم في ${dateFormat.format(created)}',
+                  context.tr(
+                    'volunteer.submittedAt',
+                    args: {'date': dateFormat.format(created)},
+                  ),
                   style: context.texts.labelSmall,
                 ),
               ],

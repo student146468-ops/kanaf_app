@@ -10,6 +10,12 @@
 
         <div id="needsAlert" class="needs-alert" hidden></div>
 
+        {% if care_homes_count == 0 %}
+        <div class="needs-alert error" role="alert">
+            لا توجد أي دار رعاية مسجلة في قاعدة البيانات. أضف دار رعاية حقيقية من لوحة Django Admin أولًا حتى تظهر هنا في القائمة.
+        </div>
+        {% endif %}
+
         <form id="needForm" class="form-grid" autocomplete="off">
             {% csrf_token %}
             <input type="hidden" id="needId" name="need_id">

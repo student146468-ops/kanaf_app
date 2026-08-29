@@ -1,4 +1,8 @@
+import re
+from decimal import Decimal, InvalidOperation
+
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils import timezone
@@ -260,10 +264,10 @@ class Need(models.Model):
 
     title = models.CharField(max_length=200, db_index=True)
     description = models.TextField(blank=True)
-    category = models.CharField(max_length=100, blank=True, db_index=True)
+    category = models.CharField(max_length=100, db_index=True)
     need_type = models.CharField(max_length=100, blank=True)
     priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default=PRIORITY_MEDIUM, db_index=True)
-    required_quantity = models.CharField(max_length=100, blank=True)
+    required_quantity = models.CharField(max_length=100)
     fulfilled_quantity = models.DecimalField(max_digits=12, decimal_places=2, default=0, validators=[MinValueValidator(0)])
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_OPEN, db_index=True)
     image_url = models.URLField(blank=True)
@@ -293,8 +297,51 @@ class Need(models.Model):
     def __str__(self):
         return self.title
 
+    def clean(self):
+        super().clean()
+        errors = {}
+
+        if not str(self.title or '').strip():
+            errors['title'] = 'title is required.'
+        if not str(self.category or '').strip():
+            errors['category'] = 'category is required.'
+        if self.care_home_id is None:
+            errors['care_home'] = 'care_home is required.'
+
+        quantity_text = str(self.required_quantity or '').strip()
+        match = re.search(r'\d+(?:\.\d+)?', quantity_text.replace(',', ''))
+        if not match:
+            errors['required_quantity'] = 'required_quantity must include a number greater than zero.'
+        else:
+            try:
+                target = Decimal(match.group(0))
+            except InvalidOperation:
+                target = Decimal('0')
+            if target <= 0:
+                errors['required_quantity'] = 'required_quantity must be greater than zero.'
+            elif self.fulfilled_quantity is not None and Decimal(self.fulfilled_quantity) > target:
+                errors['fulfilled_quantity'] = 'fulfilled_quantity cannot exceed required_quantity.'
+
+        if errors:
+            raise ValidationError(errors)
+
 
 class VolunteerOpportunity(models.Model):
+    CATEGORY_GENERAL = 'general'
+    CATEGORY_EDUCATION = 'education'
+    CATEGORY_LOGISTICS = 'logistics'
+    CATEGORY_HEALTH = 'health'
+    CATEGORY_PSYCHOLOGICAL = 'psychological'
+    CATEGORY_EVENTS = 'events'
+    CATEGORY_CHOICES = [
+        (CATEGORY_GENERAL, 'General'),
+        (CATEGORY_EDUCATION, 'Education'),
+        (CATEGORY_LOGISTICS, 'Logistics'),
+        (CATEGORY_HEALTH, 'Health'),
+        (CATEGORY_PSYCHOLOGICAL, 'Psychological support'),
+        (CATEGORY_EVENTS, 'Events'),
+    ]
+
     STATUS_OPEN = 'open'
     STATUS_CLOSED = 'closed'
     STATUS_COMPLETED = 'completed'
@@ -306,14 +353,13 @@ class VolunteerOpportunity(models.Model):
 
     title = models.CharField(max_length=200, db_index=True)
     description = models.TextField()
+    category = models.CharField(max_length=40, choices=CATEGORY_CHOICES, default=CATEGORY_GENERAL, db_index=True)
     required_skills = models.CharField(max_length=300, blank=True)
     # الدار المالكة للفرصة. بدونها لا يمكن لمدير الدار تصفية الطلبات
     # الواردة على فرصه هو، وكانت شاشة «إدارة المتطوعين» بلا مصدر بيانات.
     care_home = models.ForeignKey(
         'CareHome',
         on_delete=models.CASCADE,
-        null=True,
-        blank=True,
         related_name='opportunities',
     )
     required_volunteers = models.IntegerField(default=1, validators=[MinValueValidator(1)])
@@ -322,6 +368,7 @@ class VolunteerOpportunity(models.Model):
     end_date = models.DateTimeField(null=True, blank=True)
     location = models.CharField(max_length=200, blank=True, db_index=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_OPEN, db_index=True)
+    image_url = models.URLField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -330,6 +377,7 @@ class VolunteerOpportunity(models.Model):
         constraints = [
             models.CheckConstraint(check=models.Q(required_volunteers__gte=1), name='opportunity_required_volunteers_positive'),
             models.CheckConstraint(check=models.Q(current_volunteers__gte=0), name='opportunity_current_volunteers_non_negative'),
+            models.CheckConstraint(check=models.Q(current_volunteers__lte=models.F('required_volunteers')), name='opportunity_current_not_over_required'),
             models.CheckConstraint(
                 check=models.Q(end_date__isnull=True) | models.Q(start_date__isnull=True) | models.Q(end_date__gte=models.F('start_date')),
                 name='opportunity_end_after_start',
@@ -341,6 +389,34 @@ class VolunteerOpportunity(models.Model):
 
     def __str__(self):
         return self.title
+
+    def clean(self):
+        super().clean()
+        errors = {}
+
+        if not str(self.title or '').strip():
+            errors['title'] = 'title is required.'
+        if not str(self.description or '').strip():
+            errors['description'] = 'description is required.'
+        if not str(self.category or '').strip():
+            errors['category'] = 'category is required.'
+        if self.care_home_id is None:
+            errors['care_home'] = 'care_home is required.'
+        if self.required_volunteers is None or self.required_volunteers <= 0:
+            errors['required_volunteers'] = 'required_volunteers must be greater than zero.'
+        if self.current_volunteers is not None and self.current_volunteers < 0:
+            errors['current_volunteers'] = 'current_volunteers must be zero or greater.'
+        if (
+            self.required_volunteers is not None
+            and self.current_volunteers is not None
+            and self.current_volunteers > self.required_volunteers
+        ):
+            errors['current_volunteers'] = 'current_volunteers cannot exceed required_volunteers.'
+        if self.start_date and self.end_date and self.end_date < self.start_date:
+            errors['end_date'] = 'end_date must be after start_date.'
+
+        if errors:
+            raise ValidationError(errors)
 
 
 class VolunteerApplication(models.Model):

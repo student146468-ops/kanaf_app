@@ -7,6 +7,7 @@ import '../../theme/kanaf_motion.dart';
 import '../../theme/kanaf_tokens.dart';
 import '../../widgets/kanaf_layout.dart';
 import '../../widgets/kanaf_states.dart';
+import '../../l10n/kanaf_localizations.dart';
 
 /// ملف دار الرعاية كما يراه المتبرع.
 ///
@@ -62,15 +63,15 @@ class _OrphanageProfileScreenState extends State<OrphanageProfileScreen> {
     if (home.isEmpty) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('ملف الدار'),
+          title: Text(context.tr('orphanage.profile')),
           leading: const BackButton(),
         ),
         body: KanafBackdrop(
           child: KanafMessageState(
             icon: Icons.apartment_outlined,
-            title: 'لم تُحدَّد الدار',
-            message: 'عد إلى قائمة الدور واختر داراً لعرض ملفها.',
-            actionLabel: 'تصفّح الدور',
+            title: context.tr('orphanage.notSelected'),
+            message: context.tr('orphanage.notSelectedMessage'),
+            actionLabel: context.tr('orphanage.browse'),
             onAction: () => Navigator.pushReplacementNamed(
               context,
               KanafRoutes.exploreOrphanages,
@@ -80,7 +81,8 @@ class _OrphanageProfileScreenState extends State<OrphanageProfileScreen> {
       );
     }
 
-    final name = home['name']?.toString() ?? 'دار رعاية';
+    final name =
+        home['name']?.toString() ?? context.tr('orphanage.defaultName');
     final address = home['address']?.toString() ?? '';
     final phone = home['phone']?.toString() ?? '';
     final email = home['email']?.toString() ?? '';
@@ -96,7 +98,7 @@ class _OrphanageProfileScreenState extends State<OrphanageProfileScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('ملف الدار'),
+        title: Text(context.tr('orphanage.profile')),
         leading: const BackButton(),
       ),
       body: KanafBackdrop(
@@ -266,7 +268,7 @@ class _AboutSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const KanafSectionHeader(title: 'نبذة عن الدار'),
+        KanafSectionHeader(title: context.tr('orphanage.about')),
         const SizedBox(height: KanafSpacing.md),
         KanafCard(child: Text(text, style: context.texts.bodyMedium)),
       ],
@@ -290,7 +292,7 @@ class _ContactSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const KanafSectionHeader(title: 'التواصل'),
+        KanafSectionHeader(title: context.tr('orphanage.contact')),
         const SizedBox(height: KanafSpacing.md),
         KanafCard(
           child: Column(
@@ -324,9 +326,9 @@ class _VisitHoursSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const KanafSectionHeader(
-          title: 'مواعيد الزيارة',
-          subtitle: 'الأوقات التي تستقبل فيها الدار الزوار',
+        KanafSectionHeader(
+          title: context.tr('orphanage.visitTimes'),
+          subtitle: context.tr('orphanage.visitTimesSubtitle'),
         ),
         const SizedBox(height: KanafSpacing.md),
         KanafCard(
@@ -364,7 +366,7 @@ class _NeedsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const KanafSectionHeader(title: 'احتياجات الدار'),
+        KanafSectionHeader(title: context.tr('orphanage.needs')),
         const SizedBox(height: KanafSpacing.md),
         if (needs.isEmpty)
           KanafCard(

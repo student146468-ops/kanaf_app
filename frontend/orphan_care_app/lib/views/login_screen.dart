@@ -7,6 +7,7 @@ import '../theme/kanaf_motion.dart';
 import '../theme/kanaf_tokens.dart';
 import '../utils/auth_navigation.dart';
 import '../widgets/kanaf_layout.dart';
+import '../l10n/kanaf_localizations.dart';
 
 /// شاشة تسجيل الدخول.
 ///
@@ -86,7 +87,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                         context,
                                         KanafRoutes.forgotPassword,
                                       ),
-                              child: const Text('نسيت كلمة المرور؟'),
+                              child: Text(context.tr('auth.forgotPassword')),
                             ),
                           ),
                         ),
@@ -110,9 +111,9 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildHeader() {
     // شريط متدرّج يحمل الشعار: يعطي الشاشة حضوراً بصرياً فورياً بدل
     // سطح محايد بالكامل، ويجعل هوية كَنَفْ أول ما تقع عليه العين.
-    return const KanafHeroBand(
-      title: 'مرحبًا بك في كَنَفْ',
-      subtitle: 'سجّل الدخول لمتابعة كفالاتك وتبرعاتك',
+    return KanafHeroBand(
+      title: context.tr('auth.loginTitle'),
+      subtitle: context.tr('auth.loginSubtitle'),
     );
   }
 
@@ -124,10 +125,10 @@ class _LoginScreenState extends State<LoginScreen> {
       autofillHints: const [AutofillHints.email],
       autocorrect: false,
       enabled: !_isLoading,
-      decoration: const InputDecoration(
-        labelText: 'البريد الإلكتروني',
-        hintText: 'name@example.com',
-        prefixIcon: Icon(Icons.mail_outline_rounded),
+      decoration: InputDecoration(
+        labelText: context.tr('common.email'),
+        hintText: context.tr('auth.emailHint'),
+        prefixIcon: const Icon(Icons.mail_outline_rounded),
       ),
       validator: _validateEmail,
       onFieldSubmitted: (_) => _passwordFocus.requestFocus(),
@@ -144,10 +145,12 @@ class _LoginScreenState extends State<LoginScreen> {
       autofillHints: const [AutofillHints.password],
       enabled: !_isLoading,
       decoration: InputDecoration(
-        labelText: 'كلمة المرور',
+        labelText: context.tr('common.password'),
         prefixIcon: const Icon(Icons.lock_outline_rounded),
         suffixIcon: IconButton(
-          tooltip: _obscurePassword ? 'إظهار كلمة المرور' : 'إخفاء كلمة المرور',
+          tooltip: _obscurePassword
+              ? context.tr('auth.showPassword')
+              : context.tr('auth.hidePassword'),
           onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
           icon: Icon(
             _obscurePassword
@@ -157,7 +160,8 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
       validator: (value) {
-        if (value == null || value.isEmpty) return 'أدخل كلمة المرور';
+        if (value == null || value.isEmpty)
+          return context.tr('validation.passwordRequired');
         return null;
       },
       onFieldSubmitted: (_) => _handleLogin(),
@@ -174,7 +178,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   dimension: 22,
                   child: CircularProgressIndicator(strokeWidth: 2.5),
                 )
-              : const Text('تسجيل الدخول'),
+              : Text(context.tr('auth.loginButton')),
         ),
         const SizedBox(height: KanafSpacing.xl),
         Row(
@@ -184,7 +188,8 @@ class _LoginScreenState extends State<LoginScreen> {
               padding: const EdgeInsets.symmetric(
                 horizontal: KanafSpacing.lg,
               ),
-              child: Text('أو', style: context.texts.bodySmall),
+              child:
+                  Text(context.tr('auth.or'), style: context.texts.bodySmall),
             ),
             const Expanded(child: Divider()),
           ],
@@ -199,19 +204,19 @@ class _LoginScreenState extends State<LoginScreen> {
                     // نمرّر الدور المختار مسبقاً حتى لا يُسأل عنه مرتين.
                     arguments: ModalRoute.of(context)?.settings.arguments,
                   ),
-          child: const Text('إنشاء حساب جديد'),
+          child: Text(context.tr('auth.createAccount')),
         ),
       ],
     );
   }
 
-  static String? _validateEmail(String? value) {
+  String? _validateEmail(String? value) {
     final email = value?.trim() ?? '';
-    if (email.isEmpty) return 'أدخل البريد الإلكتروني';
+    if (email.isEmpty) return context.tr('validation.emailRequired');
     // تحقق بنيوي بسيط: الصحة النهائية مسؤولية الخادم، لكن هذا يمنع
     // رحلة شبكة مؤكدة الفشل بسبب خطأ مطبعي واضح.
     final pattern = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
-    if (!pattern.hasMatch(email)) return 'صيغة البريد الإلكتروني غير صحيحة';
+    if (!pattern.hasMatch(email)) return context.tr('validation.emailInvalid');
     return null;
   }
 
@@ -249,7 +254,7 @@ class _LoginScreenState extends State<LoginScreen> {
       _showError(
         error is ApiServiceException
             ? error.message
-            : 'تعذر إكمال تسجيل الدخول حالياً. حاول مرة أخرى.',
+            : context.tr('auth.loginFailed'),
       );
     }
   }
@@ -260,7 +265,7 @@ class _LoginScreenState extends State<LoginScreen> {
         content: Text(message),
         duration: const Duration(seconds: 6),
         action: SnackBarAction(
-          label: 'حسناً',
+          label: context.tr('common.ok'),
           onPressed: () => ScaffoldMessenger.of(context).hideCurrentSnackBar(),
         ),
       ),

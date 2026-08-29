@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
+import 'l10n/kanaf_localizations.dart';
 import 'providers/app_provider.dart';
 import 'providers/app_provider_scope.dart';
 import 'router/kanaf_router.dart';
@@ -62,7 +63,7 @@ class KanafApp extends StatelessWidget {
 
   Widget _buildApp(ThemeMode themeMode, Locale locale) {
     return MaterialApp(
-      title: 'كَنَفْ',
+      title: locale.languageCode == 'en' ? 'Kanaf' : 'كَنَفْ',
       debugShowCheckedModeBanner: false,
       navigatorKey: _navigatorKey,
 
@@ -74,6 +75,7 @@ class KanafApp extends StatelessWidget {
       locale: locale,
       supportedLocales: const [Locale('ar'), Locale('en')],
       localizationsDelegates: const [
+        KanafLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
@@ -99,7 +101,12 @@ class KanafApp extends StatelessWidget {
               maxScaleFactor: 1.25,
             ),
           ),
-          child: child ?? const SizedBox.shrink(),
+          child: Directionality(
+            textDirection: locale.languageCode == 'en'
+                ? TextDirection.ltr
+                : TextDirection.rtl,
+            child: child ?? const SizedBox.shrink(),
+          ),
         );
       },
     );

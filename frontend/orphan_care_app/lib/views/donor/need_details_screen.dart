@@ -8,6 +8,7 @@ import '../../theme/kanaf_motion.dart';
 import '../../theme/kanaf_tokens.dart';
 import '../../widgets/kanaf_layout.dart';
 import '../../widgets/kanaf_states.dart';
+import '../../l10n/kanaf_localizations.dart';
 
 /// تفاصيل الاحتياج كما يراها المتبرع.
 ///
@@ -54,12 +55,12 @@ class _NeedDetailsScreenState extends State<NeedDetailsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('تفاصيل الاحتياج'),
+        title: Text(context.tr('need.detailsTitle')),
         leading: const BackButton(),
         actions: [
           if (isReady)
             IconButton(
-              tooltip: 'تتبّع الحالة',
+              tooltip: context.tr('need.trackStatus'),
               onPressed: () => Navigator.pushNamed(
                 context,
                 KanafRoutes.trackNeedStatus,
@@ -150,7 +151,7 @@ class _NeedDetailsScreenState extends State<NeedDetailsScreen> {
                               arguments: {'need_id': need.id},
                             ),
                             icon: const Icon(Icons.inventory_2_outlined),
-                            label: const Text('تبرّع عيني'),
+                            label: Text(context.tr('need.inkindDonate')),
                           ),
                         ),
                       ],
@@ -230,7 +231,8 @@ class _ProgressCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text('ما تحقّق', style: context.texts.titleSmall),
+              Text(context.tr('need.achieved'),
+                  style: context.texts.titleSmall),
               const Spacer(),
               if (progress != null)
                 Text(
@@ -319,7 +321,7 @@ class _DescriptionSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const KanafSectionHeader(title: 'عن الاحتياج'),
+        KanafSectionHeader(title: context.tr('need.about')),
         const SizedBox(height: KanafSpacing.md),
         KanafCard(child: Text(text, style: context.texts.bodyMedium)),
       ],
@@ -359,7 +361,7 @@ class _FactsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const KanafSectionHeader(title: 'تفاصيل'),
+        KanafSectionHeader(title: context.tr('need.details')),
         const SizedBox(height: KanafSpacing.md),
         KanafCard(child: Column(children: rows)),
       ],

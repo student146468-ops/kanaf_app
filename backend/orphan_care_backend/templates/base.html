@@ -1091,6 +1091,9 @@
             <a href="{% url 'volunteers_list' %}" class="{% if request.resolver_match.url_name == 'volunteers_list' %}active{% endif %}">
                 <i class="fas fa-hand-holding-heart"></i> المتطوعون
             </a>
+            <a href="{% url 'volunteer_opportunities_list' %}" class="{% if request.resolver_match.url_name == 'volunteer_opportunities_list' %}active{% endif %}">
+                <i class="fas fa-handshake-angle"></i> فرص التطوع
+            </a>
             <a href="{% url 'reports_view' %}" class="{% if request.resolver_match.url_name == 'reports_view' %}active{% endif %}">
                 <i class="fas fa-chart-column"></i> التقارير
             </a>
@@ -1128,6 +1131,7 @@
                     {% elif request.resolver_match.url_name == 'donations_list' %}التبرعات المالية
                     {% elif request.resolver_match.url_name == 'inventory_view' %}التبرعات العينية
                     {% elif request.resolver_match.url_name == 'volunteers_list' %}إدارة المتطوعين
+                    {% elif request.resolver_match.url_name == 'volunteer_opportunities_list' %}إدارة فرص التطوع
                     {% elif request.resolver_match.url_name == 'reports_view' %}التقارير
                     {% elif request.resolver_match.url_name == 'settings_view' %}الإعدادات
                     {% else %}منظومة كنف{% endif %}

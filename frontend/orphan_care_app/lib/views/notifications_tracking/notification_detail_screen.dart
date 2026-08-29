@@ -5,6 +5,7 @@ import '../../theme/kanaf_motion.dart';
 import '../../theme/kanaf_tokens.dart';
 import '../../widgets/kanaf_layout.dart';
 import '../../widgets/kanaf_states.dart';
+import '../../l10n/kanaf_localizations.dart';
 
 /// تفاصيل إشعار واحد.
 ///
@@ -25,8 +26,8 @@ class NotificationDetailScreen extends StatelessWidget {
         args?['body']?.toString() ??
         'لا توجد تفاصيل إضافية لهذا الإشعار.';
     final status = args?['status']?.toString();
-    final type = args?['notification_type']?.toString() ??
-        args?['type']?.toString();
+    final type =
+        args?['notification_type']?.toString() ?? args?['type']?.toString();
     final created = DateTime.tryParse(
       args?['created_at']?.toString() ?? args?['timestamp']?.toString() ?? '',
     );
@@ -35,7 +36,7 @@ class NotificationDetailScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('تفاصيل الإشعار'),
+        title: Text(context.tr('notifications.detail')),
         leading: const BackButton(),
       ),
       body: KanafBackdrop(
@@ -93,8 +94,8 @@ class NotificationDetailScreen extends StatelessWidget {
                   child: KanafCard(
                     child: KanafDetailRow(
                       label: 'وصل في',
-                      value: DateFormat('d MMMM y • h:mm a', 'ar')
-                          .format(created),
+                      value:
+                          DateFormat('d MMMM y • h:mm a', 'ar').format(created),
                     ),
                   ),
                 ),
@@ -104,7 +105,7 @@ class NotificationDetailScreen extends StatelessWidget {
                 index: 2,
                 child: FilledButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('العودة للإشعارات'),
+                  child: Text(context.tr('notifications.back')),
                 ),
               ),
             ],

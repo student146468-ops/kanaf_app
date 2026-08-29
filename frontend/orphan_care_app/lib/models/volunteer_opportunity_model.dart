@@ -4,7 +4,9 @@ class VolunteerOpportunityModel {
   final int id;
   final String title;
   final String description;
+  final String category;
   final String requiredSkills;
+  final String? imageUrl;
   final int? careHomeId;
   final String? careHomeName;
   final String? careHomeLocation;
@@ -13,6 +15,8 @@ class VolunteerOpportunityModel {
   final int applicationsCount;
   final int? capacityPercent;
   final int? remainingSlots;
+  final int? myApplicationId;
+  final String? myApplicationStatus;
   final DateTime? startDate;
   final DateTime? endDate;
   final String location;
@@ -25,6 +29,7 @@ class VolunteerOpportunityModel {
     required this.id,
     required this.title,
     required this.description,
+    required this.category,
     required this.requiredSkills,
     required this.requiredVolunteers,
     required this.currentVolunteers,
@@ -35,8 +40,11 @@ class VolunteerOpportunityModel {
     this.careHomeId,
     this.careHomeName,
     this.careHomeLocation,
+    this.imageUrl,
     this.capacityPercent,
     this.remainingSlots,
+    this.myApplicationId,
+    this.myApplicationStatus,
     this.startDate,
     this.endDate,
     this.createdAt,
@@ -48,7 +56,9 @@ class VolunteerOpportunityModel {
       id: _asInt(json['id']),
       title: json['title']?.toString() ?? '',
       description: json['description']?.toString() ?? '',
+      category: json['category']?.toString() ?? 'general',
       requiredSkills: json['required_skills']?.toString() ?? '',
+      imageUrl: _asNullableString(json['image_url']),
       careHomeId: json['care_home'] == null ? null : _asInt(json['care_home']),
       careHomeName: _asNullableString(json['care_home_name']),
       careHomeLocation: _asNullableString(json['care_home_location']),
@@ -57,6 +67,8 @@ class VolunteerOpportunityModel {
       applicationsCount: _asInt(json['applications_count']),
       capacityPercent: _asNullableInt(json['capacity_percent']),
       remainingSlots: _asNullableInt(json['remaining_slots']),
+      myApplicationId: _asNullableInt(json['my_application_id']),
+      myApplicationStatus: _asNullableString(json['my_application_status']),
       startDate: _asDate(json['start_date']),
       endDate: _asDate(json['end_date']),
       location: json['location']?.toString() ?? '',
@@ -70,7 +82,8 @@ class VolunteerOpportunityModel {
   bool get isOpen => status == 'open';
   bool get isFull =>
       requiredVolunteers > 0 && currentVolunteers >= requiredVolunteers;
-  bool get canApply => isOpen && !isFull;
+  bool get hasApplication => myApplicationStatus != null;
+  bool get canApply => isOpen && !isFull && !hasApplication;
 
   int get effectiveRemainingSlots {
     if (remainingSlots != null) {
@@ -89,6 +102,20 @@ class VolunteerOpportunityModel {
   }
 
   String get categoryLabel {
+    switch (category) {
+      case 'education':
+        return 'تعليم';
+      case 'health':
+      case 'psychological':
+        return 'دعم صحي';
+      case 'logistics':
+        return 'لوجستي';
+      case 'events':
+        return 'فعاليات';
+      case 'general':
+        return 'تطوع عام';
+    }
+
     final text = '$title $description $requiredSkills'.toLowerCase();
     if (text.contains('teach') ||
         text.contains('تعليم') ||
@@ -134,7 +161,9 @@ class VolunteerOpportunityModel {
       'id': id,
       'title': title,
       'description': description,
+      'category': category,
       'required_skills': requiredSkills,
+      'image_url': imageUrl,
       'care_home': careHomeId,
       'care_home_name': careHomeName,
       'care_home_location': careHomeLocation,
@@ -143,6 +172,8 @@ class VolunteerOpportunityModel {
       'applications_count': applicationsCount,
       'capacity_percent': capacityPercent,
       'remaining_slots': remainingSlots,
+      'my_application_id': myApplicationId,
+      'my_application_status': myApplicationStatus,
       'start_date': startDate?.toIso8601String(),
       'end_date': endDate?.toIso8601String(),
       'location': location,

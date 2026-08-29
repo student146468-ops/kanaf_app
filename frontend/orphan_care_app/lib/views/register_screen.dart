@@ -7,6 +7,7 @@ import '../theme/kanaf_motion.dart';
 import '../theme/kanaf_tokens.dart';
 import '../utils/auth_navigation.dart';
 import '../widgets/kanaf_layout.dart';
+import '../l10n/kanaf_localizations.dart';
 
 /// شاشة إنشاء الحساب.
 ///
@@ -72,7 +73,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('إنشاء حساب'),
+        title: Text(context.tr('auth.registerTitle')),
         leading: const BackButton(),
       ),
       body: KanafBackdrop(
@@ -116,14 +117,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                       strokeWidth: 2.5,
                                     ),
                                   )
-                                : const Text('إنشاء الحساب'),
+                                : Text(context.tr('auth.registerButton')),
                           ),
                         ),
                         const SizedBox(height: KanafSpacing.md),
                         TextButton(
                           onPressed:
                               _isLoading ? null : () => Navigator.pop(context),
-                          child: const Text('لدي حساب بالفعل'),
+                          child: Text(context.tr('auth.haveAccount')),
                         ),
                       ],
                     ),
@@ -146,14 +147,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
           textCapitalization: TextCapitalization.words,
           autofillHints: const [AutofillHints.name],
           enabled: !_isLoading,
-          decoration: const InputDecoration(
-            labelText: 'الاسم الكامل',
-            prefixIcon: Icon(Icons.person_outline_rounded),
+          decoration: InputDecoration(
+            labelText: context.tr('common.name'),
+            prefixIcon: const Icon(Icons.person_outline_rounded),
           ),
           validator: (value) {
             final name = value?.trim() ?? '';
-            if (name.isEmpty) return 'أدخل الاسم الكامل';
-            if (name.length < 3) return 'الاسم قصير جداً';
+            if (name.isEmpty) return context.tr('validation.nameRequired');
+            if (name.length < 3) return context.tr('validation.nameShort');
             return null;
           },
           onFieldSubmitted: (_) => _phoneFocus.requestFocus(),
@@ -171,16 +172,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
             FilteringTextInputFormatter.digitsOnly,
             LengthLimitingTextInputFormatter(10),
           ],
-          decoration: const InputDecoration(
-            labelText: 'رقم الهاتف',
-            hintText: '09XXXXXXXX',
-            prefixIcon: Icon(Icons.phone_outlined),
+          decoration: InputDecoration(
+            labelText: context.tr('common.phone'),
+            hintText: context.tr('auth.phoneHint'),
+            prefixIcon: const Icon(Icons.phone_outlined),
           ),
           validator: (value) {
             final phone = value?.trim() ?? '';
-            if (phone.isEmpty) return 'أدخل رقم الهاتف';
+            if (phone.isEmpty) return context.tr('validation.phoneRequired');
             if (!RegExp(r'^(091|092|093|094)[0-9]{7}$').hasMatch(phone)) {
-              return 'يجب أن يبدأ بـ 091 أو 092 أو 093 أو 094 ويتكون من 10 أرقام';
+              return context.tr('validation.phoneInvalid');
             }
             return null;
           },
@@ -195,16 +196,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
           autofillHints: const [AutofillHints.newUsername],
           autocorrect: false,
           enabled: !_isLoading,
-          decoration: const InputDecoration(
-            labelText: 'البريد الإلكتروني',
-            hintText: 'name@example.com',
-            prefixIcon: Icon(Icons.mail_outline_rounded),
+          decoration: InputDecoration(
+            labelText: context.tr('common.email'),
+            hintText: context.tr('auth.emailHint'),
+            prefixIcon: const Icon(Icons.mail_outline_rounded),
           ),
           validator: (value) {
             final email = value?.trim() ?? '';
-            if (email.isEmpty) return 'أدخل البريد الإلكتروني';
+            if (email.isEmpty) return context.tr('validation.emailRequired');
             if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
-              return 'صيغة البريد الإلكتروني غير صحيحة';
+              return context.tr('validation.emailInvalid');
             }
             return null;
           },
@@ -219,8 +220,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
           autofillHints: const [AutofillHints.newPassword],
           enabled: !_isLoading,
           decoration: InputDecoration(
-            labelText: 'كلمة المرور',
-            helperText: '٨ خانات على الأقل، مع حروف وأرقام',
+            labelText: context.tr('common.password'),
+            helperText: context.tr('auth.passwordHelper'),
             prefixIcon: const Icon(Icons.lock_outline_rounded),
             suffixIcon: IconButton(
               onPressed: () =>
@@ -234,11 +235,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
           validator: (value) {
             final password = value ?? '';
-            if (password.isEmpty) return 'أدخل كلمة المرور';
-            if (password.length < 8) return 'كلمة المرور أقل من ٨ خانات';
+            if (password.isEmpty)
+              return context.tr('validation.passwordRequired');
+            if (password.length < 8)
+              return context.tr('validation.passwordTooShort');
             if (!RegExp(r'[A-Za-z]').hasMatch(password) ||
                 !RegExp(r'[0-9]').hasMatch(password)) {
-              return 'يجب أن تحتوي على حروف وأرقام';
+              return context.tr('validation.passwordWeak');
             }
             return null;
           },
@@ -259,7 +262,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           textInputAction: TextInputAction.done,
           enabled: !_isLoading,
           decoration: InputDecoration(
-            labelText: 'تأكيد كلمة المرور',
+            labelText: context.tr('common.confirmPassword'),
             prefixIcon: const Icon(Icons.lock_reset_outlined),
             suffixIcon: IconButton(
               onPressed: () =>
@@ -272,9 +275,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
           ),
           validator: (value) {
-            if (value == null || value.isEmpty) return 'أعد إدخال كلمة المرور';
+            if (value == null || value.isEmpty)
+              return context.tr('validation.confirmPasswordRequired');
             if (value != _passwordController.text) {
-              return 'كلمة المرور وتأكيدها غير متطابقين';
+              return context.tr('validation.passwordMismatch');
             }
             return null;
           },
@@ -290,7 +294,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     final role = _role;
     if (role == null) {
-      _showMessage('الرجاء اختيار نوع الحساب قبل إنشاء الحساب');
+      _showMessage(context.tr('auth.roleRequired'));
       Navigator.of(context).pushNamedAndRemoveUntil(
         KanafRoutes.roleSelection,
         (route) => false,
@@ -334,7 +338,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _showMessage(
         error is ApiServiceException
             ? error.message
-            : 'تعذر إكمال إنشاء الحساب حالياً. حاول مرة أخرى.',
+            : context.tr('auth.registerFailed'),
       );
     }
   }
@@ -345,7 +349,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         content: Text(message),
         duration: const Duration(seconds: 6),
         action: SnackBarAction(
-          label: 'حسناً',
+          label: context.tr('common.ok'),
           onPressed: () => ScaffoldMessenger.of(context).hideCurrentSnackBar(),
         ),
       ),
@@ -360,14 +364,15 @@ class _RoleBanner extends StatelessWidget {
   final String role;
 
   static const Map<String, (String, IconData)> _labels = {
-    AuthNavigation.donorRole: ('متبرع', Icons.favorite_outline_rounded),
-    AuthNavigation.volunteerRole: ('متطوع', Icons.handshake_outlined),
+    AuthNavigation.donorRole: ('role.donor', Icons.favorite_outline_rounded),
+    AuthNavigation.volunteerRole: ('role.volunteer', Icons.handshake_outlined),
   };
 
   @override
   Widget build(BuildContext context) {
     final scheme = context.colors;
-    final (label, icon) = _labels[role] ?? ('حساب', Icons.person_outline);
+    final (labelKey, icon) =
+        _labels[role] ?? ('role.account', Icons.person_outline);
 
     return KanafCard(
       color: scheme.primaryContainer,
@@ -381,14 +386,17 @@ class _RoleBanner extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'نوع الحساب: $label',
+                  context.tr(
+                    'auth.accountType',
+                    args: {'role': context.tr(labelKey)},
+                  ),
                   style: context.texts.titleSmall?.copyWith(
                     color: scheme.onPrimaryContainer,
                   ),
                 ),
                 const SizedBox(height: KanafSpacing.xxs),
                 Text(
-                  'يحدد نوع الحساب ما ستراه بعد الدخول',
+                  context.tr('auth.accountTypeSubtitle'),
                   style: context.texts.bodySmall?.copyWith(
                     color: scheme.onPrimaryContainer.withOpacity(0.8),
                   ),
@@ -401,7 +409,7 @@ class _RoleBanner extends StatelessWidget {
               KanafRoutes.roleSelection,
               (route) => false,
             ),
-            child: const Text('تغيير'),
+            child: Text(context.tr('common.update')),
           ),
         ],
       ),

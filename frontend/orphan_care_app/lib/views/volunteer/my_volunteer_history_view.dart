@@ -6,6 +6,7 @@ import '../../theme/kanaf_motion.dart';
 import '../../theme/kanaf_tokens.dart';
 import '../../widgets/kanaf_layout.dart';
 import '../../widgets/kanaf_states.dart';
+import '../../l10n/kanaf_localizations.dart';
 
 /// سجل مشاركات المتطوع.
 ///
@@ -24,8 +25,6 @@ class MyVolunteerHistoryView extends StatefulWidget {
 class _MyVolunteerHistoryViewState extends State<MyVolunteerHistoryView> {
   _HistoryFilter _filter = _HistoryFilter.all;
 
-  static final DateFormat _dateFormat = DateFormat('d MMMM y', 'ar');
-
   @override
   void initState() {
     super.initState();
@@ -43,10 +42,14 @@ class _MyVolunteerHistoryViewState extends State<MyVolunteerHistoryView> {
     final provider = AppProviderScope.of(context);
     final all = provider.volunteerApplications;
     final visible = _filter.apply(all);
+    final dateFormat = DateFormat(
+      'd MMMM y',
+      Localizations.localeOf(context).languageCode,
+    );
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('سجل التطوع'),
+        title: Text(context.tr('volunteer.historyTitle')),
         leading: const BackButton(),
       ),
       body: KanafBackdrop(
@@ -68,11 +71,11 @@ class _MyVolunteerHistoryViewState extends State<MyVolunteerHistoryView> {
                         ? Icons.history_edu_outlined
                         : Icons.filter_alt_off_outlined,
                     emptyTitle: all.isEmpty
-                        ? 'سجلّك فارغ حتى الآن'
-                        : 'لا نتائج لهذا التصنيف',
+                        ? context.tr('volunteer.emptyHistoryTitle')
+                        : context.tr('volunteer.emptyCategoryTitle'),
                     emptyMessage: all.isEmpty
-                        ? 'أول مشاركة تطوعية لك ستظهر هنا.'
-                        : 'جرّب تصنيفاً آخر لعرض بقية المشاركات.',
+                        ? context.tr('volunteer.emptyHistoryMessage')
+                        : context.tr('volunteer.emptyCategoryMessage'),
                     builder: (context) => ListView.separated(
                       physics: const AlwaysScrollableScrollPhysics(),
                       padding: const EdgeInsets.fromLTRB(
@@ -88,7 +91,7 @@ class _MyVolunteerHistoryViewState extends State<MyVolunteerHistoryView> {
                         index: index,
                         child: _HistoryCard(
                           data: visible[index],
-                          dateFormat: _dateFormat,
+                          dateFormat: dateFormat,
                         ),
                       ),
                     ),
@@ -117,7 +120,9 @@ class _MyVolunteerHistoryViewState extends State<MyVolunteerHistoryView> {
             Padding(
               padding: const EdgeInsetsDirectional.only(end: KanafSpacing.sm),
               child: FilterChip(
-                label: Text('${option.label} (${option.apply(all).length})'),
+                label: Text(
+                  '${context.tr(option.labelKey)} (${option.apply(all).length})',
+                ),
                 selected: _filter == option,
                 onSelected: (_) => setState(() => _filter = option),
               ),
@@ -129,14 +134,14 @@ class _MyVolunteerHistoryViewState extends State<MyVolunteerHistoryView> {
 }
 
 enum _HistoryFilter {
-  all('الكل'),
-  completed('مكتملة'),
-  active('جارية'),
-  pending('قيد المراجعة');
+  all('common.all'),
+  completed('donation.completed'),
+  active('volunteer.filterActive'),
+  pending('donation.pending');
 
-  const _HistoryFilter(this.label);
+  const _HistoryFilter(this.labelKey);
 
-  final String label;
+  final String labelKey;
 
   List<Map<String, dynamic>> apply(List<Map<String, dynamic>> items) {
     String statusOf(Map<String, dynamic> i) => i['status']?.toString() ?? '';
@@ -146,8 +151,7 @@ enum _HistoryFilter {
       _HistoryFilter.completed =>
         items.where((i) => statusOf(i) == 'completed').toList(),
       _HistoryFilter.active => items
-          .where((i) =>
-              statusOf(i) == 'accepted' || statusOf(i) == 'approved')
+          .where((i) => statusOf(i) == 'accepted' || statusOf(i) == 'approved')
           .toList(),
       _HistoryFilter.pending =>
         items.where((i) => statusOf(i) == 'pending').toList(),
@@ -164,7 +168,8 @@ class _HistoryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = context.colors;
-    final title = data['opportunity_title']?.toString() ?? 'مشاركة تطوعية';
+    final title = data['opportunity_title']?.toString() ??
+        context.tr('volunteer.defaultParticipation');
     final location = data['opportunity_location']?.toString() ?? '';
     final status = data['status']?.toString() ?? 'pending';
     final created = DateTime.tryParse(data['created_at']?.toString() ?? '');

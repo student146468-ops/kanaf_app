@@ -7,6 +7,7 @@ import '../../theme/kanaf_motion.dart';
 import '../../theme/kanaf_tokens.dart';
 import '../../widgets/kanaf_layout.dart';
 import '../../widgets/kanaf_states.dart';
+import '../../l10n/kanaf_localizations.dart';
 
 /// تتبّع حالة الاحتياج.
 ///
@@ -56,7 +57,7 @@ class _TrackNeedStatusScreenState extends State<TrackNeedStatusScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('تتبّع الاحتياج'),
+        title: Text(context.tr('need.trackStatus')),
         leading: const BackButton(),
       ),
       body: KanafBackdrop(
@@ -71,8 +72,8 @@ class _TrackNeedStatusScreenState extends State<TrackNeedStatusScreen> {
                 ? null
                 : () => provider.fetchNeedDetails(_needId!),
             emptyIcon: Icons.timeline_rounded,
-            emptyTitle: 'لم يُحدَّد الاحتياج',
-            emptyMessage: 'افتح الاحتياج من قائمة الاحتياجات لتتبّع حالته.',
+            emptyTitle: context.tr('need.notSelectedTitle'),
+            emptyMessage: context.tr('need.notSelectedMessage'),
             builder: (context) => ListView(
               padding: const EdgeInsets.fromLTRB(
                 KanafSpacing.pageInset,
@@ -86,11 +87,11 @@ class _TrackNeedStatusScreenState extends State<TrackNeedStatusScreen> {
                   child: _SummaryCard(need: need!),
                 ),
                 const SizedBox(height: KanafSpacing.xxl),
-                const KanafStaggeredEntrance(
+                KanafStaggeredEntrance(
                   index: 1,
                   child: KanafSectionHeader(
-                    title: 'مسار الاحتياج',
-                    subtitle: 'المراحل التي سجّلها النظام فعلياً',
+                    title: context.tr('need.timelineTitle'),
+                    subtitle: context.tr('need.timelineSubtitle'),
                   ),
                 ),
                 const SizedBox(height: KanafSpacing.md),
@@ -118,28 +119,35 @@ class _TrackNeedStatusScreenState extends State<TrackNeedStatusScreen> {
 
     return [
       _Step(
-        title: 'نُشر الاحتياج',
-        subtitle: 'أعلنت الدار حاجتها وأصبحت مرئية للمتبرعين.',
+        title: context.tr('need.timelinePublishedTitle'),
+        subtitle: context.tr('need.timelinePublishedSubtitle'),
         date: need.createdAt,
         done: true,
       ),
       _Step(
-        title: 'بدأ الدعم يصل',
+        title: context.tr('need.timelineProgressTitle'),
         subtitle: hasProgress
-            ? 'تحقّق ${_number(need.fulfilledQuantity)}'
-                '${progress == null ? '' : ' (${(progress * 100).round()}%)'}'
-                ' من المطلوب.'
-            : 'لم يُسجَّل أي دعم لهذا الاحتياج بعد.',
+            ? context.tr(
+                'need.timelineProgressWithValue',
+                args: {
+                  'value': _number(need.fulfilledQuantity),
+                  'percent':
+                      progress == null ? '' : ' (${(progress * 100).round()}%)',
+                },
+              )
+            : context.tr('need.timelineProgressEmpty'),
         date: hasProgress ? need.updatedAt : null,
         done: hasProgress,
       ),
       _Step(
-        title: isArchived ? 'أُرشف الاحتياج' : 'اكتمل الاحتياج',
+        title: isArchived
+            ? context.tr('need.timelineArchivedTitle')
+            : context.tr('need.timelineCompletedTitle'),
         subtitle: isArchived
-            ? 'أزالته الدار من الاحتياجات المعروضة.'
+            ? context.tr('need.timelineArchivedSubtitle')
             : isCompleted
-                ? 'غطّت المساهمات الاحتياج وأغلقته الدار.'
-                : 'سيُغلق حين تؤكد الدار اكتمال ما طلبته.',
+                ? context.tr('need.timelineCompletedSubtitle')
+                : context.tr('need.timelineWaitingSubtitle'),
         date: (isCompleted || isArchived) ? need.updatedAt : null,
         done: isCompleted || isArchived,
       ),

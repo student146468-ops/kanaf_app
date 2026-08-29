@@ -36,8 +36,8 @@ class VolunteerModel {
       status: json['status'],
       hoursWorked: json['hours_worked'],
       imageUrl: json['image_url'],
-      createdAt: json['created_at'] != null 
-          ? DateTime.parse(json['created_at']) 
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'])
           : null,
     );
   }
@@ -86,5 +86,6 @@ class VolunteerModel {
   }
 
   @override
-  String toString() => 'VolunteerModel(id: $id, name: $name, specialty: $specialty, points: $points)';
+  String toString() =>
+      'VolunteerModel(id: $id, name: $name, specialty: $specialty, points: $points)';
 }

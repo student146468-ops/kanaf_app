@@ -5,6 +5,7 @@ import '../../services/api_service.dart';
 import '../../theme/kanaf_motion.dart';
 import '../../theme/kanaf_tokens.dart';
 import '../../widgets/kanaf_layout.dart';
+import '../../l10n/kanaf_localizations.dart';
 
 /// تغيير البريد الإلكتروني للحساب.
 ///
@@ -59,7 +60,7 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('تغيير البريد الإلكتروني'),
+        title: Text(context.tr('settings.changeEmail')),
         leading: const BackButton(),
       ),
       body: KanafBackdrop(
@@ -105,7 +106,9 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
                                 )
                               : const Icon(Icons.mark_email_read_outlined),
                           label: Text(
-                            _isSaving ? 'جاري الحفظ...' : 'حفظ البريد الجديد',
+                            _isSaving
+                                ? context.tr('settings.saving')
+                                : context.tr('settings.saveEmail'),
                           ),
                         ),
                       ),
@@ -139,10 +142,13 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('البريد الحالي', style: context.texts.bodySmall),
+                Text(context.tr('settings.currentEmail'),
+                    style: context.texts.bodySmall),
                 const SizedBox(height: KanafSpacing.xxs),
                 Text(
-                  currentEmail.isEmpty ? 'جاري التحميل...' : currentEmail,
+                  currentEmail.isEmpty
+                      ? context.tr('common.loading')
+                      : currentEmail,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: context.texts.titleSmall,
@@ -164,20 +170,20 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
           textInputAction: TextInputAction.next,
           autocorrect: false,
           enabled: !_isSaving,
-          decoration: const InputDecoration(
-            labelText: 'البريد الإلكتروني الجديد',
-            hintText: 'name@example.com',
-            prefixIcon: Icon(Icons.mail_outline_rounded),
+          decoration: InputDecoration(
+            labelText: context.tr('settings.newEmail'),
+            hintText: context.tr('auth.emailHint'),
+            prefixIcon: const Icon(Icons.mail_outline_rounded),
           ),
           validator: (value) {
             final email = value?.trim() ?? '';
-            if (email.isEmpty) return 'أدخل البريد الإلكتروني الجديد';
+            if (email.isEmpty) return context.tr('settings.newEmailRequired');
             if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
-              return 'صيغة البريد الإلكتروني غير صحيحة';
+              return context.tr('validation.emailInvalid');
             }
             if (currentEmail.isNotEmpty &&
                 email.toLowerCase() == currentEmail.toLowerCase()) {
-              return 'هذا هو بريدك الحالي بالفعل';
+              return context.tr('settings.sameEmail');
             }
             return null;
           },
@@ -192,8 +198,8 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
           autofillHints: const [AutofillHints.password],
           enabled: !_isSaving,
           decoration: InputDecoration(
-            labelText: 'كلمة المرور الحالية',
-            helperText: 'للتأكد من أنك صاحب الحساب',
+            labelText: context.tr('settings.currentPassword'),
+            helperText: context.tr('settings.passwordOwnerHelper'),
             prefixIcon: const Icon(Icons.lock_outline_rounded),
             suffixIcon: IconButton(
               onPressed: () =>
@@ -207,7 +213,7 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
           ),
           validator: (value) {
             if (value == null || value.isEmpty) {
-              return 'أدخل كلمة المرور الحالية';
+              return context.tr('settings.currentPasswordRequired');
             }
             return null;
           },
@@ -232,8 +238,7 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
           const SizedBox(width: KanafSpacing.md),
           Expanded(
             child: Text(
-              'ستسجّل الدخول بالبريد الجديد بعد التغيير، وسيصل إشعار إلى '
-              'بريدك القديم، ويُسجَّل خروج الأجهزة الأخرى.',
+              context.tr('settings.emailChangeNotice'),
               style: context.texts.bodySmall?.copyWith(
                 color: semantic.onInfoContainer,
               ),
@@ -262,7 +267,7 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
       if (!mounted) return;
       setState(() => _isSaving = false);
 
-      _showMessage('تم تحديث البريد الإلكتروني بنجاح.');
+      _showMessage(context.tr('settings.emailChanged'));
       Navigator.of(context).pop(true);
     } catch (error) {
       debugPrint('Change email failed: $error');
@@ -271,7 +276,7 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
       _showMessage(
         error is ApiServiceException
             ? error.message
-            : 'تعذر تغيير البريد الإلكتروني حالياً. حاول مرة أخرى.',
+            : context.tr('settings.emailChangeFailed'),
       );
     }
   }
@@ -282,7 +287,7 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
         content: Text(message),
         duration: const Duration(seconds: 5),
         action: SnackBarAction(
-          label: 'حسناً',
+          label: context.tr('common.ok'),
           onPressed: () => ScaffoldMessenger.of(context).hideCurrentSnackBar(),
         ),
       ),

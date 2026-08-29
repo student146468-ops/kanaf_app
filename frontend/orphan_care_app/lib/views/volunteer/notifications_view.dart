@@ -7,6 +7,7 @@ import '../../theme/kanaf_motion.dart';
 import '../../theme/kanaf_tokens.dart';
 import '../../widgets/kanaf_layout.dart';
 import '../../widgets/kanaf_states.dart';
+import '../../l10n/kanaf_localizations.dart';
 
 /// إشعارات المتطوع.
 ///
@@ -30,8 +31,6 @@ class NotificationsView extends StatefulWidget {
 class _NotificationsViewState extends State<NotificationsView> {
   _NotificationFilter _filter = _NotificationFilter.all;
 
-  static final DateFormat _dateFormat = DateFormat('d MMMM y • h:mm a', 'ar');
-
   @override
   void initState() {
     super.initState();
@@ -50,17 +49,21 @@ class _NotificationsViewState extends State<NotificationsView> {
     final all = provider.notifications;
     final visible = _filter.apply(all);
     final unread = all.where((n) => n['is_read'] != true).length;
+    final dateFormat = DateFormat(
+      'd MMMM y • h:mm a',
+      Localizations.localeOf(context).languageCode,
+    );
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('الإشعارات'),
+        title: Text(context.tr('common.notifications')),
         leading: const BackButton(),
         actions: [
           if (unread > 0)
             TextButton.icon(
               onPressed: () => _markAll(provider),
               icon: const Icon(Icons.done_all_rounded, size: 18),
-              label: const Text('تحديد الكل'),
+              label: Text(context.tr('notifications.selectAll')),
             ),
           const SizedBox(width: KanafSpacing.xs),
         ],
@@ -84,11 +87,11 @@ class _NotificationsViewState extends State<NotificationsView> {
                         ? Icons.notifications_none_rounded
                         : Icons.filter_alt_off_outlined,
                     emptyTitle: all.isEmpty
-                        ? 'لا توجد إشعارات الآن'
-                        : 'لا نتائج لهذا التصنيف',
+                        ? context.tr('notifications.emptyTitle')
+                        : context.tr('volunteer.emptyCategoryTitle'),
                     emptyMessage: all.isEmpty
-                        ? 'سنخبرك هنا عند البتّ في طلباتك أو نشر فرص جديدة.'
-                        : 'جرّب تصنيفاً آخر لعرض بقية الإشعارات.',
+                        ? context.tr('notifications.emptyMessage')
+                        : context.tr('notifications.emptyFilterMessage'),
                     builder: (context) => ListView.separated(
                       physics: const AlwaysScrollableScrollPhysics(),
                       padding: const EdgeInsets.fromLTRB(
@@ -104,7 +107,7 @@ class _NotificationsViewState extends State<NotificationsView> {
                         index: index,
                         child: _NotificationCard(
                           data: visible[index],
-                          dateFormat: _dateFormat,
+                          dateFormat: dateFormat,
                           onTap: () => _open(provider, visible[index]),
                         ),
                       ),
@@ -134,7 +137,9 @@ class _NotificationsViewState extends State<NotificationsView> {
             Padding(
               padding: const EdgeInsetsDirectional.only(end: KanafSpacing.sm),
               child: FilterChip(
-                label: Text('${option.label} (${option.apply(all).length})'),
+                label: Text(
+                  '${context.tr(option.labelKey)} (${option.apply(all).length})',
+                ),
                 selected: _filter == option,
                 onSelected: (_) => setState(() => _filter = option),
               ),
@@ -165,7 +170,7 @@ class _NotificationsViewState extends State<NotificationsView> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            provider.errorMessage ?? 'تعذر تحديث حالة الإشعارات.',
+            provider.errorMessage ?? context.tr('notifications.updateFailed'),
           ),
         ),
       );
@@ -174,13 +179,13 @@ class _NotificationsViewState extends State<NotificationsView> {
 }
 
 enum _NotificationFilter {
-  all('الكل'),
-  unread('غير مقروء'),
-  volunteer('التطوع');
+  all('common.all'),
+  unread('volunteer.filterUnread'),
+  volunteer('volunteer.filterVolunteering');
 
-  const _NotificationFilter(this.label);
+  const _NotificationFilter(this.labelKey);
 
-  final String label;
+  final String labelKey;
 
   List<Map<String, dynamic>> apply(List<Map<String, dynamic>> items) {
     return switch (this) {
@@ -217,7 +222,8 @@ class _NotificationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = context.colors;
     final isRead = data['is_read'] == true;
-    final title = data['title']?.toString() ?? 'إشعار';
+    final title =
+        data['title']?.toString() ?? context.tr('notifications.defaultTitle');
     final message = data['message']?.toString() ?? '';
     final created = DateTime.tryParse(data['created_at']?.toString() ?? '');
     final type = data['notification_type']?.toString() ?? 'message';

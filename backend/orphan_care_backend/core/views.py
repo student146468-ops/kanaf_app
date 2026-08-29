@@ -10,8 +10,25 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
-from management.models import CareHome, Donation, InventoryItem, Need, Orphan, Sponsor, Volunteer, VolunteerApplication
-from management.serializers import DonationSerializer, InventorySerializer, OrphanSerializer, SponsorSerializer, VolunteerSerializer
+from management.models import (
+    CareHome,
+    Donation,
+    InventoryItem,
+    Need,
+    Orphan,
+    Sponsor,
+    Volunteer,
+    VolunteerApplication,
+    VolunteerOpportunity,
+)
+from management.serializers import (
+    DonationSerializer,
+    InventorySerializer,
+    OrphanSerializer,
+    SponsorSerializer,
+    VolunteerOpportunitySerializer,
+    VolunteerSerializer,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -104,8 +121,10 @@ def orphans_list(request):
 
 @staff_required
 def needs_list(request):
+    care_homes = CareHome.objects.order_by('name')
     context = {
-        'care_homes': CareHome.objects.all(),
+        'care_homes': care_homes,
+        'care_homes_count': care_homes.count(),
         'need_status_choices': Need.STATUS_CHOICES,
         'need_priority_choices': Need.PRIORITY_CHOICES,
     }
@@ -134,6 +153,42 @@ def volunteer_applications_view(request):
         'application_status_choices': VolunteerApplication.STATUS_CHOICES,
     }
     return render(request, 'volunteer_applications.html', context)
+
+
+@staff_required
+def volunteer_opportunities_view(request):
+    care_homes = CareHome.objects.order_by('name')
+    opportunities = VolunteerOpportunity.objects.select_related('care_home').prefetch_related('applications').all()
+    context = {
+        'care_homes': care_homes,
+        'care_homes_count': care_homes.count(),
+        'opportunities': opportunities,
+        'opportunity_category_choices': VolunteerOpportunity.CATEGORY_CHOICES,
+        'opportunity_status_choices': VolunteerOpportunity.STATUS_CHOICES,
+    }
+
+    if request.method == 'POST':
+        data = {
+            'title': request.POST.get('title', '').strip(),
+            'description': request.POST.get('description', '').strip(),
+            'category': request.POST.get('category', '').strip(),
+            'care_home': request.POST.get('care_home') or None,
+            'required_volunteers': request.POST.get('required_volunteers') or 1,
+            'required_skills': request.POST.get('required_skills', '').strip(),
+            'location': request.POST.get('location', '').strip(),
+            'start_date': request.POST.get('start_date') or None,
+            'end_date': request.POST.get('end_date') or None,
+            'status': request.POST.get('status') or VolunteerOpportunity.STATUS_OPEN,
+            'image_url': request.POST.get('image_url', '').strip(),
+        }
+        serializer = VolunteerOpportunitySerializer(data=data, context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            messages.success(request, 'تمت إضافة فرصة التطوع بنجاح.')
+            return redirect('volunteer_opportunities_list')
+        context['form_errors'] = serializer.errors
+
+    return render(request, 'volunteer_opportunities.html', context)
 
 
 @staff_required

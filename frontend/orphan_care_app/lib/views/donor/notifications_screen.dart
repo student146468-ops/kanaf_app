@@ -6,6 +6,7 @@ import '../../theme/kanaf_motion.dart';
 import '../../theme/kanaf_tokens.dart';
 import '../../widgets/kanaf_layout.dart';
 import '../../widgets/kanaf_states.dart';
+import '../../l10n/kanaf_localizations.dart';
 
 /// إشعارات المتبرع.
 ///
@@ -20,8 +21,6 @@ class NotificationsScreen extends StatefulWidget {
 }
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
-  static final DateFormat _dateFormat = DateFormat('d MMM y • h:mm a', 'ar');
-
   @override
   void initState() {
     super.initState();
@@ -39,16 +38,25 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final provider = AppProviderScope.of(context);
     final notifications = provider.notifications;
     final unread = notifications.where((n) => n['is_read'] != true).length;
+    final dateFormat = DateFormat(
+      'd MMM y • h:mm a',
+      Localizations.localeOf(context).languageCode,
+    );
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('الإشعارات'),
+        title: Text(context.tr('common.notifications')),
         actions: [
           if (unread > 0)
             TextButton.icon(
               onPressed: provider.isSaving ? null : _markAllRead,
               icon: const Icon(Icons.done_all_rounded, size: 18),
-              label: Text('تعليم الكل ($unread)'),
+              label: Text(
+                context.tr(
+                  'notifications.markAllCount',
+                  args: {'count': unread},
+                ),
+              ),
             ),
           const SizedBox(width: KanafSpacing.xs),
         ],
@@ -65,9 +73,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               errorKind: provider.errorKind,
               onRetry: provider.fetchNotifications,
               emptyIcon: Icons.notifications_none_rounded,
-              emptyTitle: 'لا توجد إشعارات',
-              emptyMessage: 'ستصلك هنا تحديثات تبرعاتك '
-                  'والاحتياجات الجديدة من دور الرعاية.',
+              emptyTitle: context.tr('notifications.emptyTitle'),
+              emptyMessage: context.tr('notifications.emptyMessage'),
               builder: (context) => ListView.separated(
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.fromLTRB(
@@ -83,7 +90,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   index: index,
                   child: _NotificationCard(
                     data: notifications[index],
-                    dateFormat: _dateFormat,
+                    dateFormat: dateFormat,
                     onOpen: () => _open(notifications[index]),
                   ),
                 ),
@@ -105,8 +112,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       SnackBar(
         content: Text(
           done
-              ? 'تم تعليم جميع الإشعارات كمقروءة'
-              : provider.errorMessage ?? 'تعذر تحديث حالة الإشعارات.',
+              ? context.tr('notifications.markAllSuccess')
+              : provider.errorMessage ??
+                  context.tr('notifications.updateFailed'),
         ),
       ),
     );
@@ -141,7 +149,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                notification['title']?.toString() ?? 'إشعار',
+                notification['title']?.toString() ??
+                    sheetContext.tr('notifications.defaultTitle'),
                 style: sheetContext.texts.titleLarge,
               ),
               const SizedBox(height: KanafSpacing.md),
@@ -152,7 +161,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               const SizedBox(height: KanafSpacing.xxl),
               FilledButton(
                 onPressed: () => Navigator.pop(sheetContext),
-                child: const Text('حسناً'),
+                child: Text(context.tr('common.ok')),
               ),
             ],
           ),

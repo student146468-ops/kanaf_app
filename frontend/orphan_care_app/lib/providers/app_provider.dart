@@ -16,6 +16,15 @@ class AppProvider extends ChangeNotifier {
   bool _isSaving = false;
   String? _errorMessage;
   ApiFailureKind? _errorKind;
+  bool _isLoadingNeeds = false;
+  String? _needsErrorMessage;
+  ApiFailureKind? _needsErrorKind;
+  bool _isLoadingNeedDetails = false;
+  String? _needDetailsErrorMessage;
+  ApiFailureKind? _needDetailsErrorKind;
+  bool _isLoadingVolunteerOpportunityDetails = false;
+  String? _volunteerOpportunityDetailsErrorMessage;
+  ApiFailureKind? _volunteerOpportunityDetailsErrorKind;
 
   List<OrphanModel> _orphans = [];
   OrphanModel? _selectedOrphan;
@@ -27,6 +36,7 @@ class AppProvider extends ChangeNotifier {
   List<Map<String, dynamic>> _volunteerApplications = [];
   List<Map<String, dynamic>> _careHomes = [];
   NeedModel? _selectedNeed;
+  VolunteerOpportunityModel? _selectedVolunteerOpportunity;
   Map<String, dynamic> _currentUser = {};
   Map<String, dynamic> _dashboardStats = {};
   // مواعيد زيارة الدار — للقراءة فقط، يعرضها المتبرع في ملف الدار.
@@ -36,6 +46,18 @@ class AppProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get isSaving => _isSaving;
   String? get errorMessage => _errorMessage;
+  bool get isLoadingNeeds => _isLoadingNeeds;
+  String? get needsErrorMessage => _needsErrorMessage;
+  ApiFailureKind? get needsErrorKind => _needsErrorKind;
+  bool get isLoadingNeedDetails => _isLoadingNeedDetails;
+  String? get needDetailsErrorMessage => _needDetailsErrorMessage;
+  ApiFailureKind? get needDetailsErrorKind => _needDetailsErrorKind;
+  bool get isLoadingVolunteerOpportunityDetails =>
+      _isLoadingVolunteerOpportunityDetails;
+  String? get volunteerOpportunityDetailsErrorMessage =>
+      _volunteerOpportunityDetailsErrorMessage;
+  ApiFailureKind? get volunteerOpportunityDetailsErrorKind =>
+      _volunteerOpportunityDetailsErrorKind;
 
   /// سبب آخر فشل. `null` يعني لا فشل قائماً.
   ApiFailureKind? get errorKind => _errorKind;
@@ -61,6 +83,8 @@ class AppProvider extends ChangeNotifier {
       _volunteerApplications;
   List<Map<String, dynamic>> get careHomes => _careHomes;
   NeedModel? get selectedNeed => _selectedNeed;
+  VolunteerOpportunityModel? get selectedVolunteerOpportunity =>
+      _selectedVolunteerOpportunity;
   Map<String, dynamic> get currentUser => _currentUser;
   Map<String, dynamic> get dashboardStats => _dashboardStats;
   List<Map<String, dynamic>> get visitHours => _visitHours;
@@ -166,13 +190,24 @@ class AppProvider extends ChangeNotifier {
   }
 
   Future<void> fetchNeeds({bool notifyLoading = true}) async {
-    await _load(() async {
+    if (notifyLoading && !_isLoadingNeeds) {
+      _isLoadingNeeds = true;
+      notifyListeners();
+    }
+    try {
       final data = await _apiService.getNeeds();
       _needs = data
           .map((item) =>
               NeedModel.fromJson(Map<String, dynamic>.from(item as Map)))
           .toList();
-    }, notifyLoading: notifyLoading);
+      _clearNeedsFailure();
+    } catch (e) {
+      _recordNeedsFailure(e);
+      debugPrint('Kanaf needs load failed: $e');
+    } finally {
+      _isLoadingNeeds = false;
+      notifyListeners();
+    }
   }
 
   Future<void> fetchVolunteerOpportunities({bool notifyLoading = true}) async {
@@ -188,6 +223,9 @@ class AppProvider extends ChangeNotifier {
     return _save(() async {
       await _apiService.applyToVolunteerOpportunity(opportunityId, data);
       await fetchVolunteerOpportunities(notifyLoading: false);
+      if (_selectedVolunteerOpportunity?.id == opportunityId) {
+        await fetchVolunteerOpportunityDetails(opportunityId);
+      }
       await fetchVolunteerApplications(notifyLoading: false);
     });
   }
@@ -200,10 +238,42 @@ class AppProvider extends ChangeNotifier {
     }, notifyLoading: notifyLoading);
   }
 
+  Future<void> fetchVolunteerOpportunityDetails(int id) async {
+    if (_selectedVolunteerOpportunity?.id != id) {
+      _selectedVolunteerOpportunity = null;
+    }
+    _isLoadingVolunteerOpportunityDetails = true;
+    notifyListeners();
+    try {
+      _selectedVolunteerOpportunity = VolunteerOpportunityModel.fromJson(
+        await _apiService.getVolunteerOpportunityDetails(id),
+      );
+      _clearVolunteerOpportunityDetailsFailure();
+    } catch (e) {
+      _recordVolunteerOpportunityDetailsFailure(e);
+      debugPrint('Kanaf volunteer opportunity details load failed: $e');
+    } finally {
+      _isLoadingVolunteerOpportunityDetails = false;
+      notifyListeners();
+    }
+  }
+
   Future<void> fetchNeedDetails(int id) async {
-    await _load(() async {
+    if (_selectedNeed?.id != id) {
+      _selectedNeed = null;
+    }
+    _isLoadingNeedDetails = true;
+    notifyListeners();
+    try {
       _selectedNeed = NeedModel.fromJson(await _apiService.getNeedDetails(id));
-    });
+      _clearNeedDetailsFailure();
+    } catch (e) {
+      _recordNeedDetailsFailure(e);
+      debugPrint('Kanaf need details load failed: $e');
+    } finally {
+      _isLoadingNeedDetails = false;
+      notifyListeners();
+    }
   }
 
   Future<void> fetchCareHomes({bool notifyLoading = true}) async {
@@ -250,8 +320,20 @@ class AppProvider extends ChangeNotifier {
   }
 
   void clearError() {
-    if (_errorMessage == null && _errorKind == null) return;
+    if (_errorMessage == null &&
+        _errorKind == null &&
+        _needsErrorMessage == null &&
+        _needsErrorKind == null &&
+        _needDetailsErrorMessage == null &&
+        _needDetailsErrorKind == null &&
+        _volunteerOpportunityDetailsErrorMessage == null &&
+        _volunteerOpportunityDetailsErrorKind == null) {
+      return;
+    }
     _clearFailure();
+    _clearNeedsFailure();
+    _clearNeedDetailsFailure();
+    _clearVolunteerOpportunityDetailsFailure();
     notifyListeners();
   }
 
@@ -270,9 +352,16 @@ class AppProvider extends ChangeNotifier {
     _notifications = [];
     _selectedOrphan = null;
     _selectedNeed = null;
+    _selectedVolunteerOpportunity = null;
     _isLoading = false;
+    _isLoadingNeeds = false;
+    _isLoadingNeedDetails = false;
+    _isLoadingVolunteerOpportunityDetails = false;
     _isSaving = false;
     _clearFailure();
+    _clearNeedsFailure();
+    _clearNeedDetailsFailure();
+    _clearVolunteerOpportunityDetailsFailure();
     notifyListeners();
   }
 
@@ -340,9 +429,56 @@ class AppProvider extends ChangeNotifier {
     _errorKind = ApiFailureKind.unknown;
   }
 
+  void _recordNeedsFailure(Object error) {
+    if (error is ApiServiceException) {
+      _needsErrorMessage = error.message;
+      _needsErrorKind = error.kind;
+      return;
+    }
+    _needsErrorMessage = 'تعذر تحميل الاحتياجات حالياً. حاول مرة أخرى.';
+    _needsErrorKind = ApiFailureKind.unknown;
+  }
+
+  void _recordNeedDetailsFailure(Object error) {
+    if (error is ApiServiceException) {
+      _needDetailsErrorMessage = error.message;
+      _needDetailsErrorKind = error.kind;
+      return;
+    }
+    _needDetailsErrorMessage =
+        'تعذر تحميل تفاصيل الاحتياج حالياً. حاول مرة أخرى.';
+    _needDetailsErrorKind = ApiFailureKind.unknown;
+  }
+
+  void _recordVolunteerOpportunityDetailsFailure(Object error) {
+    if (error is ApiServiceException) {
+      _volunteerOpportunityDetailsErrorMessage = error.message;
+      _volunteerOpportunityDetailsErrorKind = error.kind;
+      return;
+    }
+    _volunteerOpportunityDetailsErrorMessage =
+        'تعذر تحميل تفاصيل فرصة التطوع حالياً. حاول مرة أخرى.';
+    _volunteerOpportunityDetailsErrorKind = ApiFailureKind.unknown;
+  }
+
   void _clearFailure() {
     _errorMessage = null;
     _errorKind = null;
+  }
+
+  void _clearNeedsFailure() {
+    _needsErrorMessage = null;
+    _needsErrorKind = null;
+  }
+
+  void _clearNeedDetailsFailure() {
+    _needDetailsErrorMessage = null;
+    _needDetailsErrorKind = null;
+  }
+
+  void _clearVolunteerOpportunityDetailsFailure() {
+    _volunteerOpportunityDetailsErrorMessage = null;
+    _volunteerOpportunityDetailsErrorKind = null;
   }
 
   void _replaceDonation(DonationModel updated) {

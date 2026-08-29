@@ -1,17 +1,18 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 import '../router/kanaf_router.dart';
 import '../services/api_service.dart';
 import '../theme/kanaf_tokens.dart';
 import '../utils/auth_navigation.dart';
 import '../widgets/kanaf_layout.dart';
+import '../l10n/kanaf_localizations.dart';
 
-/// شاشة البداية.
+/// ط´ط§ط´ط© ط§ظ„ط¨ط¯ط§ظٹط©.
 ///
-/// الأهم في إعادة البناء: الانتظار صار **مرتبطاً بالعمل الفعلي** لا
-/// بمؤقّت ثابت. سابقاً كان `Timer(4 seconds)` يحبس المستخدم أربع ثوانٍ
-/// كاملة حتى لو انتهى فحص الجلسة في 50 مللي ثانية. الآن نفحص الجلسة
-/// فوراً وننتظر حداً أدنى قصيراً فقط ليكتمل ظهور الشعار بصرياً.
+/// ط§ظ„ط£ظ‡ظ… ظپظٹ ط¥ط¹ط§ط¯ط© ط§ظ„ط¨ظ†ط§ط،: ط§ظ„ط§ظ†طھط¸ط§ط± طµط§ط± **ظ…ط±طھط¨ط·ط§ظ‹ ط¨ط§ظ„ط¹ظ…ظ„ ط§ظ„ظپط¹ظ„ظٹ** ظ„ط§
+/// ط¨ظ…ط¤ظ‚ظ‘طھ ط«ط§ط¨طھ. ط³ط§ط¨ظ‚ط§ظ‹ ظƒط§ظ† `Timer(4 seconds)` ظٹط­ط¨ط³ ط§ظ„ظ…ط³طھط®ط¯ظ… ط£ط±ط¨ط¹ ط«ظˆط§ظ†ظچ
+/// ظƒط§ظ…ظ„ط© ط­طھظ‰ ظ„ظˆ ط§ظ†طھظ‡ظ‰ ظپط­طµ ط§ظ„ط¬ظ„ط³ط© ظپظٹ 50 ظ…ظ„ظ„ظٹ ط«ط§ظ†ظٹط©. ط§ظ„ط¢ظ† ظ†ظپط­طµ ط§ظ„ط¬ظ„ط³ط©
+/// ظپظˆط±ط§ظ‹ ظˆظ†ظ†طھط¸ط± ط­ط¯ط§ظ‹ ط£ط¯ظ†ظ‰ ظ‚طµظٹط±ط§ظ‹ ظپظ‚ط· ظ„ظٹظƒطھظ…ظ„ ط¸ظ‡ظˆط± ط§ظ„ط´ط¹ط§ط± ط¨طµط±ظٹط§ظ‹.
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -21,7 +22,7 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with TickerProviderStateMixin {
-  /// أقل مدة عرض. أقصر منها يجعل الشاشة تبدو كوميض خاطف.
+  /// ط£ظ‚ظ„ ظ…ط¯ط© ط¹ط±ط¶. ط£ظ‚طµط± ظ…ظ†ظ‡ط§ ظٹط¬ط¹ظ„ ط§ظ„ط´ط§ط´ط© طھط¨ط¯ظˆ ظƒظˆظ…ظٹط¶ ط®ط§ط·ظپ.
   static const Duration _minimumDisplay = Duration(milliseconds: 1400);
 
   late final AnimationController _introController = AnimationController(
@@ -49,8 +50,8 @@ class _SplashScreenState extends State<SplashScreen>
     super.dispose();
   }
 
-  /// يفحص الجلسة وينتقل. الحد الأدنى للعرض والفحص يجريان **بالتوازي**
-  /// عبر `Future.wait`، فالمستخدم لا يدفع ثمن الاثنين متتاليين.
+  /// ظٹظپط­طµ ط§ظ„ط¬ظ„ط³ط© ظˆظٹظ†طھظ‚ظ„. ط§ظ„ط­ط¯ ط§ظ„ط£ط¯ظ†ظ‰ ظ„ظ„ط¹ط±ط¶ ظˆط§ظ„ظپط­طµ ظٹط¬ط±ظٹط§ظ† **ط¨ط§ظ„طھظˆط§ط²ظٹ**
+  /// ط¹ط¨ط± `Future.wait`طŒ ظپط§ظ„ظ…ط³طھط®ط¯ظ… ظ„ط§ ظٹط¯ظپط¹ ط«ظ…ظ† ط§ظ„ط§ط«ظ†ظٹظ† ظ…طھطھط§ظ„ظٹظٹظ†.
   Future<void> _resolveDestination() async {
     final api = ApiService();
 
@@ -81,26 +82,26 @@ class _SplashScreenState extends State<SplashScreen>
 
       final role = await api.getSavedRole();
 
-      // وجود رمز محفوظ لا يعني أن الجلسة ما زالت صالحة: قد يكون
-      // انتهى أو أُبطل من الخادم (تغيير كلمة مرور، أو خروج من جهاز
-      // آخر). كنا ندخل المستخدم إلى قسمه ثم تفشل أول عملية أمامه
-      // بلا تفسير. نتحقق الآن بنداء واحد خفيف قبل الدخول.
+      // ظˆط¬ظˆط¯ ط±ظ…ط² ظ…ط­ظپظˆط¸ ظ„ط§ ظٹط¹ظ†ظٹ ط£ظ† ط§ظ„ط¬ظ„ط³ط© ظ…ط§ ط²ط§ظ„طھ طµط§ظ„ط­ط©: ظ‚ط¯ ظٹظƒظˆظ†
+      // ط§ظ†طھظ‡ظ‰ ط£ظˆ ط£ظڈط¨ط·ظ„ ظ…ظ† ط§ظ„ط®ط§ط¯ظ… (طھط؛ظٹظٹط± ظƒظ„ظ…ط© ظ…ط±ظˆط±طŒ ط£ظˆ ط®ط±ظˆط¬ ظ…ظ† ط¬ظ‡ط§ط²
+      // ط¢ط®ط±). ظƒظ†ط§ ظ†ط¯ط®ظ„ ط§ظ„ظ…ط³طھط®ط¯ظ… ط¥ظ„ظ‰ ظ‚ط³ظ…ظ‡ ط«ظ… طھظپط´ظ„ ط£ظˆظ„ ط¹ظ…ظ„ظٹط© ط£ظ…ط§ظ…ظ‡
+      // ط¨ظ„ط§ طھظپط³ظٹط±. ظ†طھط­ظ‚ظ‚ ط§ظ„ط¢ظ† ط¨ظ†ط¯ط§ط، ظˆط§ط­ط¯ ط®ظپظٹظپ ظ‚ط¨ظ„ ط§ظ„ط¯ط®ظˆظ„.
       try {
         final me = await api.getMe();
-        // الدور القادم من الخادم أحدث من المحفوظ محلياً.
+        // ط§ظ„ط¯ظˆط± ط§ظ„ظ‚ط§ط¯ظ… ظ…ظ† ط§ظ„ط®ط§ط¯ظ… ط£ط­ط¯ط« ظ…ظ† ط§ظ„ظ…ط­ظپظˆط¸ ظ…ط­ظ„ظٹط§ظ‹.
         final freshRole = AuthNavigation.roleFromAuthResponse(me) ?? role;
         return _Session(isAuthenticated: true, role: freshRole);
       } on ApiServiceException catch (e) {
-        // انقطاع الشبكة ليس دليلاً على بطلان الجلسة — ندخل بالدور
-        // المحفوظ بدل طرد مستخدم صالح لأنه بلا إنترنت لحظتها.
+        // ط§ظ†ظ‚ط·ط§ط¹ ط§ظ„ط´ط¨ظƒط© ظ„ظٹط³ ط¯ظ„ظٹظ„ط§ظ‹ ط¹ظ„ظ‰ ط¨ط·ظ„ط§ظ† ط§ظ„ط¬ظ„ط³ط© â€” ظ†ط¯ط®ظ„ ط¨ط§ظ„ط¯ظˆط±
+        // ط§ظ„ظ…ط­ظپظˆط¸ ط¨ط¯ظ„ ط·ط±ط¯ ظ…ط³طھط®ط¯ظ… طµط§ظ„ط­ ظ„ط£ظ†ظ‡ ط¨ظ„ط§ ط¥ظ†طھط±ظ†طھ ظ„ط­ط¸طھظ‡ط§.
         if (e.isConnectivity) {
           return _Session(isAuthenticated: true, role: role);
         }
         return const _Session(isAuthenticated: false);
       }
     } catch (_) {
-      // تعذر قراءة التخزين المحلي: نعامله كعدم وجود جلسة بدل
-      // تعليق المستخدم على شاشة البداية إلى الأبد.
+      // طھط¹ط°ط± ظ‚ط±ط§ط،ط© ط§ظ„طھط®ط²ظٹظ† ط§ظ„ظ…ط­ظ„ظٹ: ظ†ط¹ط§ظ…ظ„ظ‡ ظƒط¹ط¯ظ… ظˆط¬ظˆط¯ ط¬ظ„ط³ط© ط¨ط¯ظ„
+      // طھط¹ظ„ظٹظ‚ ط§ظ„ظ…ط³طھط®ط¯ظ… ط¹ظ„ظ‰ ط´ط§ط´ط© ط§ظ„ط¨ط¯ط§ظٹط© ط¥ظ„ظ‰ ط§ظ„ط£ط¨ط¯.
       return const _Session(isAuthenticated: false);
     }
   }
@@ -108,6 +109,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     final scheme = context.colors;
+    final l10n = context.l10n;
 
     return Scaffold(
       backgroundColor: scheme.surface,
@@ -126,7 +128,7 @@ class _SplashScreenState extends State<SplashScreen>
                     _buildLogo(),
                     const SizedBox(height: KanafSpacing.xxl),
                     Text(
-                      'كَــنَـــفْ',
+                      l10n.tr('app.name'),
                       style: context.texts.displaySmall?.copyWith(
                         color: KanafPalette.seed,
                         fontFamily: 'Cairo',
@@ -135,14 +137,14 @@ class _SplashScreenState extends State<SplashScreen>
                     ),
                     const SizedBox(height: KanafSpacing.xs),
                     Text(
-                      'معًا نصنع أثرًا',
+                      l10n.tr('splash.tagline'),
                       style: context.texts.bodyMedium?.copyWith(
                         color: scheme.onSurfaceVariant,
                       ),
                     ),
                     const SizedBox(height: KanafSpacing.huge),
-                    // مؤشر خطي رقيق: يوصّل «جاري العمل» بلا نقاط
-                    // مصنوعة يدوياً، ويتبع الثيم تلقائياً.
+                    // ظ…ط¤ط´ط± ط®ط·ظٹ ط±ظ‚ظٹظ‚: ظٹظˆطµظ‘ظ„ آ«ط¬ط§ط±ظٹ ط§ظ„ط¹ظ…ظ„آ» ط¨ظ„ط§ ظ†ظ‚ط§ط·
+                    // ظ…طµظ†ظˆط¹ط© ظٹط¯ظˆظٹط§ظ‹طŒ ظˆظٹطھط¨ط¹ ط§ظ„ط«ظٹظ… طھظ„ظ‚ط§ط¦ظٹط§ظ‹.
                     SizedBox(
                       width: 132,
                       child: ClipRRect(
@@ -170,7 +172,7 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Widget _buildLogo() {
-    // تنفّس هادئ (0.97 ← 1.03) بدل نبض حاد — يوحي بالحياة لا بالقلق.
+    // طھظ†ظپظ‘ط³ ظ‡ط§ط¯ط¦ (0.97 â†گ 1.03) ط¨ط¯ظ„ ظ†ط¨ط¶ ط­ط§ط¯ â€” ظٹظˆط­ظٹ ط¨ط§ظ„ط­ظٹط§ط© ظ„ط§ ط¨ط§ظ„ظ‚ظ„ظ‚.
     return ScaleTransition(
       scale: Tween<double>(begin: 0.97, end: 1.03).animate(
         CurvedAnimation(parent: _breatheController, curve: Curves.easeInOut),
@@ -187,8 +189,8 @@ class _Session {
   final String? role;
 }
 
-/// موجتان برتقاليتان أسفل الشاشة — أبرز تجلٍّ لهوية كَنَفْ في التطبيق،
-/// ومقصور على شاشة البداية حتى يبقى استثناءً لا نمطاً متكرراً.
+/// ظ…ظˆط¬طھط§ظ† ط¨ط±طھظ‚ط§ظ„ظٹطھط§ظ† ط£ط³ظپظ„ ط§ظ„ط´ط§ط´ط© â€” ط£ط¨ط±ط² طھط¬ظ„ظچظ‘ ظ„ظ‡ظˆظٹط© ظƒظژظ†ظژظپظ’ ظپظٹ ط§ظ„طھط·ط¨ظٹظ‚طŒ
+/// ظˆظ…ظ‚طµظˆط± ط¹ظ„ظ‰ ط´ط§ط´ط© ط§ظ„ط¨ط¯ط§ظٹط© ط­طھظ‰ ظٹط¨ظ‚ظ‰ ط§ط³طھط«ظ†ط§ط،ظ‹ ظ„ط§ ظ†ظ…ط·ط§ظ‹ ظ…طھظƒط±ط±ط§ظ‹.
 class _SplashWaves extends StatelessWidget {
   const _SplashWaves();
 

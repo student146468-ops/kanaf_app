@@ -7,6 +7,7 @@ import '../../theme/kanaf_motion.dart';
 import '../../theme/kanaf_tokens.dart';
 import '../../widgets/kanaf_layout.dart';
 import '../../widgets/kanaf_states.dart';
+import '../../l10n/kanaf_localizations.dart';
 
 /// مركز الإشعارات — مشترك بين كل الأدوار.
 ///
@@ -26,8 +27,6 @@ class _NotificationsCenterScreenState extends State<NotificationsCenterScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController =
       TabController(length: 2, vsync: this);
-
-  static final DateFormat _dateFormat = DateFormat('d MMM y • h:mm a', 'ar');
 
   @override
   void initState() {
@@ -52,21 +51,27 @@ class _NotificationsCenterScreenState extends State<NotificationsCenterScreen>
     final provider = AppProviderScope.of(context);
     final all = provider.notifications;
     final unread = all.where((n) => n['is_read'] != true).toList();
+    final dateFormat = DateFormat(
+      'd MMM y • h:mm a',
+      Localizations.localeOf(context).languageCode,
+    );
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('مركز الإشعارات'),
+        title: Text(context.tr('notifications.center')),
         bottom: TabBar(
           controller: _tabController,
           tabs: [
-            Tab(text: 'الكل (${all.length})'),
-            Tab(text: 'غير المقروء (${unread.length})'),
+            Tab(text: '${context.tr('common.all')} (${all.length})'),
+            Tab(
+                text:
+                    '${context.tr('notifications.unreadTab')} (${unread.length})'),
           ],
         ),
         actions: [
           if (unread.isNotEmpty)
             IconButton(
-              tooltip: 'تعليم الكل كمقروء',
+              tooltip: context.tr('notifications.markAllRead'),
               onPressed: provider.isSaving ? null : _markAllRead,
               icon: const Icon(Icons.done_all_rounded),
             ),
@@ -78,8 +83,8 @@ class _NotificationsCenterScreenState extends State<NotificationsCenterScreen>
           child: TabBarView(
             controller: _tabController,
             children: [
-              _buildList(all, isUnreadTab: false),
-              _buildList(unread, isUnreadTab: true),
+              _buildList(all, isUnreadTab: false, dateFormat: dateFormat),
+              _buildList(unread, isUnreadTab: true, dateFormat: dateFormat),
             ],
           ),
         ),
@@ -90,6 +95,7 @@ class _NotificationsCenterScreenState extends State<NotificationsCenterScreen>
   Widget _buildList(
     List<Map<String, dynamic>> items, {
     required bool isUnreadTab,
+    required DateFormat dateFormat,
   }) {
     final provider = AppProviderScope.of(context);
 
@@ -104,10 +110,12 @@ class _NotificationsCenterScreenState extends State<NotificationsCenterScreen>
         emptyIcon: isUnreadTab
             ? Icons.mark_email_read_outlined
             : Icons.notifications_none_rounded,
-        emptyTitle: isUnreadTab ? 'لا شيء غير مقروء' : 'لا توجد إشعارات',
+        emptyTitle: isUnreadTab
+            ? context.tr('notifications.noUnreadTitle')
+            : context.tr('notifications.emptyTitle'),
         emptyMessage: isUnreadTab
-            ? 'أنت على اطلاع بكل التحديثات.'
-            : 'ستصلك هنا تحديثات تبرعاتك وطلبات التطوع.',
+            ? context.tr('notifications.noUnreadMessage')
+            : context.tr('notifications.centerEmptyMessage'),
         builder: (context) => ListView.separated(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(
@@ -122,7 +130,7 @@ class _NotificationsCenterScreenState extends State<NotificationsCenterScreen>
             index: index,
             child: _CenterCard(
               data: items[index],
-              dateFormat: _dateFormat,
+              dateFormat: dateFormat,
               onOpen: () => _open(items[index]),
             ),
           ),
@@ -139,8 +147,9 @@ class _NotificationsCenterScreenState extends State<NotificationsCenterScreen>
       SnackBar(
         content: Text(
           done
-              ? 'تم تعليم جميع الإشعارات كمقروءة'
-              : provider.errorMessage ?? 'تعذر تحديث حالة الإشعارات.',
+              ? context.tr('notifications.markAllSuccess')
+              : provider.errorMessage ??
+                  context.tr('notifications.updateFailed'),
         ),
       ),
     );
@@ -193,7 +202,8 @@ class _CenterCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  data['title']?.toString() ?? 'إشعار',
+                  data['title']?.toString() ??
+                      context.tr('notifications.defaultTitle'),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: context.texts.titleSmall?.copyWith(

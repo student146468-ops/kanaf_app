@@ -6,6 +6,7 @@ import '../../theme/kanaf_motion.dart';
 import '../../theme/kanaf_tokens.dart';
 import '../../widgets/kanaf_layout.dart';
 import '../../widgets/kanaf_nav_shell.dart';
+import '../../l10n/kanaf_localizations.dart';
 
 /// حساب المتطوع.
 ///
@@ -46,26 +47,24 @@ class _ProfileVolunteerViewState extends State<ProfileVolunteerView> {
     final user = provider.currentUser;
     final applications = provider.volunteerApplications;
 
-    final name = _displayName(user);
+    final name = _displayName(user, context.tr('role.volunteer'));
     final email = user['email']?.toString() ?? '';
 
     int countWhere(bool Function(String) test) => applications
         .where((item) => test(item['status']?.toString() ?? ''))
         .length;
 
-    final accepted =
-        countWhere((s) => s == 'accepted' || s == 'approved');
+    final accepted = countWhere((s) => s == 'accepted' || s == 'approved');
     final completed = countWhere((s) => s == 'completed');
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('حسابي'),
+        title: Text(context.tr('common.profile')),
         centerTitle: false,
         actions: [
           IconButton(
-            tooltip: 'الإعدادات',
-            onPressed: () =>
-                Navigator.pushNamed(context, KanafRoutes.settings),
+            tooltip: context.tr('common.settings'),
+            onPressed: () => Navigator.pushNamed(context, KanafRoutes.settings),
             icon: const Icon(Icons.settings_outlined),
           ),
           const SizedBox(width: KanafSpacing.xs),
@@ -106,12 +105,13 @@ class _ProfileVolunteerViewState extends State<ProfileVolunteerView> {
                   ),
                 ),
                 const SizedBox(height: KanafSpacing.xxl),
-                const KanafStaggeredEntrance(
+                KanafStaggeredEntrance(
                   index: 2,
-                  child: KanafSectionHeader(title: 'سجلّي'),
+                  child: KanafSectionHeader(
+                      title: context.tr('volunteer.myRecord')),
                 ),
                 const SizedBox(height: KanafSpacing.md),
-                const KanafStaggeredEntrance(index: 3, child: _MenuCard()),
+                KanafStaggeredEntrance(index: 3, child: _MenuCard()),
               ],
             ),
           ),
@@ -121,13 +121,13 @@ class _ProfileVolunteerViewState extends State<ProfileVolunteerView> {
   }
 
   /// الاسم الكامل إن وُجد، وإلا اسم المستخدم — لا «غير محدد» فارغة.
-  String _displayName(Map<String, dynamic> user) {
+  String _displayName(Map<String, dynamic> user, String fallback) {
     final first = user['first_name']?.toString().trim() ?? '';
     final last = user['last_name']?.toString().trim() ?? '';
     final full = [first, last].where((p) => p.isNotEmpty).join(' ');
     if (full.isNotEmpty) return full;
     final username = user['username']?.toString().trim() ?? '';
-    return username.isNotEmpty ? username : 'متطوع';
+    return username.isNotEmpty ? username : fallback;
   }
 }
 
@@ -212,7 +212,7 @@ class _StatsRow extends StatelessWidget {
           child: KanafStatTile(
             icon: Icons.send_outlined,
             value: '$total',
-            label: 'طلباتي',
+            label: context.tr('volunteer.myRequests'),
           ),
         ),
         const SizedBox(width: KanafSpacing.md),
@@ -220,7 +220,7 @@ class _StatsRow extends StatelessWidget {
           child: KanafStatTile(
             icon: Icons.check_circle_outline_rounded,
             value: '$accepted',
-            label: 'مقبولة',
+            label: context.tr('volunteer.accepted'),
           ),
         ),
         const SizedBox(width: KanafSpacing.md),
@@ -228,7 +228,7 @@ class _StatsRow extends StatelessWidget {
           child: KanafStatTile(
             icon: Icons.workspace_premium_outlined,
             value: '$completed',
-            label: 'مكتملة',
+            label: context.tr('donation.completed'),
           ),
         ),
       ],
@@ -240,10 +240,22 @@ class _MenuCard extends StatelessWidget {
   const _MenuCard();
 
   static const List<(String, IconData, String)> _items = [
-    ('سجل التطوع', Icons.history_edu_outlined, KanafRoutes.myVolunteerHistory),
-    ('شهاداتي', Icons.workspace_premium_outlined, KanafRoutes.myCertificates),
-    ('جدولي', Icons.event_note_outlined, KanafRoutes.mySchedule),
-    ('الإعدادات', Icons.settings_outlined, KanafRoutes.settings),
+    (
+      'volunteer.menuHistory',
+      Icons.history_edu_outlined,
+      KanafRoutes.myVolunteerHistory
+    ),
+    (
+      'volunteer.menuCertificates',
+      Icons.workspace_premium_outlined,
+      KanafRoutes.myCertificates
+    ),
+    (
+      'volunteer.menuSchedule',
+      Icons.event_note_outlined,
+      KanafRoutes.mySchedule
+    ),
+    ('common.settings', Icons.settings_outlined, KanafRoutes.settings),
   ];
 
   @override
@@ -255,7 +267,10 @@ class _MenuCard extends StatelessWidget {
           for (var i = 0; i < _items.length; i++) ...[
             ListTile(
               leading: Icon(_items[i].$2, color: context.colors.primary),
-              title: Text(_items[i].$1, style: context.texts.titleSmall),
+              title: Text(
+                context.tr(_items[i].$1),
+                style: context.texts.titleSmall,
+              ),
               trailing: const Icon(Icons.chevron_left_rounded),
               onTap: () => Navigator.pushNamed(context, _items[i].$3),
             ),

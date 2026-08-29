@@ -5,6 +5,7 @@ import '../theme/kanaf_motion.dart';
 import '../theme/kanaf_tokens.dart';
 import '../utils/auth_navigation.dart';
 import '../widgets/kanaf_layout.dart';
+import '../l10n/kanaf_localizations.dart';
 
 /// شاشة اختيار الدور.
 ///
@@ -27,14 +28,14 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
   static const List<_RoleOption> _roles = [
     _RoleOption(
       key: AuthNavigation.donorRole,
-      title: 'متبرع',
-      subtitle: 'ابحث عن الاحتياجات الحقيقية وادعم بما تستطيع.',
+      titleKey: 'role.donor',
+      subtitleKey: 'role.donorSubtitle',
       icon: Icons.favorite_outline_rounded,
     ),
     _RoleOption(
       key: AuthNavigation.volunteerRole,
-      title: 'متطوع',
-      subtitle: 'ساهم بوقتك ومهاراتك، وتابع ساعاتك وشهاداتك.',
+      titleKey: 'role.volunteer',
+      subtitleKey: 'role.volunteerSubtitle',
       icon: Icons.handshake_outlined,
     ),
   ];
@@ -61,14 +62,13 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                         const KanafLogo(size: 76),
                         const SizedBox(height: KanafSpacing.xl),
                         Text(
-                          'اختر دورك لنبدأ',
+                          context.tr('role.chooseTitle'),
                           textAlign: TextAlign.center,
                           style: context.texts.headlineMedium,
                         ),
                         const SizedBox(height: KanafSpacing.sm),
                         Text(
-                          'يحدد الدور ما تراه في التطبيق. يمكنك تغييره لاحقاً '
-                          'بتسجيل الدخول بحساب آخر.',
+                          context.tr('role.chooseSubtitle'),
                           textAlign: TextAlign.center,
                           style: context.texts.bodyMedium?.copyWith(
                             color: context.colors.onSurfaceVariant,
@@ -123,7 +123,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                     child: FilledButton.icon(
                       onPressed: _selectedRole == null ? null : _proceed,
                       icon: const Icon(Icons.arrow_back_rounded),
-                      label: const Text('متابعة'),
+                      label: Text(context.tr('role.continue')),
                     ),
                   ),
                 ],
@@ -148,14 +148,14 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
 class _RoleOption {
   const _RoleOption({
     required this.key,
-    required this.title,
-    required this.subtitle,
+    required this.titleKey,
+    required this.subtitleKey,
     required this.icon,
   });
 
   final String key;
-  final String title;
-  final String subtitle;
+  final String titleKey;
+  final String subtitleKey;
   final IconData icon;
 }
 
@@ -213,7 +213,7 @@ class _RoleCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      role.title,
+                      context.tr(role.titleKey),
                       style: context.texts.titleMedium?.copyWith(
                         color: selected
                             ? scheme.onPrimaryContainer
@@ -221,7 +221,10 @@ class _RoleCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: KanafSpacing.xxs),
-                    Text(role.subtitle, style: context.texts.bodySmall),
+                    Text(
+                      context.tr(role.subtitleKey),
+                      style: context.texts.bodySmall,
+                    ),
                   ],
                 ),
               ),

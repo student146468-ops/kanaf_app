@@ -8,6 +8,7 @@ import '../../router/kanaf_router.dart';
 import '../../theme/kanaf_motion.dart';
 import '../../theme/kanaf_tokens.dart';
 import '../../widgets/kanaf_layout.dart';
+import '../../l10n/kanaf_localizations.dart';
 
 /// شاشة التبرع المالي.
 ///
@@ -72,11 +73,17 @@ class _FinancialDonationScreenState extends State<FinancialDonationScreen> {
     return null;
   }
 
+  int? get _targetNeedId {
+    final raw = _targetHome?['need_id'];
+    if (raw is int) return raw;
+    return int.tryParse(raw?.toString() ?? '');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('التبرع المالي'),
+        title: Text(context.tr('home.financialDonation')),
         leading: const BackButton(),
       ),
       body: KanafBackdrop(
@@ -134,7 +141,9 @@ class _FinancialDonationScreenState extends State<FinancialDonationScreen> {
                         )
                       : const Icon(Icons.lock_outline_rounded),
                   label: Text(
-                    _isProcessing ? 'جاري التأكيد...' : 'متابعة الدفع',
+                    _isProcessing
+                        ? context.tr('donation.confirming')
+                        : context.tr('donation.continuePayment'),
                   ),
                 ),
               ),
@@ -145,11 +154,27 @@ class _FinancialDonationScreenState extends State<FinancialDonationScreen> {
     );
   }
 
+  String _donationModeLabel(BuildContext context, String mode) {
+    return mode == _donationModes.first
+        ? context.tr('donation.oneTime')
+        : context.tr('donation.monthly');
+  }
+
+  String _paymentMethodLabel(BuildContext context, String method) {
+    return switch (method) {
+      'السداد عبر المصرف' => context.tr('payment.bankPay'),
+      'بطاقة محلية' => context.tr('payment.localCard'),
+      'تحويل مصرفي' => context.tr('payment.bankTransfer'),
+      'محفظة إلكترونية' => context.tr('payment.wallet'),
+      _ => method,
+    };
+  }
   // ── الأقسام ──────────────────────────────────────────────────
 
   Widget _buildTargetSection(Map<String, dynamic> home) {
     final scheme = context.colors;
-    final name = home['name']?.toString() ?? 'دار رعاية';
+    final name =
+        home['name']?.toString() ?? context.tr('orphanage.defaultName');
     final address = home['address']?.toString() ?? '';
 
     return KanafCard(
@@ -169,7 +194,8 @@ class _FinancialDonationScreenState extends State<FinancialDonationScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('الدار المستهدفة', style: context.texts.bodySmall),
+                Text(context.tr('donation.targetOrphanage'),
+                    style: context.texts.bodySmall),
                 const SizedBox(height: KanafSpacing.xxs),
                 Text(
                   name,
@@ -201,7 +227,8 @@ class _FinancialDonationScreenState extends State<FinancialDonationScreen> {
           for (final mode in _donationModes)
             ButtonSegment<String>(
               value: mode,
-              label: Text(mode, maxLines: 1, overflow: TextOverflow.ellipsis),
+              label: Text(_donationModeLabel(context, mode),
+                  maxLines: 1, overflow: TextOverflow.ellipsis),
               icon: Icon(
                 mode == _donationModes.first
                     ? Icons.bolt_rounded
@@ -224,9 +251,9 @@ class _FinancialDonationScreenState extends State<FinancialDonationScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const KanafSectionHeader(
-          title: 'قيمة التبرع',
-          subtitle: 'اختر مبلغاً جاهزاً أو أدخل ما تشاء — لا حد أدنى',
+        KanafSectionHeader(
+          title: context.tr('donation.amountTitle'),
+          subtitle: context.tr('donation.amountSubtitle'),
         ),
         const SizedBox(height: KanafSpacing.lg),
         Wrap(
@@ -235,7 +262,9 @@ class _FinancialDonationScreenState extends State<FinancialDonationScreen> {
           children: [
             for (final amount in _quickAmounts)
               ChoiceChip(
-                label: Text('${_amountFormat.format(amount)} د.ل'),
+                label: Text(
+                  '${_amountFormat.format(amount)} ${context.tr('common.lydShort')}',
+                ),
                 selected: _enteredAmount == amount,
                 onSelected: (_) {
                   setState(() {
@@ -263,9 +292,9 @@ class _FinancialDonationScreenState extends State<FinancialDonationScreen> {
             fontFamily: KanafThemeFonts.display,
           ),
           decoration: InputDecoration(
-            hintText: 'أدخل المبلغ',
+            hintText: context.tr('donation.enterAmount'),
             errorText: _amountError,
-            suffixText: 'د.ل',
+            suffixText: context.tr('common.lydShort'),
             suffixStyle: context.texts.titleMedium?.copyWith(
               color: scheme.onSurfaceVariant,
             ),
@@ -284,7 +313,7 @@ class _FinancialDonationScreenState extends State<FinancialDonationScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const KanafSectionHeader(title: 'طريقة الدفع'),
+        KanafSectionHeader(title: context.tr('donation.paymentMethod')),
         const SizedBox(height: KanafSpacing.md),
         KanafCard(
           padding: EdgeInsets.zero,
@@ -300,7 +329,8 @@ class _FinancialDonationScreenState extends State<FinancialDonationScreen> {
                       setState(() => _selectedPaymentMethod = value);
                     }
                   },
-                  title: Text(_paymentMethods[i].name),
+                  title: Text(
+                      _paymentMethodLabel(context, _paymentMethods[i].name)),
                   secondary: Icon(_paymentMethods[i].icon),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: KanafSpacing.md,
@@ -328,7 +358,7 @@ class _FinancialDonationScreenState extends State<FinancialDonationScreen> {
           const SizedBox(width: KanafSpacing.md),
           Expanded(
             child: Text(
-              'لا يُسجَّل التبرع إلا بعد تأكيد الخادم، ويصلك رقم مرجعي حقيقي.',
+              context.tr('donation.securityNote'),
               style: context.texts.bodySmall?.copyWith(
                 color: semantic.onInfoContainer,
               ),
@@ -344,7 +374,7 @@ class _FinancialDonationScreenState extends State<FinancialDonationScreen> {
   Future<void> _reviewDonation() async {
     final amount = _enteredAmount;
     if (amount == null || amount <= 0) {
-      setState(() => _amountError = 'أدخل قيمة صحيحة للتبرع');
+      setState(() => _amountError = context.tr('donation.amountInvalid'));
       return;
     }
     if (amount > _maxDonationAmount) {
@@ -378,37 +408,41 @@ class _FinancialDonationScreenState extends State<FinancialDonationScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('مراجعة التبرع', style: sheetContext.texts.titleLarge),
+                Text(sheetContext.tr('donation.reviewTitle'),
+                    style: sheetContext.texts.titleLarge),
                 const SizedBox(height: KanafSpacing.lg),
                 KanafDetailRow(
-                  label: 'القيمة',
+                  label: sheetContext.tr('donation.value'),
                   value: '${_amountFormat.format(amount)} د.ل',
                   valueStyle: sheetContext.texts.titleLarge?.copyWith(
                     color: sheetContext.colors.primary,
                   ),
                 ),
                 KanafDetailRow(
-                  label: 'نوع التبرع',
-                  value: _selectedDonationMode,
+                  label: sheetContext.tr('donation.type'),
+                  value:
+                      _donationModeLabel(sheetContext, _selectedDonationMode),
                 ),
                 KanafDetailRow(
-                  label: 'وسيلة الدفع',
-                  value: _selectedPaymentMethod,
+                  label: sheetContext.tr('donation.paymentMethod'),
+                  value:
+                      _paymentMethodLabel(sheetContext, _selectedPaymentMethod),
                 ),
                 KanafDetailRow(
-                  label: 'الدار',
-                  value: _targetHome?['name']?.toString() ?? 'صندوق كنف العام',
+                  label: sheetContext.tr('donation.targetOrphanage'),
+                  value: _targetHome?['name']?.toString() ??
+                      sheetContext.tr('donation.generalFund'),
                 ),
                 const SizedBox(height: KanafSpacing.xxl),
                 FilledButton.icon(
                   onPressed: () => Navigator.pop(sheetContext, true),
                   icon: const Icon(Icons.check_circle_outline_rounded),
-                  label: const Text('تأكيد وإتمام التبرع'),
+                  label: Text(sheetContext.tr('donation.confirmComplete')),
                 ),
                 const SizedBox(height: KanafSpacing.sm),
                 TextButton(
                   onPressed: () => Navigator.pop(sheetContext, false),
-                  child: const Text('تعديل'),
+                  child: Text(sheetContext.tr('donation.edit')),
                 ),
               ],
             ),
@@ -423,6 +457,7 @@ class _FinancialDonationScreenState extends State<FinancialDonationScreen> {
       amount: amount,
       paymentMethod: _selectedPaymentMethod,
       donationMode: _selectedDonationMode,
+      needId: _targetNeedId,
     );
     final validationError = request.validationError();
     if (validationError != null) {
@@ -442,7 +477,7 @@ class _FinancialDonationScreenState extends State<FinancialDonationScreen> {
         context,
         KanafRoutes.donationSuccess,
         arguments: {
-          'type': 'تبرع مالي',
+          'type': context.tr('home.financialDonation'),
           'status': 'failed',
           'summary': '${_amountFormat.format(amount)} دينار ليبي عبر '
               '$_selectedPaymentMethod',
@@ -461,7 +496,7 @@ class _FinancialDonationScreenState extends State<FinancialDonationScreen> {
       context,
       KanafRoutes.donationSuccess,
       arguments: {
-        'type': 'تبرع مالي',
+        'type': context.tr('home.financialDonation'),
         // الرقم المرجعي هو المعرّف الحقيقي في قاعدة البيانات.
         'reference': 'KNF-${created.id}',
         'status': created.status,

@@ -13,6 +13,7 @@ urlpatterns = [
     path('orphans/', views.orphans_list, name='orphans_list'),
     path('needs/', views.needs_list, name='needs_list'),
     path('volunteers/', views.volunteers_view, name='volunteers_list'),
+    path('volunteer-opportunities/', views.volunteer_opportunities_view, name='volunteer_opportunities_list'),
     path('volunteer-applications/', views.volunteer_applications_view, name='volunteer_applications_list'),
     path('donations/', views.donations_list, name='donations_list'),
     path('sponsors/', views.sponsors_list, name='sponsors_list'),

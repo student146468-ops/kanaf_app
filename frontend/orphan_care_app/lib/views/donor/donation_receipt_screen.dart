@@ -6,6 +6,7 @@ import '../../models/donation_model.dart';
 import '../../theme/kanaf_tokens.dart';
 import '../../widgets/kanaf_layout.dart';
 import '../../widgets/kanaf_states.dart';
+import '../../l10n/kanaf_localizations.dart';
 
 class DonationReceiptScreen extends StatelessWidget {
   const DonationReceiptScreen({super.key});
@@ -20,17 +21,17 @@ class DonationReceiptScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('إيصال التبرع'),
+        title: Text(context.tr('donation.receiptTitle')),
         leading: const BackButton(),
       ),
       body: KanafBackdrop(
         child: SafeArea(
           top: false,
           child: donation == null
-              ? const KanafMessageState(
+              ? KanafMessageState(
                   icon: Icons.receipt_long_outlined,
-                  title: 'الإيصال غير متاح',
-                  message: 'افتح الإيصال من سجل التبرعات.',
+                  title: context.tr('donation.receiptUnavailable'),
+                  message: context.tr('donation.openReceiptFromHistory'),
                 )
               : ListView(
                   padding: const EdgeInsets.fromLTRB(
@@ -119,11 +120,13 @@ class DonationReceiptScreen extends StatelessWidget {
                         );
                         if (!context.mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('تم نسخ الرقم المرجعي')),
+                          SnackBar(
+                              content:
+                                  Text(context.tr('donation.referenceCopied'))),
                         );
                       },
                       icon: const Icon(Icons.copy_rounded),
-                      label: const Text('نسخ الرقم المرجعي'),
+                      label: Text(context.tr('donation.copyReference')),
                     ),
                   ],
                 ),

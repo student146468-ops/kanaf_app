@@ -1,18 +1,19 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
+import '../l10n/kanaf_localizations.dart';
 import '../providers/app_provider_scope.dart';
 import '../theme/kanaf_tokens.dart';
 
 /// وجهة في شريط التنقل السفلي.
 class KanafDestination {
   const KanafDestination({
-    required this.label,
+    required this.labelKey,
     required this.icon,
     required this.selectedIcon,
     required this.route,
   });
 
-  final String label;
+  final String labelKey;
   final IconData icon;
   final IconData selectedIcon;
   final String route;
@@ -55,8 +56,8 @@ class KanafNavBar extends StatelessWidget {
           NavigationDestination(
             icon: Icon(destination.icon),
             selectedIcon: Icon(destination.selectedIcon),
-            label: destination.label,
-            tooltip: destination.label,
+            label: context.tr(destination.labelKey),
+            tooltip: context.tr(destination.labelKey),
           ),
       ],
     );
@@ -67,25 +68,25 @@ class KanafNavBar extends StatelessWidget {
 abstract final class KanafNavDestinations {
   static const List<KanafDestination> donor = [
     KanafDestination(
-      label: 'الرئيسية',
+      labelKey: 'nav.home',
       icon: Icons.home_outlined,
       selectedIcon: Icons.home_rounded,
       route: '/supporter_home',
     ),
     KanafDestination(
-      label: 'استكشاف',
+      labelKey: 'nav.explore',
       icon: Icons.travel_explore_outlined,
       selectedIcon: Icons.travel_explore_rounded,
       route: '/explore_orphanages',
     ),
     KanafDestination(
-      label: 'تبرعاتي',
+      labelKey: 'nav.myDonations',
       icon: Icons.volunteer_activism_outlined,
       selectedIcon: Icons.volunteer_activism_rounded,
       route: '/donation_history',
     ),
     KanafDestination(
-      label: 'حسابي',
+      labelKey: 'nav.profile',
       icon: Icons.person_outline_rounded,
       selectedIcon: Icons.person_rounded,
       route: '/profile',
@@ -94,25 +95,25 @@ abstract final class KanafNavDestinations {
 
   static const List<KanafDestination> volunteer = [
     KanafDestination(
-      label: 'الرئيسية',
+      labelKey: 'nav.home',
       icon: Icons.home_outlined,
       selectedIcon: Icons.home_rounded,
       route: '/volunteer_home',
     ),
     KanafDestination(
-      label: 'جدولي',
+      labelKey: 'nav.schedule',
       icon: Icons.calendar_month_outlined,
       selectedIcon: Icons.calendar_month_rounded,
       route: '/my_schedule',
     ),
     KanafDestination(
-      label: 'شهاداتي',
+      labelKey: 'nav.certificates',
       icon: Icons.workspace_premium_outlined,
       selectedIcon: Icons.workspace_premium_rounded,
       route: '/my_certificates',
     ),
     KanafDestination(
-      label: 'حسابي',
+      labelKey: 'nav.profile',
       icon: Icons.person_outline_rounded,
       selectedIcon: Icons.person_rounded,
       route: '/volunteer_profile',
@@ -136,7 +137,7 @@ class KanafNotificationButton extends StatelessWidget {
     final scheme = context.colors;
 
     return IconButton(
-      tooltip: 'الإشعارات',
+      tooltip: context.tr('common.notifications'),
       onPressed: () => _openNotifications(context),
       icon: Badge(
         // الشارة تظهر فقط عند وجود غير مقروء — لا نقطة دائمة بلا معنى.

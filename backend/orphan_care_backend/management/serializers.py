@@ -190,10 +190,46 @@ class NeedSerializer(serializers.ModelSerializer):
     def validate_title(self, value):
         return _validate_required_text(value, 'title')
 
+    def validate_category(self, value):
+        return _validate_required_text(value, 'category')
+
+    def validate_required_quantity(self, value):
+        value = _validate_required_text(value, 'required_quantity')
+        target = _decimal_from_text(value)
+        if target is None or target <= 0:
+            raise serializers.ValidationError(
+                'required_quantity must include a number greater than zero.'
+            )
+        return value
+
     def validate_fulfilled_quantity(self, value):
         if value is None or value < 0:
             raise serializers.ValidationError('fulfilled_quantity must be zero or greater.')
         return value
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+
+        required_quantity = attrs.get(
+            'required_quantity',
+            getattr(self.instance, 'required_quantity', None),
+        )
+        target = _decimal_from_text(required_quantity)
+        fulfilled_quantity = attrs.get(
+            'fulfilled_quantity',
+            getattr(self.instance, 'fulfilled_quantity', Decimal('0')),
+        )
+
+        if target is not None and fulfilled_quantity is not None:
+            if Decimal(fulfilled_quantity) > target:
+                raise serializers.ValidationError({
+                    'fulfilled_quantity': 'fulfilled_quantity cannot exceed required_quantity.'
+                })
+
+        if 'care_home' in attrs and attrs['care_home'] is None:
+            raise serializers.ValidationError({'care_home': 'care_home is required.'})
+
+        return attrs
 
     def get_progress_percent(self, obj) -> int | None:
         target = _decimal_from_text(obj.required_quantity)
@@ -238,11 +274,16 @@ class VolunteerOpportunitySerializer(serializers.ModelSerializer):
     care_home_location = serializers.CharField(source='care_home.address', read_only=True)
     capacity_percent = serializers.SerializerMethodField()
     remaining_slots = serializers.SerializerMethodField()
+    my_application_id = serializers.SerializerMethodField()
+    my_application_status = serializers.SerializerMethodField()
 
     class Meta:
         model = VolunteerOpportunity
         fields = '__all__'
         read_only_fields = ['created_at', 'updated_at', 'current_volunteers']
+        extra_kwargs = {
+            'care_home': {'required': False},
+        }
 
     def validate_title(self, value):
         return _validate_required_text(value, 'title')
@@ -250,11 +291,43 @@ class VolunteerOpportunitySerializer(serializers.ModelSerializer):
     def validate_description(self, value):
         return _validate_required_text(value, 'description')
 
+    def validate_required_volunteers(self, value):
+        if value is None or value <= 0:
+            raise serializers.ValidationError('required_volunteers must be greater than zero.')
+        return value
+
+    def validate_current_volunteers(self, value):
+        if value is None or value < 0:
+            raise serializers.ValidationError('current_volunteers must be zero or greater.')
+        return value
+
     def validate(self, attrs):
+        request = self.context.get('request')
+        user = getattr(request, 'user', None)
+        care_home = attrs.get('care_home', getattr(self.instance, 'care_home', None))
         start_date = attrs.get('start_date', getattr(self.instance, 'start_date', None))
         end_date = attrs.get('end_date', getattr(self.instance, 'end_date', None))
+        required_volunteers = attrs.get(
+            'required_volunteers',
+            getattr(self.instance, 'required_volunteers', 1),
+        )
+        current_volunteers = attrs.get(
+            'current_volunteers',
+            getattr(self.instance, 'current_volunteers', 0),
+        )
+
+        if request and request.method == 'POST' and getattr(user, 'is_staff', False):
+            if care_home is None:
+                raise serializers.ValidationError({'care_home': 'care_home is required.'})
+        if request and not getattr(user, 'is_staff', False) and 'care_home' in attrs:
+            raise serializers.ValidationError({'care_home': 'care_home is managed by the backend.'})
         if start_date and end_date and end_date < start_date:
             raise serializers.ValidationError({'end_date': 'end_date must be after start_date.'})
+        if current_volunteers is not None and required_volunteers is not None:
+            if current_volunteers > required_volunteers:
+                raise serializers.ValidationError({
+                    'current_volunteers': 'current_volunteers cannot exceed required_volunteers.'
+                })
         return attrs
 
     def get_applications_count(self, obj) -> int:
@@ -268,6 +341,21 @@ class VolunteerOpportunitySerializer(serializers.ModelSerializer):
 
     def get_remaining_slots(self, obj) -> int:
         return max(obj.required_volunteers - obj.current_volunteers, 0)
+
+    def _current_user_application(self, obj):
+        request = self.context.get('request')
+        user = getattr(request, 'user', None)
+        if not (user and user.is_authenticated):
+            return None
+        return obj.applications.filter(user=user).order_by('-created_at').first()
+
+    def get_my_application_id(self, obj):
+        application = self._current_user_application(obj)
+        return application.id if application else None
+
+    def get_my_application_status(self, obj):
+        application = self._current_user_application(obj)
+        return application.status if application else None
 
 
 class VolunteerApplicationSerializer(serializers.ModelSerializer):
@@ -286,6 +374,7 @@ class VolunteerApplicationSerializer(serializers.ModelSerializer):
         # التقييم والحالة يملكهما الخادم؛ العميل يرسل `message` فقط.
         read_only_fields = [
             'user',
+            'status',
             'created_at',
             'updated_at',
             'rating',
@@ -296,6 +385,29 @@ class VolunteerApplicationSerializer(serializers.ModelSerializer):
     def get_volunteer_name(self, obj) -> str:
         full_name = obj.user.get_full_name().strip()
         return full_name or obj.user.username
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        request = self.context.get('request')
+        user = getattr(request, 'user', None)
+        opportunity = attrs.get('opportunity', getattr(self.instance, 'opportunity', None))
+        if self.instance is None and opportunity is not None:
+            if opportunity.care_home_id is None:
+                raise serializers.ValidationError({'opportunity': 'opportunity must be linked to a care home.'})
+            if opportunity.status != VolunteerOpportunity.STATUS_OPEN:
+                raise serializers.ValidationError({'opportunity': 'opportunity is not open for applications.'})
+            if opportunity.current_volunteers >= opportunity.required_volunteers:
+                raise serializers.ValidationError({'opportunity': 'opportunity is already full.'})
+            if (
+                user
+                and user.is_authenticated
+                and VolunteerApplication.objects.filter(
+                    opportunity=opportunity,
+                    user=user,
+                ).exists()
+            ):
+                raise serializers.ValidationError({'opportunity': 'You have already applied to this opportunity.'})
+        return attrs
 
     def validate_status(self, value):
         if value == 'approved':

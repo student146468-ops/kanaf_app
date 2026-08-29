@@ -31,6 +31,16 @@ from management.models import (
 User = get_user_model()
 
 
+def _create_care_home(name='Test Care Home', manager=None):
+    return CareHome.objects.create(
+        name=name,
+        address='Tripoli',
+        phone='0910000000',
+        manager=manager,
+        orphan_count=1,
+    )
+
+
 class _SuccessfulBrevoResponse:
     status = 201
 
@@ -555,29 +565,35 @@ class AuthApiTests(APITestCase):
 
     def test_volunteer_opportunity_crud_endpoint(self):
         user = get_user_model().objects.create_user(username='opportunityuser', password='StrongPass123!')
+        care_home = _create_care_home(manager=user)
         self.client.force_authenticate(user=user)
         response = self.client.post('/api/volunteer-opportunities/', {
             'title': 'Teaching support',
             'description': 'Weekly tutoring',
+            'category': VolunteerOpportunity.CATEGORY_EDUCATION,
             'required_volunteers': 2,
             'location': 'Kanaf Home',
         }, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.json()['current_volunteers'], 0)
+        self.assertEqual(response.json()['care_home'], care_home.id)
 
     def test_volunteer_opportunities_endpoint_hides_verification_records(self):
         user = get_user_model().objects.create_user(username='cleanopportunityuser', password='StrongPass123!')
+        care_home = _create_care_home()
         VolunteerOpportunity.objects.create(
             title='Codex verification opportunity 20260725000301',
             description='Local verification opportunity created through the API.',
             location='Codex Local Center',
             required_volunteers=2,
+            care_home=care_home,
         )
         VolunteerOpportunity.objects.create(
             title='Real tutoring opportunity',
             description='Help children with homework',
             location='Kanaf Center',
             required_volunteers=2,
+            care_home=care_home,
         )
         self.client.force_authenticate(user=user)
         response = self.client.get('/api/volunteer-opportunities/')
@@ -589,10 +605,12 @@ class AuthApiTests(APITestCase):
     def test_apply_to_volunteer_opportunity_is_duplicate_safe(self):
         user = get_user_model().objects.create_user(username='applyuser', password='StrongPass123!')
         UserProfile.objects.create(user=user, role=UserProfile.ROLE_VOLUNTEER)
+        care_home = _create_care_home()
         opportunity = VolunteerOpportunity.objects.create(
             title='Visit support',
             description='Help organize a visit',
             required_volunteers=1,
+            care_home=care_home,
         )
         self.client.force_authenticate(user=user)
         first = self.client.post(f'/api/volunteer-opportunities/{opportunity.id}/apply/', {'message': 'I can help'}, format='json')
@@ -601,9 +619,87 @@ class AuthApiTests(APITestCase):
         self.assertEqual(second.status_code, status.HTTP_200_OK)
         self.assertEqual(VolunteerApplication.objects.filter(opportunity=opportunity, user=user).count(), 1)
 
+    def test_apply_status_is_returned_with_volunteer_opportunity_payload(self):
+        user = get_user_model().objects.create_user(username='applystatususer', password='StrongPass123!')
+        UserProfile.objects.create(user=user, role=UserProfile.ROLE_VOLUNTEER)
+        care_home = _create_care_home()
+        opportunity = VolunteerOpportunity.objects.create(
+            title='Kitchen help',
+            description='Help prepare meals',
+            required_volunteers=2,
+            care_home=care_home,
+        )
+        self.client.force_authenticate(user=user)
+
+        before = self.client.get(f'/api/volunteer-opportunities/{opportunity.id}/')
+        apply_response = self.client.post(
+            f'/api/volunteer-opportunities/{opportunity.id}/apply/',
+            {'message': 'I can help this week'},
+            format='json',
+        )
+        after = self.client.get(f'/api/volunteer-opportunities/{opportunity.id}/')
+
+        self.assertEqual(before.status_code, status.HTTP_200_OK)
+        self.assertIsNone(before.json()['my_application_status'])
+        self.assertEqual(apply_response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(after.status_code, status.HTTP_200_OK)
+        self.assertEqual(after.json()['my_application_status'], VolunteerApplication.STATUS_PENDING)
+        self.assertEqual(after.json()['my_application_id'], apply_response.json()['id'])
+        self.assertEqual(after.json()['applications_count'], 1)
+
+    def test_direct_volunteer_application_post_rejects_duplicate(self):
+        user = get_user_model().objects.create_user(username='directapplyuser', password='StrongPass123!')
+        UserProfile.objects.create(user=user, role=UserProfile.ROLE_VOLUNTEER)
+        opportunity = VolunteerOpportunity.objects.create(
+            title='Store sorting',
+            description='Sort in-kind donations',
+            required_volunteers=2,
+            care_home=_create_care_home(),
+        )
+        self.client.force_authenticate(user=user)
+
+        first = self.client.post(
+            '/api/volunteer-applications/',
+            {'opportunity': opportunity.id, 'message': 'Available'},
+            format='json',
+        )
+        second = self.client.post(
+            '/api/volunteer-applications/',
+            {'opportunity': opportunity.id, 'message': 'Available again'},
+            format='json',
+        )
+
+        self.assertEqual(first.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(second.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(VolunteerApplication.objects.filter(opportunity=opportunity, user=user).count(), 1)
+
+    def test_direct_volunteer_application_post_requires_volunteer_role(self):
+        user = get_user_model().objects.create_user(username='notvolunteerapply', password='StrongPass123!')
+        UserProfile.objects.create(user=user, role=UserProfile.ROLE_DONOR)
+        opportunity = VolunteerOpportunity.objects.create(
+            title='Delivery help',
+            description='Help deliver food baskets',
+            required_volunteers=2,
+            care_home=_create_care_home(),
+        )
+        self.client.force_authenticate(user=user)
+
+        response = self.client.post(
+            '/api/volunteer-applications/',
+            {'opportunity': opportunity.id, 'message': 'I should not apply'},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertFalse(VolunteerApplication.objects.filter(opportunity=opportunity, user=user).exists())
+
     def test_only_staff_can_approve_volunteer_application(self):
         user = get_user_model().objects.create_user(username='approvaluser', password='StrongPass123!')
-        opportunity = VolunteerOpportunity.objects.create(title='Food packing', description='Pack donated food')
+        opportunity = VolunteerOpportunity.objects.create(
+            title='Food packing',
+            description='Pack donated food',
+            care_home=_create_care_home(),
+        )
         application = VolunteerApplication.objects.create(opportunity=opportunity, user=user)
         self.client.force_authenticate(user=user)
         response = self.client.post(f'/api/volunteer-applications/{application.id}/approve/')
@@ -612,7 +708,12 @@ class AuthApiTests(APITestCase):
     def test_staff_approval_updates_opportunity_count(self):
         user = get_user_model().objects.create_user(username='approveduser', password='StrongPass123!')
         staff = get_user_model().objects.create_user(username='staffuser', password='StrongPass123!', is_staff=True)
-        opportunity = VolunteerOpportunity.objects.create(title='Tutoring', description='Math tutoring', required_volunteers=1)
+        opportunity = VolunteerOpportunity.objects.create(
+            title='Tutoring',
+            description='Math tutoring',
+            required_volunteers=1,
+            care_home=_create_care_home(),
+        )
         application = VolunteerApplication.objects.create(opportunity=opportunity, user=user)
         self.client.force_authenticate(user=staff)
         response = self.client.post(f'/api/volunteer-applications/{application.id}/approve/')
@@ -725,10 +826,12 @@ class AuthApiTests(APITestCase):
         volunteer = get_user_model().objects.create_user(username='DELETE_TEST_VOLUNTEER_FLOW', password='StrongPass123!')
         staff = get_user_model().objects.create_user(username='volunteer-flow-staff', password='StrongPass123!', is_staff=True)
         UserProfile.objects.create(user=volunteer, role=UserProfile.ROLE_VOLUNTEER)
+        care_home = _create_care_home()
         opportunity = VolunteerOpportunity.objects.create(
             title='DELETE_TEST_VOLUNTEER_OPPORTUNITY_FLOW',
             description='Help with tutoring',
             required_volunteers=2,
+            care_home=care_home,
         )
         self.client.force_authenticate(user=volunteer)
 
@@ -806,10 +909,12 @@ class DeleteApiTests(APITestCase):
         self.assertFalse(NeedViewSetQuery.visible_need_exists(need.pk))
 
     def test_delete_test_volunteer_opportunity_api(self):
+        care_home = _create_care_home()
         opportunity = VolunteerOpportunity.objects.create(
             title='DELETE_TEST_OPPORTUNITY',
             description='Temporary opportunity',
             required_volunteers=1,
+            care_home=care_home,
         )
         self._assert_staff_delete_only(
             f'/api/volunteer-opportunities/{opportunity.id}/',
@@ -817,10 +922,12 @@ class DeleteApiTests(APITestCase):
         )
 
     def test_related_volunteer_opportunity_delete_is_blocked_safely(self):
+        care_home = _create_care_home()
         opportunity = VolunteerOpportunity.objects.create(
             title='DELETE_TEST_RELATED_OPPORTUNITY',
             description='Temporary opportunity with application',
             required_volunteers=1,
+            care_home=care_home,
         )
         VolunteerApplication.objects.create(opportunity=opportunity, user=self.user)
         self.client.force_authenticate(user=self.staff)
@@ -846,11 +953,13 @@ class DeleteApiTests(APITestCase):
         self.assertTrue(Notification.objects.filter(pk=theirs.pk).exists())
 
     def test_deleting_approved_volunteer_application_updates_opportunity_count(self):
+        care_home = _create_care_home()
         opportunity = VolunteerOpportunity.objects.create(
             title='DELETE_TEST_APPROVED_APPLICATION_OPPORTUNITY',
             description='Temporary opportunity',
             required_volunteers=2,
             current_volunteers=1,
+            care_home=care_home,
         )
         application = VolunteerApplication.objects.create(
             opportunity=opportunity,
@@ -1011,6 +1120,7 @@ class ManagementStatusUpdateTests(TestCase):
             title='STATUS_TEST_OPPORTUNITY',
             description='Temporary opportunity',
             required_volunteers=1,
+            care_home=_create_care_home(),
         )
         self.application = VolunteerApplication.objects.create(
             user=self.volunteer,
@@ -1142,6 +1252,228 @@ class ManagementStatusUpdateTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()[0]['status'], VolunteerApplication.STATUS_ACCEPTED)
+
+
+@override_settings(
+    STORAGES={
+        'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+        'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'},
+    }
+)
+class ManagementNeedsDashboardTests(TestCase):
+    def setUp(self):
+        self.staff = get_user_model().objects.create_user(
+            username='needs-dashboard-staff',
+            password='StrongPass123!',
+            is_staff=True,
+        )
+        self.user = get_user_model().objects.create_user(
+            username='needs-dashboard-user',
+            password='StrongPass123!',
+        )
+        self.care_home = CareHome.objects.create(
+            name='Needs Dashboard Care Home',
+            address='Tripoli',
+            phone='0910000000',
+        )
+        self.client.force_login(self.staff)
+
+    def test_staff_can_open_needs_dashboard_page(self):
+        response = self.client.get(reverse('needs_list'))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertContains(response, reverse('need-list'))
+        self.assertContains(response, 'needsApp')
+        self.assertContains(response, 'Needs Dashboard Care Home')
+
+    def test_needs_dashboard_shows_clear_message_without_care_homes(self):
+        self.care_home.delete()
+
+        response = self.client.get(reverse('needs_list'))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertContains(response, 'لا توجد أي دار رعاية مسجلة في قاعدة البيانات')
+
+    def test_care_home_dropdown_and_api_use_database_records(self):
+        response = self.client.get(reverse('needs_list'))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertContains(
+            response,
+            f'<option value="{self.care_home.id}">{self.care_home.name}</option>',
+            html=True,
+        )
+
+        api_client = APIClient()
+        api_client.force_authenticate(user=self.staff)
+        api_response = api_client.get('/api/care-homes/')
+
+        self.assertEqual(api_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(api_response.json()), 1)
+        care_home_data = api_response.json()[0]
+        self.assertEqual(care_home_data['id'], self.care_home.id)
+        self.assertEqual(care_home_data['name'], 'Needs Dashboard Care Home')
+        self.assertEqual(care_home_data['address'], 'Tripoli')
+        self.assertEqual(care_home_data['phone'], '0910000000')
+        self.assertEqual(care_home_data['open_needs_count'], 0)
+        self.assertEqual(care_home_data['visit_hours_count'], 0)
+
+    def test_sidebar_links_to_needs_dashboard(self):
+        response = self.client.get(reverse('dashboard'))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertContains(response, reverse('needs_list'))
+
+    def test_regular_user_cannot_open_needs_dashboard_page(self):
+        client = Client()
+        client.force_login(self.user)
+
+        response = client.get(reverse('needs_list'))
+
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+
+    def test_staff_can_create_need_from_dashboard_api_and_read_it_back(self):
+        response = self.client.post(
+            reverse('need-list'),
+            data=json.dumps({
+                'title': 'Dashboard food basket',
+                'description': 'Created from dashboard UI endpoint',
+                'category': 'food',
+                'required_quantity': '30',
+                'fulfilled_quantity': '5',
+                'priority': Need.PRIORITY_URGENT,
+                'status': Need.STATUS_OPEN,
+                'care_home': self.care_home.id,
+            }),
+            content_type='application/json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        need_id = response.json()['id']
+        self.assertTrue(Need.objects.filter(id=need_id, title='Dashboard food basket').exists())
+
+        list_response = self.client.get(reverse('need-list'))
+        self.assertEqual(list_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(list_response.json()[0]['id'], need_id)
+
+    def test_staff_can_update_need_from_dashboard_api(self):
+        need = Need.objects.create(
+            title='Needs edit source',
+            description='Before update',
+            category='food',
+            required_quantity='10',
+            priority=Need.PRIORITY_MEDIUM,
+            care_home=self.care_home,
+            created_by=self.staff,
+        )
+
+        response = self.client.patch(
+            reverse('need-detail', args=[need.pk]),
+            data=json.dumps({
+                'title': 'Needs edit updated',
+                'fulfilled_quantity': '3',
+                'status': Need.STATUS_COMPLETED,
+            }),
+            content_type='application/json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        need.refresh_from_db()
+        self.assertEqual(need.title, 'Needs edit updated')
+        self.assertEqual(str(need.fulfilled_quantity), '3.00')
+        self.assertEqual(need.status, Need.STATUS_COMPLETED)
+
+    def test_staff_can_archive_need_from_dashboard_api(self):
+        need = Need.objects.create(
+            title='Needs archive source',
+            description='To be archived',
+            category='food',
+            required_quantity='10',
+            priority=Need.PRIORITY_MEDIUM,
+            care_home=self.care_home,
+            created_by=self.staff,
+        )
+
+        response = self.client.post(reverse('need-archive', args=[need.pk]))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        need.refresh_from_db()
+        self.assertEqual(need.status, Need.STATUS_ARCHIVED)
+
+        list_response = self.client.get(reverse('need-list'))
+        self.assertEqual(list_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(list_response.json(), [])
+
+
+@override_settings(
+    STORAGES={
+        'default': {
+            'BACKEND': 'django.core.files.storage.FileSystemStorage',
+        },
+        'staticfiles': {
+            'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
+        },
+    }
+)
+class ManagementVolunteerOpportunitiesDashboardTests(TestCase):
+    def setUp(self):
+        self.staff = get_user_model().objects.create_user(
+            username='opportunities-dashboard-staff',
+            password='StrongPass123!',
+            is_staff=True,
+        )
+        self.user = get_user_model().objects.create_user(
+            username='opportunities-dashboard-user',
+            password='StrongPass123!',
+        )
+        self.care_home = CareHome.objects.create(
+            name='Volunteer Opportunity Care Home',
+            address='Tripoli',
+            phone='0910000001',
+        )
+        self.client.force_login(self.staff)
+
+    def test_staff_can_open_volunteer_opportunities_dashboard_page(self):
+        response = self.client.get(reverse('volunteer_opportunities_list'))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertContains(response, 'إدارة فرص التطوع')
+        self.assertContains(response, 'Volunteer Opportunity Care Home')
+
+    def test_sidebar_links_to_volunteer_opportunities_dashboard(self):
+        response = self.client.get(reverse('dashboard'))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertContains(response, reverse('volunteer_opportunities_list'))
+
+    def test_regular_user_cannot_open_volunteer_opportunities_dashboard_page(self):
+        client = Client()
+        client.force_login(self.user)
+
+        response = client.get(reverse('volunteer_opportunities_list'))
+
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+
+    def test_staff_can_create_volunteer_opportunity_from_dashboard_form(self):
+        response = self.client.post(
+            reverse('volunteer_opportunities_list'),
+            data={
+                'title': 'Dashboard logistics support',
+                'description': 'Help sort and deliver donation boxes',
+                'category': VolunteerOpportunity.CATEGORY_LOGISTICS,
+                'care_home': self.care_home.id,
+                'required_volunteers': '3',
+                'required_skills': 'organizing',
+                'location': 'Tripoli',
+                'status': VolunteerOpportunity.STATUS_OPEN,
+            },
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+        opportunity = VolunteerOpportunity.objects.get(title='Dashboard logistics support')
+        self.assertEqual(opportunity.care_home, self.care_home)
+        self.assertEqual(opportunity.required_volunteers, 3)
+        self.assertEqual(opportunity.status, VolunteerOpportunity.STATUS_OPEN)
 
 
 class ManagementModelTests(TestCase):
@@ -1756,6 +2088,132 @@ class CareHomeSurfaceApiTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    # --- فرص التطوع --------------------------------------------------
+
+    def test_manager_creates_volunteer_opportunity_bound_to_own_home(self):
+        self.client.force_authenticate(user=self.manager)
+
+        response = self.client.post(
+            '/api/volunteer-opportunities/',
+            {
+                'title': 'دعم دراسي',
+                'description': 'حصص تقوية أسبوعية',
+                'category': VolunteerOpportunity.CATEGORY_EDUCATION,
+                'required_volunteers': 2,
+                'location': 'غريان',
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.json()['care_home'], self.care_home.id)
+        self.assertEqual(VolunteerOpportunity.objects.get().care_home, self.care_home)
+
+    def test_outsider_cannot_create_volunteer_opportunity(self):
+        self.client.force_authenticate(user=self.outsider)
+
+        response = self.client.post(
+            '/api/volunteer-opportunities/',
+            {
+                'title': 'تنظيم مخزن',
+                'description': 'فرز التبرعات العينية',
+                'required_volunteers': 3,
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(VolunteerOpportunity.objects.count(), 0)
+
+    def test_staff_create_volunteer_opportunity_requires_care_home(self):
+        staff = User.objects.create_user(
+            username='opportunity-staff',
+            email='opportunity-staff@example.com',
+            password='StaffPass123',
+            is_staff=True,
+        )
+        self.client.force_authenticate(user=staff)
+
+        missing_home = self.client.post(
+            '/api/volunteer-opportunities/',
+            {
+                'title': 'حملة توعية',
+                'description': 'تنظيم حملة توعوية',
+                'required_volunteers': 4,
+            },
+            format='json',
+        )
+        with_home = self.client.post(
+            '/api/volunteer-opportunities/',
+            {
+                'title': 'حملة توعية',
+                'description': 'تنظيم حملة توعوية',
+                'category': VolunteerOpportunity.CATEGORY_EVENTS,
+                'required_volunteers': 4,
+                'care_home': self.care_home.id,
+            },
+            format='json',
+        )
+
+        self.assertEqual(missing_home.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(with_home.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(with_home.json()['care_home'], self.care_home.id)
+
+    def test_volunteer_opportunities_api_reads_saved_database_rows(self):
+        VolunteerOpportunity.objects.create(
+            title='مساعدة في السلال الغذائية',
+            description='تجهيز وتوزيع السلال',
+            care_home=self.care_home,
+            required_volunteers=5,
+            category=VolunteerOpportunity.CATEGORY_LOGISTICS,
+            status=VolunteerOpportunity.STATUS_OPEN,
+        )
+        self.client.force_authenticate(user=self.outsider)
+
+        response = self.client.get('/api/volunteer-opportunities/')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.json()), 1)
+        self.assertEqual(response.json()[0]['care_home'], self.care_home.id)
+        self.assertEqual(response.json()[0]['care_home_name'], self.care_home.name)
+
+    def test_volunteer_cannot_apply_to_closed_or_full_opportunity(self):
+        volunteer = User.objects.create_user(
+            username='blocked-volunteer@example.com',
+            email='blocked-volunteer@example.com',
+            password='VolPass123',
+        )
+        UserProfile.objects.create(user=volunteer, role=UserProfile.ROLE_VOLUNTEER)
+        closed = VolunteerOpportunity.objects.create(
+            title='فرصة مغلقة',
+            description='ليست مفتوحة حالياً',
+            care_home=self.care_home,
+            status=VolunteerOpportunity.STATUS_CLOSED,
+        )
+        full = VolunteerOpportunity.objects.create(
+            title='فرصة مكتملة العدد',
+            description='اكتمل عدد المتطوعين',
+            care_home=self.care_home,
+            required_volunteers=1,
+            current_volunteers=1,
+        )
+        self.client.force_authenticate(user=volunteer)
+
+        closed_response = self.client.post(
+            f'/api/volunteer-opportunities/{closed.id}/apply/',
+            {'message': 'أرغب بالمشاركة'},
+            format='json',
+        )
+        full_response = self.client.post(
+            f'/api/volunteer-opportunities/{full.id}/apply/',
+            {'message': 'أرغب بالمشاركة'},
+            format='json',
+        )
+
+        self.assertEqual(closed_response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(full_response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(VolunteerApplication.objects.count(), 0)
+
     # --- مراجعة طلبات التطوع ---------------------------------------
 
     def _application(self):
@@ -1907,6 +2365,7 @@ class CareHomeSurfaceApiTests(APITestCase):
             {
                 'title': 'بطانيات شتوية',
                 'description': 'تغطية احتياج الشتاء',
+                'category': 'clothing',
                 'required_quantity': '40',
                 'priority': 'urgent',
             },
@@ -1916,3 +2375,133 @@ class CareHomeSurfaceApiTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.json()['care_home'], self.care_home.id)
         self.assertEqual(Need.objects.get().care_home_id, self.care_home.id)
+
+    def test_need_creation_requires_care_home_manager(self):
+        self.client.force_authenticate(user=self.outsider)
+
+        response = self.client.post(
+            '/api/needs/',
+            {
+                'title': 'Food baskets',
+                'description': 'Monthly baskets',
+                'category': 'food',
+                'required_quantity': '20',
+                'priority': Need.PRIORITY_URGENT,
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(Need.objects.count(), 0)
+
+    def test_need_creation_validates_required_fields(self):
+        self.client.force_authenticate(user=self.manager)
+
+        response = self.client.post(
+            '/api/needs/',
+            {
+                'title': '',
+                'description': 'Invalid need',
+                'category': '',
+                'required_quantity': '0',
+                'priority': Need.PRIORITY_URGENT,
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        body = response.json()
+        self.assertIn('title', body)
+        self.assertIn('category', body)
+        self.assertIn('required_quantity', body)
+        self.assertEqual(Need.objects.count(), 0)
+
+    def test_manager_cannot_update_need_for_another_care_home(self):
+        other_manager = User.objects.create_user(
+            username='other-manager@example.com',
+            email='other-manager@example.com',
+            password='OtherManagerPass123',
+        )
+        other_home = CareHome.objects.create(
+            name='Other Home',
+            address='Tripoli',
+            phone='0920000000',
+            manager=other_manager,
+            orphan_count=8,
+        )
+        need = Need.objects.create(
+            title='Other home need',
+            description='Owned by another home',
+            category='food',
+            required_quantity='30',
+            priority=Need.PRIORITY_URGENT,
+            care_home=other_home,
+            created_by=other_manager,
+        )
+        self.client.force_authenticate(user=self.manager)
+
+        response = self.client.patch(
+            f'/api/needs/{need.id}/',
+            {'status': Need.STATUS_COMPLETED},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        need.refresh_from_db()
+        self.assertEqual(need.status, Need.STATUS_OPEN)
+
+    def test_manager_can_complete_own_need_and_open_filter_excludes_it(self):
+        need = Need.objects.create(
+            title='Own home need',
+            description='Can be completed',
+            category='medical',
+            required_quantity='15',
+            priority=Need.PRIORITY_URGENT,
+            care_home=self.care_home,
+            created_by=self.manager,
+        )
+        self.client.force_authenticate(user=self.manager)
+
+        response = self.client.patch(
+            f'/api/needs/{need.id}/',
+            {'status': Need.STATUS_COMPLETED},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        need.refresh_from_db()
+        self.assertEqual(need.status, Need.STATUS_COMPLETED)
+
+        open_response = self.client.get('/api/needs/?status=open')
+        self.assertEqual(open_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(open_response.json(), [])
+
+    def test_staff_can_create_need_for_selected_care_home(self):
+        staff = User.objects.create_user(
+            username='needs-admin',
+            password='StaffPass123!',
+            is_staff=True,
+        )
+        self.client.force_authenticate(user=staff)
+
+        response = self.client.post(
+            '/api/needs/',
+            {
+                'title': 'School supplies',
+                'description': 'Books and bags',
+                'category': 'education',
+                'required_quantity': '25',
+                'priority': Need.PRIORITY_MEDIUM,
+                'care_home': self.care_home.id,
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.json()['care_home'], self.care_home.id)
+        self.assertTrue(Need.objects.filter(title='School supplies').exists())
+
+        detail_response = self.client.get(f"/api/needs/{response.json()['id']}/")
+        self.assertEqual(detail_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(detail_response.json()['title'], 'School supplies')
+        self.assertEqual(detail_response.json()['care_home'], self.care_home.id)

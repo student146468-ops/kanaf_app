@@ -5,6 +5,7 @@ import '../services/api_service.dart';
 import '../theme/kanaf_tokens.dart';
 import '../utils/auth_navigation.dart';
 import '../widgets/kanaf_layout.dart';
+import '../l10n/kanaf_localizations.dart';
 
 class PhoneVerificationScreen extends StatefulWidget {
   const PhoneVerificationScreen({super.key});
@@ -49,7 +50,7 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('تأكيد رقم الهاتف'),
+        title: Text(context.tr('phone.appBar')),
         leading: const BackButton(),
       ),
       body: KanafBackdrop(
@@ -71,10 +72,13 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       KanafHeroBand(
-                        title: 'أدخل رمز التحقق',
+                        title: context.tr('phone.title'),
                         subtitle: _phoneNumber.isEmpty
-                            ? 'أرسلنا رمزًا من ٦ أرقام إلى رقم هاتفك'
-                            : 'أرسلنا رمزًا من ٦ أرقام إلى $_phoneNumber',
+                            ? context.tr('phone.subtitle')
+                            : context.tr(
+                                'phone.subtitleWithNumber',
+                                args: {'phone': _phoneNumber},
+                              ),
                       ),
                       const SizedBox(height: KanafSpacing.xxl),
                       TextFormField(
@@ -88,16 +92,17 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
                           LengthLimitingTextInputFormatter(6),
                         ],
                         style: context.texts.headlineSmall,
-                        decoration: const InputDecoration(
-                          labelText: 'رمز التحقق',
-                          hintText: '000000',
-                          prefixIcon: Icon(Icons.sms_outlined),
+                        decoration: InputDecoration(
+                          labelText: context.tr('common.verificationCode'),
+                          hintText: context.tr('auth.codeHint'),
+                          prefixIcon: const Icon(Icons.sms_outlined),
                         ),
                         validator: (value) {
                           final code = value?.trim() ?? '';
-                          if (code.isEmpty) return 'أدخل رمز التحقق';
+                          if (code.isEmpty)
+                            return context.tr('validation.codeRequired');
                           if (code.length != 6) {
-                            return 'رمز التحقق يتكون من ٦ أرقام';
+                            return context.tr('validation.codeLength');
                           }
                           return null;
                         },
@@ -115,8 +120,9 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
                                 ),
                               )
                             : const Icon(Icons.verified_outlined),
-                        label: Text(
-                            _isVerifying ? 'جاري التحقق...' : 'تأكيد الرمز'),
+                        label: Text(_isVerifying
+                            ? context.tr('phone.verifying')
+                            : context.tr('phone.verify')),
                       ),
                       const SizedBox(height: KanafSpacing.md),
                       TextButton.icon(
@@ -131,8 +137,8 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
                               )
                             : const Icon(Icons.refresh_rounded),
                         label: Text(_isResending
-                            ? 'جاري إعادة الإرسال...'
-                            : 'إعادة إرسال الرمز'),
+                            ? context.tr('phone.resending')
+                            : context.tr('phone.resend')),
                       ),
                     ],
                   ),
@@ -149,7 +155,7 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
     final form = _formKey.currentState;
     if (form == null || !form.validate()) return;
     if (_phoneNumber.isEmpty) {
-      _showMessage('رقم الهاتف غير متوفر. أعد إنشاء الحساب.');
+      _showMessage(context.tr('phone.missingPhone'));
       return;
     }
 
@@ -174,14 +180,14 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
       _showMessage(
         error is ApiServiceException
             ? error.message
-            : 'تعذر التحقق من الرمز حالياً. حاول مرة أخرى.',
+            : context.tr('phone.verifyFailed'),
       );
     }
   }
 
   Future<void> _resend() async {
     if (_phoneNumber.isEmpty) {
-      _showMessage('رقم الهاتف غير متوفر. أعد إنشاء الحساب.');
+      _showMessage(context.tr('phone.missingPhone'));
       return;
     }
 
@@ -193,7 +199,7 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
       );
       if (!mounted) return;
       setState(() => _isResending = false);
-      _showMessage('تم إرسال رمز جديد.');
+      _showMessage(context.tr('phone.resendSuccess'));
     } catch (error) {
       debugPrint('Phone OTP resend failed: $error');
       if (!mounted) return;
@@ -201,7 +207,7 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
       _showMessage(
         error is ApiServiceException
             ? error.message
-            : 'تعذر إعادة إرسال الرمز حالياً. حاول مرة أخرى.',
+            : context.tr('phone.resendFailed'),
       );
     }
   }
@@ -212,7 +218,7 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
         content: Text(message),
         duration: const Duration(seconds: 6),
         action: SnackBarAction(
-          label: 'حسناً',
+          label: context.tr('common.ok'),
           onPressed: () => ScaffoldMessenger.of(context).hideCurrentSnackBar(),
         ),
       ),

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 import '../theme/kanaf_tokens.dart';
 
@@ -189,32 +189,28 @@ class KanafLogo extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: scheme.surfaceContainerLowest,
+        color: scheme.surface.withOpacity(0.72),
         // حلقة برتقالية رقيقة تربط الشعار بالهوية بلا صخب.
         border: Border.all(
-          color: KanafPalette.seed.withOpacity(0.22),
-          width: 1.5,
+          color: KanafPalette.seed.withOpacity(0.82),
+          width: 1.8,
         ),
         boxShadow: [
           BoxShadow(
-            color: KanafPalette.seed.withOpacity(0.22),
-            blurRadius: size * 0.34,
-            spreadRadius: -size * 0.06,
-            offset: Offset(0, size * 0.09),
+            color: KanafPalette.seed.withOpacity(0.34),
+            blurRadius: size * 0.22,
+            spreadRadius: size * 0.015,
+          ),
+          BoxShadow(
+            color: KanafPalette.seed.withOpacity(0.18),
+            blurRadius: size * 0.42,
+            spreadRadius: size * 0.02,
           ),
         ],
       ),
       child: Padding(
-        padding: EdgeInsets.all(size * 0.17),
-        child: Image.asset(
-          'assets/images/logo.png',
-          fit: BoxFit.contain,
-          errorBuilder: (context, error, stackTrace) => Icon(
-            Icons.volunteer_activism_rounded,
-            size: size * 0.42,
-            color: KanafPalette.seed,
-          ),
-        ),
+        padding: EdgeInsets.all(size * 0.18),
+        child: const CustomPaint(painter: _KanafNativeLogoPainter()),
       ),
     );
   }
@@ -225,6 +221,74 @@ class KanafLogo extends StatelessWidget {
 /// أضيف بعد ملاحظة أن الواجهات «صامتة»: سطح محايد بالكامل بلا أي
 /// كتلة لونية يجعل الشاشة تبدو غير مكتملة. التدرّج هنا يحمل الشعار
 /// والعنوان، فهو بنية لا زخرفة.
+class _KanafNativeLogoPainter extends CustomPainter {
+  const _KanafNativeLogoPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    final fill = Paint()
+      ..color = KanafPalette.seed
+      ..style = PaintingStyle.fill;
+    final stroke = Paint()
+      ..color = KanafPalette.seed
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..strokeWidth = w * 0.075;
+
+    canvas.drawCircle(Offset(w * 0.25, h * 0.16), w * 0.075, fill);
+    canvas.drawCircle(Offset(w * 0.75, h * 0.16), w * 0.075, fill);
+
+    final heartHands = Path()
+      ..moveTo(w * 0.23, h * 0.27)
+      ..cubicTo(w * 0.05, h * 0.36, w * 0.08, h * 0.72, w * 0.50, h * 0.92)
+      ..cubicTo(w * 0.92, h * 0.72, w * 0.95, h * 0.36, w * 0.77, h * 0.27)
+      ..cubicTo(w * 0.64, h * 0.21, w * 0.55, h * 0.30, w * 0.50, h * 0.39)
+      ..cubicTo(w * 0.45, h * 0.30, w * 0.36, h * 0.21, w * 0.23, h * 0.27);
+    canvas.drawPath(heartHands, stroke);
+
+    final house = Path()
+      ..moveTo(w * 0.29, h * 0.57)
+      ..lineTo(w * 0.50, h * 0.38)
+      ..lineTo(w * 0.71, h * 0.57)
+      ..moveTo(w * 0.36, h * 0.55)
+      ..lineTo(w * 0.36, h * 0.77)
+      ..lineTo(w * 0.64, h * 0.77)
+      ..lineTo(w * 0.64, h * 0.55);
+    canvas.drawPath(house, stroke..strokeWidth = w * 0.045);
+
+    canvas.drawCircle(Offset(w * 0.50, h * 0.58), w * 0.045, fill);
+    canvas.drawCircle(Offset(w * 0.42, h * 0.66), w * 0.035, fill);
+    canvas.drawCircle(Offset(w * 0.58, h * 0.66), w * 0.035, fill);
+
+    final familyStroke = Paint()
+      ..color = KanafPalette.seed
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = w * 0.03;
+    canvas.drawLine(
+      Offset(w * 0.50, h * 0.63),
+      Offset(w * 0.50, h * 0.74),
+      familyStroke,
+    );
+    canvas.drawLine(
+      Offset(w * 0.42, h * 0.70),
+      Offset(w * 0.42, h * 0.76),
+      familyStroke,
+    );
+    canvas.drawLine(
+      Offset(w * 0.58, h * 0.70),
+      Offset(w * 0.58, h * 0.76),
+      familyStroke,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _KanafNativeLogoPainter oldDelegate) => false;
+}
+
 class KanafHeroBand extends StatelessWidget {
   const KanafHeroBand({
     super.key,

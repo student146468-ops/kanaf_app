@@ -9,6 +9,7 @@ import '../../theme/kanaf_tokens.dart';
 import '../../widgets/kanaf_layout.dart';
 import '../../widgets/kanaf_nav_shell.dart';
 import '../../widgets/kanaf_states.dart';
+import '../../l10n/kanaf_localizations.dart';
 
 /// استكشاف دور الرعاية.
 ///
@@ -32,8 +33,7 @@ class _ExploreOrphanagesScreenState extends State<ExploreOrphanagesScreen> {
   String _selectedCategory = _allFilter;
   _DiscoverySort _sort = _DiscoverySort.mostNeeded;
 
-  static const String _allFilter = 'الكل';
-  static final NumberFormat _numberFormat = NumberFormat.decimalPattern('ar');
+  static const String _allFilter = '__all__';
 
   @override
   void initState() {
@@ -66,7 +66,7 @@ class _ExploreOrphanagesScreenState extends State<ExploreOrphanagesScreen> {
     final categories = _categoriesOf(needs);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('استكشاف دور الرعاية')),
+      appBar: AppBar(title: Text(context.tr('search.orphanagesTitle'))),
       bottomNavigationBar: const KanafNavBar(
         destinations: KanafNavDestinations.donor,
         currentIndex: 1,
@@ -85,12 +85,12 @@ class _ExploreOrphanagesScreenState extends State<ExploreOrphanagesScreen> {
                 ),
                 child: SearchBar(
                   controller: _searchController,
-                  hintText: 'ابحث باسم الدار أو العنوان',
+                  hintText: context.tr('search.orphanagesHint'),
                   leading: const Icon(Icons.search_rounded),
                   trailing: [
                     if (_query.isNotEmpty)
                       IconButton(
-                        tooltip: 'مسح البحث',
+                        tooltip: context.tr('search.clearSearch'),
                         onPressed: () {
                           _searchController.clear();
                           setState(() => _query = '');
@@ -126,11 +126,11 @@ class _ExploreOrphanagesScreenState extends State<ExploreOrphanagesScreen> {
                         ? Icons.apartment_outlined
                         : Icons.search_off_rounded,
                     emptyTitle: all.isEmpty
-                        ? 'لا توجد دور رعاية مسجّلة بعد'
-                        : 'لا نتائج لبحثك',
+                        ? context.tr('orphanage.noRegistered')
+                        : context.tr('search.noResultsTitle'),
                     emptyMessage: all.isEmpty
-                        ? 'ستظهر هنا الدور فور تسجيلها في المنظومة.'
-                        : 'جرّب اسماً آخر أو امسح البحث.',
+                        ? context.tr('orphanage.noRegisteredMessage')
+                        : context.tr('search.noResultsMessage'),
                     builder: (context) => ListView.separated(
                       physics: const AlwaysScrollableScrollPhysics(),
                       padding: const EdgeInsets.fromLTRB(
@@ -147,7 +147,8 @@ class _ExploreOrphanagesScreenState extends State<ExploreOrphanagesScreen> {
                         child: _CareHomeCard(
                           data: visible[index],
                           needs: _needsForHome(visible[index], needs),
-                          numberFormat: _numberFormat,
+                          numberFormat: NumberFormat.decimalPattern(
+                              Localizations.localeOf(context).languageCode),
                         ),
                       ),
                     ),
@@ -247,12 +248,12 @@ class _ExploreOrphanagesScreenState extends State<ExploreOrphanagesScreen> {
 }
 
 enum _DiscoverySort {
-  mostNeeded('الأكثر احتياجاً'),
-  nearest('الأقرب');
+  mostNeeded('search.sortMostNeeded'),
+  nearest('search.sortNearest');
 
-  const _DiscoverySort(this.label);
+  const _DiscoverySort(this.labelKey);
 
-  final String label;
+  final String labelKey;
 }
 
 class _DiscoveryControls extends StatelessWidget {
@@ -276,6 +277,12 @@ class _DiscoveryControls extends StatelessWidget {
   final ValueChanged<String> onCategoryChanged;
   final ValueChanged<_DiscoverySort> onSortChanged;
 
+  static String _labelFor(BuildContext context, String value) {
+    return value == _ExploreOrphanagesScreenState._allFilter
+        ? context.tr('common.all')
+        : value;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -287,8 +294,9 @@ class _DiscoveryControls extends StatelessWidget {
               Expanded(
                 child: _FilterMenu(
                   icon: Icons.location_city_outlined,
-                  label: selectedCity,
+                  label: _labelFor(context, selectedCity),
                   values: cities,
+                  displayLabel: (value) => _labelFor(context, value),
                   onSelected: onCityChanged,
                 ),
               ),
@@ -296,8 +304,9 @@ class _DiscoveryControls extends StatelessWidget {
               Expanded(
                 child: _FilterMenu(
                   icon: Icons.category_outlined,
-                  label: selectedCategory,
+                  label: _labelFor(context, selectedCategory),
                   values: categories,
+                  displayLabel: (value) => _labelFor(context, value),
                   onSelected: onCategoryChanged,
                 ),
               ),
@@ -320,7 +329,7 @@ class _DiscoveryControls extends StatelessWidget {
                           : Icons.priority_high_rounded,
                     ),
                     label: Text(
-                      option.label,
+                      context.tr(option.labelKey),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -339,12 +348,14 @@ class _FilterMenu extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.values,
+    required this.displayLabel,
     required this.onSelected,
   });
 
   final IconData icon;
   final String label;
   final List<String> values;
+  final String Function(String value) displayLabel;
   final ValueChanged<String> onSelected;
 
   @override
@@ -360,7 +371,7 @@ class _FilterMenu extends StatelessWidget {
         for (final value in values)
           MenuItemButton(
             onPressed: () => onSelected(value),
-            child: Text(value),
+            child: Text(displayLabel(value)),
           ),
       ],
     );
@@ -381,7 +392,8 @@ class _CareHomeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = context.colors;
-    final name = data['name']?.toString() ?? 'دار رعاية';
+    final name =
+        data['name']?.toString() ?? context.tr('orphanage.defaultName');
     final address = data['address']?.toString() ?? '';
     final description = data['description']?.toString() ?? '';
     final orphanCount = _intOf(data['orphan_count']);
@@ -459,7 +471,9 @@ class _CareHomeCard extends StatelessWidget {
               if (orphanCount != null)
                 _MetaChip(
                   icon: Icons.child_care_outlined,
-                  label: '${numberFormat.format(orphanCount)} طفل',
+                  label: context.tr('orphanage.childrenCount', args: {
+                    'count': numberFormat.format(orphanCount),
+                  }),
                 ),
               if (phone.isNotEmpty) ...[
                 const SizedBox(width: KanafSpacing.sm),
@@ -473,7 +487,7 @@ class _CareHomeCard extends StatelessWidget {
                   arguments: data,
                 ),
                 icon: const Icon(Icons.volunteer_activism_outlined, size: 18),
-                label: const Text('تبرع الآن'),
+                label: Text(context.tr('orphanage.donateNow')),
               ),
             ],
           ),

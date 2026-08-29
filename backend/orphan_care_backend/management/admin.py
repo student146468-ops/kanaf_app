@@ -4,6 +4,7 @@ from .models import (
     CareHome,
     Donation,
     InventoryItem,
+    Need,
     Notification,
     Orphan,
     Sponsor,
@@ -54,11 +55,69 @@ class InventoryItemAdmin(admin.ModelAdmin):
     search_fields = ['item_name']
 
 
+@admin.register(Need)
+class NeedAdmin(admin.ModelAdmin):
+    list_display = [
+        'title',
+        'care_home',
+        'category',
+        'required_quantity',
+        'fulfilled_quantity',
+        'priority',
+        'status',
+        'created_at',
+    ]
+    list_filter = ['status', 'priority', 'category', 'care_home']
+    search_fields = ['title', 'description', 'category', 'care_home__name']
+    readonly_fields = ['created_at', 'updated_at']
+    autocomplete_fields = ['care_home', 'created_by']
+    fieldsets = (
+        (None, {
+            'fields': (
+                'title',
+                'description',
+                'care_home',
+                'category',
+                'need_type',
+                'priority',
+                'status',
+            )
+        }),
+        ('Quantities', {
+            'fields': ('required_quantity', 'fulfilled_quantity')
+        }),
+        ('Media and timing', {
+            'fields': ('image_url', 'deadline')
+        }),
+        ('Audit', {
+            'fields': ('created_by', 'created_at', 'updated_at')
+        }),
+    )
+
+
 @admin.register(VolunteerOpportunity)
 class VolunteerOpportunityAdmin(admin.ModelAdmin):
-    list_display = ['title', 'status', 'required_volunteers', 'current_volunteers', 'start_date']
-    list_filter = ['status']
-    search_fields = ['title', 'description', 'location']
+    list_display = ['title', 'care_home', 'category', 'status', 'required_volunteers', 'current_volunteers', 'start_date']
+    list_filter = ['status', 'category', 'care_home']
+    search_fields = ['title', 'description', 'required_skills', 'location', 'care_home__name']
+    readonly_fields = ['current_volunteers', 'created_at', 'updated_at']
+    fieldsets = (
+        (None, {
+            'fields': ('title', 'description', 'care_home', 'category', 'status')
+        }),
+        ('Volunteer capacity', {
+            'fields': ('required_volunteers', 'current_volunteers', 'required_skills')
+        }),
+        ('Location and timing', {
+            'fields': ('location', 'start_date', 'end_date')
+        }),
+        ('Media', {
+            'fields': ('image_url',)
+        }),
+        ('Audit', {
+            'fields': ('created_at', 'updated_at')
+        }),
+    )
 
 
 @admin.register(VolunteerApplication)

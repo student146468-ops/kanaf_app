@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../router/kanaf_router.dart';
 import '../theme/kanaf_tokens.dart';
 import '../widgets/kanaf_layout.dart';
+import '../l10n/kanaf_localizations.dart';
 
 /// شاشة الترحيب.
 ///
@@ -23,24 +24,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   static const List<_Slide> _slides = [
     _Slide(
-      title: 'تبرعك يصل لمن يحتاجه',
-      description:
-          'ساهم بما تستطيع من غذاء أو ملابس أو مستلزمات أو تبرعات مالية، '
-          'وساعد دور رعاية الأيتام على تلبية احتياجاتها الحقيقية بشفافية.',
+      titleKey: 'onboarding.slide1Title',
+      descriptionKey: 'onboarding.slide1Description',
       imagePath: 'assets/images/image12.png',
       fallbackIcon: Icons.volunteer_activism_rounded,
     ),
     _Slide(
-      title: 'شارك بوقتك واصنع أثرًا',
-      description:
-          'قدّم مهاراتك في التعليم أو الترفيه أو الإرشاد، وكن سببًا في رسم '
-          'الابتسامة على وجوه الأطفال.',
+      titleKey: 'onboarding.slide2Title',
+      descriptionKey: 'onboarding.slide2Description',
       imagePath: 'assets/images/image11.png',
       fallbackIcon: Icons.handshake_rounded,
     ),
     _Slide(
-      title: 'ابدأ رحلتك الإنسانية',
-      description: 'كل خطوة صغيرة تحدث فرقًا كبيرًا في حياة شخص ما.',
+      titleKey: 'onboarding.slide3Title',
+      descriptionKey: 'onboarding.slide3Description',
       imagePath: 'assets/images/image14.png',
       fallbackIcon: Icons.favorite_rounded,
     ),
@@ -95,7 +92,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                       child: TextButton(
                         onPressed: _finish,
-                        child: const Text('تخطي'),
+                        child: Text(context.tr('onboarding.skip')),
                       ),
                     ),
                   ),
@@ -159,7 +156,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             icon: Icon(
               _isLastPage ? Icons.login_rounded : Icons.arrow_back_rounded,
             ),
-            label: Text(_isLastPage ? 'ابدأ الآن' : 'التالي'),
+            label: Text(_isLastPage
+                ? context.tr('onboarding.start')
+                : context.tr('onboarding.next')),
           ),
           SizedBox(
             height: 44,
@@ -168,7 +167,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 : TextButton.icon(
                     onPressed: _goBack,
                     icon: const Icon(Icons.arrow_forward_rounded, size: 18),
-                    label: const Text('السابق'),
+                    label: Text(context.tr('onboarding.previous')),
                   ),
           ),
         ],
@@ -179,14 +178,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
 class _Slide {
   const _Slide({
-    required this.title,
-    required this.description,
+    required this.titleKey,
+    required this.descriptionKey,
     required this.imagePath,
     required this.fallbackIcon,
   });
 
-  final String title;
-  final String description;
+  final String titleKey;
+  final String descriptionKey;
   final String imagePath;
   final IconData fallbackIcon;
 }
@@ -248,13 +247,13 @@ class _SlideView extends StatelessWidget {
           ),
           const SizedBox(height: KanafSpacing.xxxl),
           Text(
-            slide.title,
+            context.tr(slide.titleKey),
             textAlign: TextAlign.center,
             style: context.texts.headlineMedium,
           ),
           const SizedBox(height: KanafSpacing.md),
           Text(
-            slide.description,
+            context.tr(slide.descriptionKey),
             textAlign: TextAlign.center,
             style: context.texts.bodyMedium?.copyWith(
               color: scheme.onSurfaceVariant,

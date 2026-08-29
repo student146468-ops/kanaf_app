@@ -9,6 +9,7 @@ import '../../theme/kanaf_tokens.dart';
 import '../../widgets/kanaf_layout.dart';
 import '../../widgets/kanaf_nav_shell.dart';
 import '../../widgets/kanaf_states.dart';
+import '../../l10n/kanaf_localizations.dart';
 
 class HomeVolunteerView extends StatefulWidget {
   const HomeVolunteerView({super.key});
@@ -19,8 +20,6 @@ class HomeVolunteerView extends StatefulWidget {
 
 class _HomeVolunteerViewState extends State<HomeVolunteerView> {
   _OpportunityFilter _filter = _OpportunityFilter.open;
-
-  static final DateFormat _dateFormat = DateFormat('d MMM y', 'ar');
 
   @override
   void initState() {
@@ -40,14 +39,18 @@ class _HomeVolunteerViewState extends State<HomeVolunteerView> {
     final provider = AppProviderScope.of(context);
     final all = provider.volunteerOpportunityModels;
     final visible = _filter.apply(all);
+    final dateFormat = DateFormat(
+      'd MMM y',
+      Localizations.localeOf(context).languageCode,
+    );
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('فرص التطوع'),
+        title: Text(context.tr('volunteer.homeTitle')),
         centerTitle: false,
         actions: [
           IconButton(
-            tooltip: 'بحث وتصفية',
+            tooltip: context.tr('home.searchTooltip'),
             onPressed: () =>
                 Navigator.pushNamed(context, KanafRoutes.volunteerSearch),
             icon: const Icon(Icons.search_rounded),
@@ -84,11 +87,11 @@ class _HomeVolunteerViewState extends State<HomeVolunteerView> {
                         ? Icons.handshake_outlined
                         : Icons.filter_alt_off_outlined,
                     emptyTitle: all.isEmpty
-                        ? 'لا توجد فرص تطوع حالياً'
-                        : 'لا نتائج لهذا التصنيف',
+                        ? context.tr('volunteer.emptyOpportunitiesTitle')
+                        : context.tr('volunteer.emptyCategoryTitle'),
                     emptyMessage: all.isEmpty
-                        ? 'ستظهر هنا الفرص فور نشرها من دور الرعاية.'
-                        : 'جرب تصنيفاً آخر لعرض بقية الفرص.',
+                        ? context.tr('volunteer.emptyOpportunitiesMessage')
+                        : context.tr('volunteer.emptyCategoryMessage'),
                     builder: (context) => ListView.separated(
                       physics: const AlwaysScrollableScrollPhysics(),
                       padding: const EdgeInsets.fromLTRB(
@@ -104,7 +107,7 @@ class _HomeVolunteerViewState extends State<HomeVolunteerView> {
                         index: index,
                         child: _OpportunityCard(
                           data: visible[index],
-                          dateFormat: _dateFormat,
+                          dateFormat: dateFormat,
                         ),
                       ),
                     ),
@@ -133,7 +136,9 @@ class _HomeVolunteerViewState extends State<HomeVolunteerView> {
             Padding(
               padding: const EdgeInsetsDirectional.only(end: KanafSpacing.sm),
               child: FilterChip(
-                label: Text('${option.label} (${option.apply(all).length})'),
+                label: Text(
+                  '${context.tr(option.labelKey)} (${option.apply(all).length})',
+                ),
                 selected: _filter == option,
                 onSelected: (_) => setState(() => _filter = option),
               ),
@@ -145,13 +150,13 @@ class _HomeVolunteerViewState extends State<HomeVolunteerView> {
 }
 
 enum _OpportunityFilter {
-  open('متاحة'),
-  all('الكل'),
-  closed('مغلقة');
+  open('volunteer.filterAvailable'),
+  all('common.all'),
+  closed('volunteer.filterClosed');
 
-  const _OpportunityFilter(this.label);
+  const _OpportunityFilter(this.labelKey);
 
-  final String label;
+  final String labelKey;
 
   List<VolunteerOpportunityModel> apply(List<VolunteerOpportunityModel> items) {
     return switch (this) {
@@ -173,7 +178,9 @@ class _OpportunityCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = context.colors;
-    final title = data.title.isEmpty ? 'فرصة تطوع' : data.title;
+    final title = data.title.isEmpty
+        ? context.tr('volunteer.defaultOpportunity')
+        : data.title;
     final dateText =
         data.startDate == null ? null : dateFormat.format(data.startDate!);
 
@@ -215,7 +222,10 @@ class _OpportunityCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: KanafSpacing.sm),
-              KanafStatusChip(status: data.status, compact: true),
+              KanafStatusChip(
+                status: data.myApplicationStatus ?? data.status,
+                compact: true,
+              ),
             ],
           ),
           if (data.description.isNotEmpty) ...[
@@ -283,8 +293,14 @@ class _OpportunityCard extends StatelessWidget {
                 const SizedBox(width: KanafSpacing.md),
                 Text(
                   data.isFull
-                      ? 'مكتملة'
-                      : '${data.currentVolunteers} من ${data.requiredVolunteers}',
+                      ? context.tr('donation.completed')
+                      : context.tr(
+                          'volunteer.capacityCount',
+                          args: {
+                            'current': data.currentVolunteers,
+                            'required': data.requiredVolunteers,
+                          },
+                        ),
                   style: context.texts.labelSmall?.copyWith(
                     color: data.isFull ? scheme.error : scheme.onSurfaceVariant,
                     fontWeight: FontWeight.w700,

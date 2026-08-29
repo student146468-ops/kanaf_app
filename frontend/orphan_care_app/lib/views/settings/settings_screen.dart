@@ -10,13 +10,14 @@ import '../../theme/kanaf_motion.dart';
 import '../../theme/kanaf_theme_controller.dart';
 import '../../theme/kanaf_tokens.dart';
 import '../../widgets/kanaf_layout.dart';
+import '../../l10n/kanaf_localizations.dart';
 
-/// شاشة الإعدادات.
+/// ط´ط§ط´ط© ط§ظ„ط¥ط¹ط¯ط§ط¯ط§طھ.
 ///
-/// أُصلح فيها عيبان حقيقيان بجانب المظهر:
-/// * **تسجيل الخروج كان لا يمسح التوكن** — كان ينتقل إلى شاشة الدخول
-///   فقط، فيبقى المستخدم مصادَقاً فعلياً وأي طلب لاحق ينجح باسمه.
-/// * **مفتاح الوضع الداكن كان زخرفياً** — يقلب `bool` محلياً بلا أثر.
+/// ط£ظڈطµظ„ط­ ظپظٹظ‡ط§ ط¹ظٹط¨ط§ظ† ط­ظ‚ظٹظ‚ظٹط§ظ† ط¨ط¬ط§ظ†ط¨ ط§ظ„ظ…ط¸ظ‡ط±:
+/// * **طھط³ط¬ظٹظ„ ط§ظ„ط®ط±ظˆط¬ ظƒط§ظ† ظ„ط§ ظٹظ…ط³ط­ ط§ظ„طھظˆظƒظ†** â€” ظƒط§ظ† ظٹظ†طھظ‚ظ„ ط¥ظ„ظ‰ ط´ط§ط´ط© ط§ظ„ط¯ط®ظˆظ„
+///   ظپظ‚ط·طŒ ظپظٹط¨ظ‚ظ‰ ط§ظ„ظ…ط³طھط®ط¯ظ… ظ…طµط§ط¯ظژظ‚ط§ظ‹ ظپط¹ظ„ظٹط§ظ‹ ظˆط£ظٹ ط·ظ„ط¨ ظ„ط§ط­ظ‚ ظٹظ†ط¬ط­ ط¨ط§ط³ظ…ظ‡.
+/// * **ظ…ظپطھط§ط­ ط§ظ„ظˆط¶ط¹ ط§ظ„ط¯ط§ظƒظ† ظƒط§ظ† ط²ط®ط±ظپظٹط§ظ‹** â€” ظٹظ‚ظ„ط¨ `bool` ظ…ط­ظ„ظٹط§ظ‹ ط¨ظ„ط§ ط£ط«ط±.
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
@@ -50,7 +51,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final user = provider.currentUser;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('الإعدادات')),
+      appBar: AppBar(title: Text(context.tr('settings.title'))),
       body: KanafBackdrop(
         child: SafeArea(
           top: false,
@@ -70,13 +71,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
               KanafStaggeredEntrance(
                 index: 1,
                 child: _buildSection(
-                  title: 'الحساب والأمان',
+                  title: context.tr('settings.accountSecurity'),
                   children: [
                     _SettingsTile(
                       icon: Icons.alternate_email_rounded,
-                      title: 'تغيير البريد الإلكتروني',
-                      subtitle:
-                          user['email']?.toString() ?? 'إدارة بريد الحساب',
+                      title: context.tr('settings.changeEmail'),
+                      subtitle: user['email']?.toString() ??
+                          context.tr('settings.changeEmailSubtitle'),
                       onTap: () => Navigator.pushNamed(
                         context,
                         KanafRoutes.changeEmail,
@@ -84,8 +85,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                     _SettingsTile(
                       icon: Icons.lock_outline_rounded,
-                      title: 'تغيير كلمة المرور',
-                      subtitle: 'حماية الحساب وإنهاء الجلسات الأخرى',
+                      title: context.tr('settings.changePassword'),
+                      subtitle: context.tr('settings.changePasswordSubtitle'),
                       onTap: () => Navigator.pushNamed(
                         context,
                         KanafRoutes.changePassword,
@@ -98,17 +99,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
               KanafStaggeredEntrance(
                 index: 2,
                 child: _buildSection(
-                  title: 'المظهر واللغة',
+                  title: context.tr('settings.appearanceLanguage'),
                   children: [
-                    // المفتاح مربوط بمتحكم حقيقي يحفظ الاختيار.
+                    // ط§ظ„ظ…ظپطھط§ط­ ظ…ط±ط¨ظˆط· ط¨ظ…طھط­ظƒظ… ط­ظ‚ظٹظ‚ظٹ ظٹط­ظپط¸ ط§ظ„ط§ط®طھظٹط§ط±.
                     ValueListenableBuilder<ThemeMode>(
                       valueListenable: KanafThemeController.instance,
                       builder: (context, mode, _) => SwitchListTile(
                         value: mode == ThemeMode.dark,
                         onChanged: KanafThemeController.instance.setDark,
                         secondary: const Icon(Icons.dark_mode_outlined),
-                        title: const Text('الوضع الداكن'),
-                        subtitle: const Text('يُحفظ اختيارك للمرات القادمة'),
+                        title: Text(context.tr('settings.darkMode')),
+                        subtitle: Text(context.tr('settings.darkModeSubtitle')),
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: KanafSpacing.lg,
                         ),
@@ -118,12 +119,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ValueListenableBuilder<Locale>(
                       valueListenable: KanafLocaleController.instance,
                       builder: (context, locale, _) {
-                        final isArabic = locale.languageCode == 'ar';
                         return _SettingsTile(
                           icon: Icons.language_rounded,
-                          title: isArabic ? 'اللغة' : 'Language',
-                          subtitle:
-                              KanafLocaleController.instance.languageLabel,
+                          title: context.tr('settings.language'),
+                          subtitle: locale.languageCode == 'en'
+                              ? context.tr('settings.english')
+                              : context.tr('settings.arabic'),
                           onTap: _showLanguageDialog,
                         );
                       },
@@ -144,12 +145,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               KanafStaggeredEntrance(
                 index: 4,
                 child: _buildSection(
-                  title: 'عن التطبيق',
+                  title: context.tr('settings.aboutSection'),
                   children: [
                     _SettingsTile(
                       icon: Icons.info_outline_rounded,
-                      title: 'عن كَنَفْ',
-                      subtitle: 'الرؤية والفريق والإصدار',
+                      title: context.tr('settings.aboutTitle'),
+                      subtitle: context.tr('settings.aboutSubtitle'),
                       onTap: () => Navigator.pushNamed(
                         context,
                         KanafRoutes.aboutApp,
@@ -195,7 +196,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: CircularProgressIndicator(strokeWidth: 2),
             )
           : const Icon(Icons.logout_rounded),
-      label: Text(_isLoggingOut ? 'جاري الخروج...' : 'تسجيل الخروج'),
+      label: Text(_isLoggingOut
+          ? context.tr('settings.loggingOut')
+          : context.tr('settings.logout')),
     );
   }
 
@@ -203,16 +206,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('تسجيل الخروج'),
-        content: const Text('هل تريد الخروج من حسابك على هذا الجهاز؟'),
+        title: Text(context.tr('settings.logoutConfirmTitle')),
+        content: Text(context.tr('settings.logoutConfirmMessage')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('إلغاء'),
+            child: Text(context.tr('common.cancel')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('خروج'),
+            child: Text(context.tr('settings.logoutAction')),
           ),
         ],
       ),
@@ -226,10 +229,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() => _isLoggingOut = true);
     final provider = AppProviderScope.of(context);
 
-    // مسح التوكن أولاً: لو انتقلنا قبل المسح لبقيت الجلسة صالحة،
-    // ولأعادت شاشة البداية المستخدم إلى حسابه عند إعادة التشغيل.
+    // ظ…ط³ط­ ط§ظ„طھظˆظƒظ† ط£ظˆظ„ط§ظ‹: ظ„ظˆ ط§ظ†طھظ‚ظ„ظ†ط§ ظ‚ط¨ظ„ ط§ظ„ظ…ط³ط­ ظ„ط¨ظ‚ظٹطھ ط§ظ„ط¬ظ„ط³ط© طµط§ظ„ط­ط©طŒ
+    // ظˆظ„ط£ط¹ط§ط¯طھ ط´ط§ط´ط© ط§ظ„ط¨ط¯ط§ظٹط© ط§ظ„ظ…ط³طھط®ط¯ظ… ط¥ظ„ظ‰ ط­ط³ط§ط¨ظ‡ ط¹ظ†ط¯ ط¥ط¹ط§ط¯ط© ط§ظ„طھط´ط؛ظٹظ„.
     await _apiService.logout();
-    // وتفريغ الذاكرة حتى لا يرى المستخدم التالي بيانات السابق.
+    // ظˆطھظپط±ظٹط؛ ط§ظ„ط°ط§ظƒط±ط© ط­طھظ‰ ظ„ط§ ظٹط±ظ‰ ط§ظ„ظ…ط³طھط®ط¯ظ… ط§ظ„طھط§ظ„ظٹ ط¨ظٹط§ظ†ط§طھ ط§ظ„ط³ط§ط¨ظ‚.
     provider.clearAll();
 
     if (!mounted) return;
@@ -244,7 +247,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final selected = await showDialog<String>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('اللغة / Language'),
+        title: Text(context.tr('settings.languageDialog')),
         contentPadding: const EdgeInsets.only(top: KanafSpacing.sm),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -254,23 +257,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
               groupValue: current,
               onChanged: (value) => Navigator.pop(dialogContext, value),
               secondary: const Icon(Icons.translate_rounded),
-              title: const Text('العربية'),
-              subtitle: const Text('واجهة عربية واتجاه من اليمين إلى اليسار'),
+              title: Text(context.tr('settings.arabic')),
+              subtitle: Text(context.tr('settings.arabicSubtitle')),
             ),
             RadioListTile<String>(
               value: 'en',
               groupValue: current,
               onChanged: (value) => Navigator.pop(dialogContext, value),
               secondary: const Icon(Icons.language_rounded),
-              title: const Text('English'),
-              subtitle: const Text('English locale and left-to-right layout'),
+              title: Text(context.tr('settings.english')),
+              subtitle: Text(context.tr('settings.englishSubtitle')),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('إلغاء'),
+            child: Text(context.tr('common.cancel')),
           ),
         ],
       ),
@@ -284,19 +287,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('إلغاء التبرع الشهري'),
-        content: Text(
-          'سيتم تسجيل طلب إلغاء التبرع الشهري رقم KNF-${donation.id}. '
-          'لن تُحذف التبرعات السابقة من السجل.',
-        ),
+        title: Text(context.tr('settings.cancelMonthlyTitle')),
+        content: Text(context.tr(
+          'settings.cancelMonthlyMessage',
+          args: {'id': donation.id},
+        )),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('رجوع'),
+            child: Text(context.tr('common.back')),
           ),
           FilledButton.tonal(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('طلب الإلغاء'),
+            child: Text(context.tr('settings.cancelMonthlyRequest')),
           ),
         ],
       ),
@@ -304,9 +307,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (confirmed != true || !mounted) return;
     setState(() => _cancelRequested.add(donation.id));
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
+      SnackBar(
         content: Text(
-          'تم تسجيل طلب الإلغاء محلياً. يحتاج الخادم إلى API مخصص لإيقاف الخصم تلقائياً.',
+          context.tr('settings.cancelMonthlyQueued'),
         ),
       ),
     );
@@ -324,29 +327,30 @@ class _MonthlyDonationsSection extends StatelessWidget {
   final Set<int> cancelRequested;
   final ValueChanged<DonationModel> onCancel;
 
-  static final NumberFormat _amountFormat = NumberFormat.decimalPattern('ar');
-  static final DateFormat _dateFormat = DateFormat('d MMMM y', 'ar');
-
   @override
   Widget build(BuildContext context) {
+    final localeCode = Localizations.localeOf(context).languageCode;
+    final amountFormat = NumberFormat.decimalPattern(localeCode);
+    final dateFormat = DateFormat('d MMMM y', localeCode);
     final monthly = donations.where(_isRecurring).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const KanafSectionHeader(
-          title: 'التبرعات الشهرية',
-          subtitle: 'إدارة المساهمات المتكررة',
+        KanafSectionHeader(
+          title: context.tr('settings.monthlyDonations'),
+          subtitle: context.tr('settings.monthlyDonationsSubtitle'),
         ),
         const SizedBox(height: KanafSpacing.md),
         KanafCard(
           padding: EdgeInsets.zero,
           child: monthly.isEmpty
-              ? const ListTile(
-                  leading: Icon(Icons.event_repeat_rounded),
-                  title: Text('لا توجد تبرعات شهرية نشطة'),
-                  subtitle: Text('ستظهر هنا مساهماتك المتكررة عند إنشائها'),
-                  contentPadding: EdgeInsets.symmetric(
+              ? ListTile(
+                  leading: const Icon(Icons.event_repeat_rounded),
+                  title: Text(context.tr('settings.noMonthlyDonations')),
+                  subtitle:
+                      Text(context.tr('settings.noMonthlyDonationsSubtitle')),
+                  contentPadding: const EdgeInsets.symmetric(
                     horizontal: KanafSpacing.lg,
                   ),
                 )
@@ -357,8 +361,8 @@ class _MonthlyDonationsSection extends StatelessWidget {
                         const Divider(height: 1, indent: KanafSpacing.lg),
                       _MonthlyDonationTile(
                         donation: monthly[i],
-                        amountFormat: _amountFormat,
-                        dateFormat: _dateFormat,
+                        amountFormat: amountFormat,
+                        dateFormat: dateFormat,
                         cancelRequested:
                             cancelRequested.contains(monthly[i].id),
                         onCancel: () => onCancel(monthly[i]),
@@ -373,7 +377,7 @@ class _MonthlyDonationsSection extends StatelessWidget {
 
   static bool _isRecurring(DonationModel donation) {
     final mode = donation.donationMode?.toLowerCase() ?? '';
-    return mode.contains('month') || mode.contains('شهري');
+    return mode.contains('month') || mode.contains('ط´ظ‡ط±ظٹ');
   }
 }
 
@@ -398,17 +402,22 @@ class _MonthlyDonationTile extends StatelessWidget {
     final nextDate = _nextDeductionDate(donation);
     final description = donation.needTitle ??
         donation.description ??
-        'مساهمة شهرية لدعم احتياجات كنف العامة';
+        context.tr('settings.monthlyDefaultDescription');
 
     return ListTile(
       leading: const Icon(Icons.event_repeat_rounded),
       title: Text(
         amount == null
-            ? 'تبرع شهري'
-            : '${amountFormat.format(amount)} دينار ليبي شهرياً',
+            ? context.tr('settings.monthlyDonation')
+            : context.tr('settings.monthlyAmount', args: {
+                'amount': amountFormat.format(amount),
+              }),
       ),
       subtitle: Text(
-        '$description\nالخصم القادم: ${dateFormat.format(nextDate)}',
+        context.tr('settings.nextDeductionLine', args: {
+          'description': description,
+          'date': dateFormat.format(nextDate),
+        }),
         maxLines: 3,
         overflow: TextOverflow.ellipsis,
       ),
@@ -417,7 +426,7 @@ class _MonthlyDonationTile extends StatelessWidget {
           ? const Icon(Icons.pending_actions_rounded)
           : TextButton(
               onPressed: onCancel,
-              child: const Text('إلغاء'),
+              child: Text(context.tr('settings.cancelMonthly')),
             ),
       contentPadding: const EdgeInsets.symmetric(horizontal: KanafSpacing.lg),
     );
@@ -444,7 +453,7 @@ class _AccountHeader extends StatelessWidget {
     final scheme = context.colors;
     final name = (user['first_name']?.toString().trim().isNotEmpty ?? false)
         ? user['first_name'].toString()
-        : (user['username']?.toString() ?? 'حسابي');
+        : (user['username']?.toString() ?? 'ط­ط³ط§ط¨ظٹ');
     final email = user['email']?.toString() ?? '';
 
     return KanafCard(
@@ -454,8 +463,8 @@ class _AccountHeader extends StatelessWidget {
             radius: 28,
             backgroundColor: scheme.primaryContainer,
             child: Text(
-              // أول حرف من الاسم كبديل عن صورة غير موجودة.
-              name.isEmpty ? '؟' : name.characters.first,
+              // ط£ظˆظ„ ط­ط±ظپ ظ…ظ† ط§ظ„ط§ط³ظ… ظƒط¨ط¯ظٹظ„ ط¹ظ† طµظˆط±ط© ط؛ظٹط± ظ…ظˆط¬ظˆط¯ط©.
+              name.isEmpty ? 'طں' : name.characters.first,
               style: context.texts.titleLarge?.copyWith(
                 color: scheme.onPrimaryContainer,
               ),

@@ -4,6 +4,7 @@ import '../../services/api_service.dart';
 import '../../theme/kanaf_motion.dart';
 import '../../theme/kanaf_tokens.dart';
 import '../../widgets/kanaf_layout.dart';
+import '../../l10n/kanaf_localizations.dart';
 
 /// تغيير كلمة المرور من داخل الحساب.
 ///
@@ -47,7 +48,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('تغيير كلمة المرور'),
+        title: Text(context.tr('settings.changePassword')),
         leading: const BackButton(),
       ),
       body: KanafBackdrop(
@@ -85,7 +86,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                                 )
                               : const Icon(Icons.shield_outlined),
                           label: Text(
-                            _isSaving ? 'جاري الحفظ...' : 'حفظ كلمة المرور',
+                            _isSaving
+                                ? context.tr('settings.saving')
+                                : context.tr('settings.savePassword'),
                           ),
                         ),
                       ),
@@ -114,8 +117,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
           const SizedBox(width: KanafSpacing.md),
           Expanded(
             child: Text(
-              'بعد التغيير سيُسجَّل خروج جميع الأجهزة الأخرى، ويبقى هذا '
-              'الجهاز مسجّلاً.',
+              context.tr('settings.passwordChangeNotice'),
               style: context.texts.bodySmall?.copyWith(
                 color: semantic.onWarningContainer,
               ),
@@ -136,7 +138,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
           autofillHints: const [AutofillHints.password],
           enabled: !_isSaving,
           decoration: InputDecoration(
-            labelText: 'كلمة المرور الحالية',
+            labelText: context.tr('settings.currentPassword'),
             prefixIcon: const Icon(Icons.lock_outline_rounded),
             suffixIcon: IconButton(
               onPressed: () =>
@@ -150,7 +152,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
           ),
           validator: (value) {
             if (value == null || value.isEmpty) {
-              return 'أدخل كلمة المرور الحالية';
+              return context.tr('settings.currentPasswordRequired');
             }
             return null;
           },
@@ -165,7 +167,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
           autofillHints: const [AutofillHints.newPassword],
           enabled: !_isSaving,
           decoration: InputDecoration(
-            labelText: 'كلمة المرور الجديدة',
+            labelText: context.tr('reset.newPassword'),
             prefixIcon: const Icon(Icons.key_outlined),
             suffixIcon: IconButton(
               onPressed: () => setState(() => _obscureNew = !_obscureNew),
@@ -179,14 +181,18 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
           // نفس قواعد الخادم في `_is_valid_registration_password`.
           validator: (value) {
             final password = value ?? '';
-            if (password.isEmpty) return 'أدخل كلمة المرور الجديدة';
-            if (password.length < 8) return 'كلمة المرور أقل من ٨ خانات';
+            if (password.isEmpty) {
+              return context.tr('settings.newPasswordRequired');
+            }
+            if (password.length < 8) {
+              return context.tr('validation.passwordTooShort');
+            }
             if (!RegExp(r'[A-Za-z]').hasMatch(password) ||
                 !RegExp(r'[0-9]').hasMatch(password)) {
-              return 'يجب أن تحتوي على حروف وأرقام';
+              return context.tr('validation.passwordWeak');
             }
             if (password == _currentController.text) {
-              return 'كلمة المرور الجديدة مطابقة للحالية';
+              return context.tr('settings.newPasswordSameAsCurrent');
             }
             return null;
           },
@@ -208,7 +214,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
           textInputAction: TextInputAction.done,
           enabled: !_isSaving,
           decoration: InputDecoration(
-            labelText: 'تأكيد كلمة المرور الجديدة',
+            labelText: context.tr('settings.confirmNewPassword'),
             prefixIcon: const Icon(Icons.lock_reset_outlined),
             suffixIcon: IconButton(
               onPressed: () =>
@@ -221,9 +227,11 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
             ),
           ),
           validator: (value) {
-            if (value == null || value.isEmpty) return 'أعد إدخال كلمة المرور';
+            if (value == null || value.isEmpty) {
+              return context.tr('settings.confirmNewPasswordRequired');
+            }
             if (value != _newController.text) {
-              return 'كلمة المرور وتأكيدها غير متطابقين';
+              return context.tr('settings.confirmNewPasswordMismatch');
             }
             return null;
           },
@@ -248,7 +256,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       setState(() => _isSaving = false);
 
       // الوصول إلى هنا يعني أن الخادم أكد التغيير وأعاد رموزاً جديدة.
-      _showMessage('تم تغيير كلمة المرور بنجاح.');
+      _showMessage(context.tr('settings.passwordChanged'));
       Navigator.of(context).pop(true);
     } catch (error) {
       debugPrint('Change password failed: $error');
@@ -257,7 +265,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       _showMessage(
         error is ApiServiceException
             ? error.message
-            : 'تعذر تغيير كلمة المرور حالياً. حاول مرة أخرى.',
+            : context.tr('settings.passwordChangeFailed'),
       );
     }
   }
@@ -268,7 +276,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         content: Text(message),
         duration: const Duration(seconds: 5),
         action: SnackBarAction(
-          label: 'حسناً',
+          label: context.tr('common.ok'),
           onPressed: () => ScaffoldMessenger.of(context).hideCurrentSnackBar(),
         ),
       ),
@@ -295,9 +303,9 @@ class _PasswordStrengthBar extends StatelessWidget {
     final score = _score(password);
 
     final (String label, Color color) = switch (score) {
-      <= 2 => ('ضعيفة', scheme.error),
-      3 => ('متوسطة', semantic.warning),
-      _ => ('قوية', semantic.success),
+      <= 2 => (context.tr('settings.passwordWeak'), scheme.error),
+      3 => (context.tr('settings.passwordMedium'), semantic.warning),
+      _ => (context.tr('settings.passwordStrong'), semantic.success),
     };
 
     return Column(
@@ -315,8 +323,7 @@ class _PasswordStrengthBar extends StatelessWidget {
                     duration: KanafDuration.quick,
                     height: 5,
                     decoration: BoxDecoration(
-                      color:
-                          i < score ? color : scheme.surfaceContainerHighest,
+                      color: i < score ? color : scheme.surfaceContainerHighest,
                       borderRadius: KanafRadii.pill,
                     ),
                   ),
@@ -326,7 +333,7 @@ class _PasswordStrengthBar extends StatelessWidget {
         ),
         const SizedBox(height: KanafSpacing.sm),
         Text(
-          'قوة كلمة المرور: $label',
+          context.tr('settings.passwordStrength', args: {'label': label}),
           style: context.texts.labelSmall?.copyWith(color: color),
         ),
       ],

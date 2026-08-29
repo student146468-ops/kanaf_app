@@ -104,7 +104,7 @@
                 <div class="empty-state">لا توجد طلبات تطوع حديثة.</div>
                 {% endfor %}
             </div>
-            <a class="btn-3d" href="{% url 'volunteers_list' %}" style="width: 100%; margin-top: 14px;">عرض جميع الطلبات</a>
+            <a class="btn-3d" href="{% url 'volunteer_applications_list' %}" style="width: 100%; margin-top: 14px;">عرض جميع الطلبات</a>
         </section>
     </div>
 
@@ -114,7 +114,7 @@
         <a class="quick-action" href="{% url 'needs_list' %}"><span>إضافة احتياج</span><i class="fas fa-list-check"></i></a>
         <a class="quick-action" href="{% url 'donations_list' %}"><span>إضافة تبرع مالي</span><i class="fas fa-wallet"></i></a>
         <a class="quick-action" href="{% url 'inventory_view' %}"><span>إضافة تبرع عيني</span><i class="fas fa-box-open"></i></a>
-        <a class="quick-action" href="{% url 'volunteers_list' %}"><span>إضافة فرصة تطوع</span><i class="fas fa-heart"></i></a>
+        <a class="quick-action" href="{% url 'volunteer_opportunities_list' %}"><span>إضافة فرصة تطوع</span><i class="fas fa-heart"></i></a>
         <a class="quick-action" href="{% url 'volunteers_list' %}"><span>إضافة متطوع</span><i class="fas fa-user-plus"></i></a>
     </section>
 </section>

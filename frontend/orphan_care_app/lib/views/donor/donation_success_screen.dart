@@ -6,6 +6,7 @@ import '../../router/kanaf_router.dart';
 import '../../theme/kanaf_tokens.dart';
 import '../../widgets/kanaf_layout.dart';
 import '../../widgets/kanaf_states.dart';
+import '../../l10n/kanaf_localizations.dart';
 
 /// شاشة تأكيد التبرع.
 ///
@@ -21,7 +22,8 @@ class DonationSuccessScreen extends StatelessWidget {
     final args =
         ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
     final reference = args?['reference']?.toString();
-    final type = args?['type']?.toString() ?? 'تبرع';
+    final type =
+        args?['type']?.toString() ?? context.tr('donation.genericType');
     final summary = args?['summary']?.toString();
     final status = args?['status']?.toString() ?? 'pending';
     final amount = args?['amount'];
@@ -33,7 +35,8 @@ class DonationSuccessScreen extends StatelessWidget {
     final date =
         DateTime.tryParse(args?['date']?.toString() ?? '') ?? DateTime.now();
     final state = _DonationResultState.fromStatus(status);
-    final amountText = _amountText(amount);
+    final amountText = _amountText(context, amount);
+    final locale = Localizations.localeOf(context).languageCode;
 
     return Scaffold(
       body: KanafBackdrop(
@@ -48,13 +51,13 @@ class DonationSuccessScreen extends StatelessWidget {
                     _ResultSeal(state: state),
                     const SizedBox(height: KanafSpacing.xxl),
                     Text(
-                      state.title,
+                      context.tr(state.titleKey),
                       textAlign: TextAlign.center,
                       style: context.texts.headlineMedium,
                     ),
                     const SizedBox(height: KanafSpacing.md),
                     Text(
-                      error ?? state.message,
+                      error ?? context.tr(state.messageKey),
                       textAlign: TextAlign.center,
                       style: context.texts.bodyMedium?.copyWith(
                         color: context.colors.onSurfaceVariant,
@@ -65,22 +68,25 @@ class DonationSuccessScreen extends StatelessWidget {
                       child: Column(
                         children: [
                           KanafDetailRow(
-                            label: 'الحالة',
+                            label: context.tr('donation.status'),
                             value: status,
                             trailing: Align(
                               alignment: AlignmentDirectional.centerStart,
                               child: KanafStatusChip(status: status),
                             ),
                           ),
-                          KanafDetailRow(label: 'النوع', value: type),
                           KanafDetailRow(
-                            label: 'التاريخ',
-                            value: DateFormat('d MMMM y • h:mm a', 'ar')
+                            label: context.tr('donation.type'),
+                            value: type,
+                          ),
+                          KanafDetailRow(
+                            label: context.tr('donation.date'),
+                            value: DateFormat('d MMMM y • h:mm a', locale)
                                 .format(date),
                           ),
                           if (amountText != null)
                             KanafDetailRow(
-                              label: 'المبلغ',
+                              label: context.tr('donation.amount'),
                               value: amountText,
                               valueStyle: context.texts.titleMedium?.copyWith(
                                 color: context.colors.primary,
@@ -88,18 +94,24 @@ class DonationSuccessScreen extends StatelessWidget {
                             ),
                           if (_notBlank(donationMode))
                             KanafDetailRow(
-                              label: 'نوع التبرع',
-                              value: _modeLabel(donationMode!),
+                              label: context.tr('donation.type'),
+                              value: _modeLabel(context, donationMode!),
                             ),
                           if (_notBlank(paymentMethod))
                             KanafDetailRow(
-                              label: 'طريقة الدفع',
+                              label: context.tr('donation.paymentMethod'),
                               value: paymentMethod!,
                             ),
                           if (_notBlank(target))
-                            KanafDetailRow(label: 'الهدف', value: target!),
+                            KanafDetailRow(
+                              label: context.tr('donation.target'),
+                              value: target!,
+                            ),
                           if (summary != null)
-                            KanafDetailRow(label: 'التفاصيل', value: summary),
+                            KanafDetailRow(
+                              label: context.tr('donation.details'),
+                              value: summary,
+                            ),
                           if (reference != null) ...[
                             const Divider(height: KanafSpacing.xxl),
                             _ReferenceRow(reference: reference),
@@ -134,8 +146,8 @@ class DonationSuccessScreen extends StatelessWidget {
                       ),
                       label: Text(
                         state == _DonationResultState.failed
-                            ? 'إعادة المحاولة'
-                            : 'عرض سجل تبرعاتي',
+                            ? context.tr('common.retry')
+                            : context.tr('donation.viewHistory'),
                       ),
                     ),
                     const SizedBox(height: KanafSpacing.sm),
@@ -147,7 +159,7 @@ class DonationSuccessScreen extends StatelessWidget {
                         KanafRoutes.donorHome,
                         (route) => false,
                       ),
-                      child: const Text('العودة إلى الرئيسية'),
+                      child: Text(context.tr('donation.successBackHome')),
                     ),
                   ],
                 ),
@@ -162,39 +174,40 @@ class DonationSuccessScreen extends StatelessWidget {
   static bool _notBlank(String? value) =>
       value != null && value.trim().isNotEmpty;
 
-  static String? _amountText(dynamic amount) {
+  static String? _amountText(BuildContext context, dynamic amount) {
     final value =
         amount is num ? amount.toDouble() : double.tryParse('$amount');
     if (value == null) return null;
-    return '${NumberFormat.decimalPattern('ar').format(value)} دينار ليبي';
+    final locale = Localizations.localeOf(context).languageCode;
+    return '${NumberFormat.decimalPattern(locale).format(value)} ${context.tr('common.dinar')}';
   }
 
-  static String _modeLabel(String value) {
+  static String _modeLabel(BuildContext context, String value) {
     final normalized = value.toLowerCase();
     return normalized.contains('month') || normalized.contains('شهري')
-        ? 'شهري'
-        : 'مرة واحدة';
+        ? context.tr('donation.modeMonthlyShort')
+        : context.tr('donation.modeOneTimeShort');
   }
 }
 
 enum _DonationResultState {
   success(
-    'تم تسجيل مساهمتك',
-    'تمت العملية بنجاح وحُفظت تفاصيلها في سجل تبرعاتك.',
+    'donation.resultSuccessTitle',
+    'donation.resultSuccessMessage',
   ),
   pending(
-    'تم تسجيل مساهمتك',
-    'وصلت مساهمتك إلى المنظومة. ستراجعها دار الرعاية وتظهر تحديثاتها في السجل.',
+    'donation.resultSuccessTitle',
+    'donation.resultPendingMessage',
   ),
   failed(
-    'تعذر إكمال التبرع',
-    'لم يتم تسجيل العملية. راجع السبب وحاول مرة أخرى.',
+    'donation.resultFailedTitle',
+    'donation.resultFailedMessage',
   );
 
-  const _DonationResultState(this.title, this.message);
+  const _DonationResultState(this.titleKey, this.messageKey);
 
-  final String title;
-  final String message;
+  final String titleKey;
+  final String messageKey;
 
   static _DonationResultState fromStatus(String status) {
     final normalized = status.trim().toLowerCase();
@@ -318,7 +331,8 @@ class _ReferenceRow extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('الرقم المرجعي', style: context.texts.bodySmall),
+              Text(context.tr('donation.reference'),
+                  style: context.texts.bodySmall),
               const SizedBox(height: KanafSpacing.xs),
               Text(
                 reference,
@@ -331,12 +345,12 @@ class _ReferenceRow extends StatelessWidget {
           ),
         ),
         IconButton.filledTonal(
-          tooltip: 'نسخ الرقم المرجعي',
+          tooltip: context.tr('donation.copyReference'),
           onPressed: () async {
             await Clipboard.setData(ClipboardData(text: reference));
             if (!context.mounted) return;
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('تم نسخ الرقم المرجعي')),
+              SnackBar(content: Text(context.tr('donation.referenceCopied'))),
             );
           },
           icon: const Icon(Icons.copy_rounded, size: 20),

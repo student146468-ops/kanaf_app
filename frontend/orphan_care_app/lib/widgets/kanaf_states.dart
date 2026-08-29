@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../services/api_failure.dart';
 import '../theme/kanaf_tokens.dart';
+import '../l10n/kanaf_localizations.dart';
 
 /// حالات المحتوى الأربع: تحميل، خطأ، فراغ، ومحتوى.
 ///
@@ -199,7 +200,7 @@ class KanafAsyncView extends StatelessWidget {
     this.onRetry,
     this.loadingPlaceholder,
     this.emptyIcon = Icons.inbox_outlined,
-    this.emptyTitle = 'لا توجد بيانات بعد',
+    this.emptyTitle,
     this.emptyMessage,
   });
 
@@ -215,7 +216,7 @@ class KanafAsyncView extends StatelessWidget {
   final WidgetBuilder builder;
   final Widget? loadingPlaceholder;
   final IconData emptyIcon;
-  final String emptyTitle;
+  final String? emptyTitle;
   final String? emptyMessage;
 
   @override
@@ -237,9 +238,9 @@ class KanafAsyncView extends StatelessWidget {
     if (isEmpty) {
       return KanafMessageState(
         icon: emptyIcon,
-        title: emptyTitle,
+        title: emptyTitle ?? context.tr('state.emptyTitle'),
         message: emptyMessage,
-        actionLabel: onRetry == null ? null : 'تحديث',
+        actionLabel: onRetry == null ? null : context.tr('common.update'),
         onAction: onRetry,
       );
     }
@@ -271,38 +272,38 @@ class KanafFailureState extends StatelessWidget {
     final (IconData icon, String title, KanafMessageTone tone) = switch (kind) {
       ApiFailureKind.offline => (
           Icons.wifi_off_rounded,
-          'لا يوجد اتصال بالإنترنت',
+          context.tr('state.offlineTitle'),
           KanafMessageTone.neutral,
         ),
       ApiFailureKind.unreachable => (
           Icons.cloud_off_rounded,
-          'الخدمة غير متاحة حالياً',
+          context.tr('state.unreachableTitle'),
           KanafMessageTone.error,
         ),
       ApiFailureKind.timeout => (
           Icons.hourglass_disabled_rounded,
-          'استغرق الاتصال وقتاً طويلاً',
+          context.tr('state.timeoutTitle'),
           KanafMessageTone.neutral,
         ),
       ApiFailureKind.server => (
           Icons.dns_outlined,
-          'خطأ في الخادم',
+          context.tr('state.serverTitle'),
           KanafMessageTone.error,
         ),
       ApiFailureKind.unauthorized => (
           Icons.lock_outline_rounded,
-          'انتهت صلاحية الجلسة',
+          context.tr('state.unauthorizedTitle'),
           KanafMessageTone.error,
         ),
       ApiFailureKind.request => (
           Icons.report_gmailerrorred_rounded,
-          'تعذر إتمام الطلب',
+          context.tr('state.requestTitle'),
           KanafMessageTone.error,
         ),
       // بلا تصنيف: رسالة محايدة لا تدّعي معرفة السبب.
       _ => (
           Icons.error_outline_rounded,
-          'تعذر تحميل البيانات',
+          context.tr('state.loadFailedTitle'),
           KanafMessageTone.error,
         ),
     };
@@ -314,7 +315,7 @@ class KanafFailureState extends StatelessWidget {
       title: title,
       message: message,
       tone: tone,
-      actionLabel: canRetry ? 'إعادة المحاولة' : null,
+      actionLabel: canRetry ? context.tr('common.retry') : null,
       onAction: canRetry ? onRetry : null,
     );
   }
@@ -325,7 +326,8 @@ class KanafFailureState extends StatelessWidget {
 /// هذا هو المكان **الوحيد** الذي يترجم `pending/accepted/...`،
 /// فلا تتناقض التسميات بين الشاشات كما كان يحدث.
 class KanafStatusChip extends StatelessWidget {
-  const KanafStatusChip({super.key, required this.status, this.compact = false});
+  const KanafStatusChip(
+      {super.key, required this.status, this.compact = false});
 
   final String status;
   final bool compact;
@@ -338,37 +340,37 @@ class KanafStatusChip extends StatelessWidget {
     final (String label, Color foreground, Color background, IconData icon) =
         switch (status.trim().toLowerCase()) {
       'pending' => (
-          'قيد المراجعة',
+          context.tr('status.pending'),
           semantic.onWarningContainer,
           semantic.warningContainer,
           Icons.hourglass_top_rounded,
         ),
       'accepted' || 'approved' => (
-          'مقبول',
+          context.tr('status.accepted'),
           semantic.onInfoContainer,
           semantic.infoContainer,
           Icons.thumb_up_outlined,
         ),
       'completed' => (
-          'مكتمل',
+          context.tr('status.completed'),
           semantic.onSuccessContainer,
           semantic.successContainer,
           Icons.check_circle_outline_rounded,
         ),
       'rejected' => (
-          'مرفوض',
+          context.tr('status.rejected'),
           scheme.onErrorContainer,
           scheme.errorContainer,
           Icons.cancel_outlined,
         ),
       'open' => (
-          'مفتوح',
+          context.tr('status.open'),
           semantic.onSuccessContainer,
           semantic.successContainer,
           Icons.lock_open_rounded,
         ),
       'closed' || 'archived' => (
-          'مغلق',
+          context.tr('status.closed'),
           scheme.onSurfaceVariant,
           scheme.surfaceContainerHighest,
           Icons.archive_outlined,
@@ -397,8 +399,9 @@ class KanafStatusChip extends StatelessWidget {
           SizedBox(width: compact ? KanafSpacing.xs : KanafSpacing.sm - 2),
           Text(
             label,
-            style: (compact ? context.texts.labelSmall : context.texts.labelMedium)
-                ?.copyWith(color: foreground),
+            style:
+                (compact ? context.texts.labelSmall : context.texts.labelMedium)
+                    ?.copyWith(color: foreground),
           ),
         ],
       ),

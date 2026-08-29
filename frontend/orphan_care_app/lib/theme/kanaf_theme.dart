@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'kanaf_tokens.dart';
@@ -48,6 +48,16 @@ abstract final class KanafTheme {
             onPrimary: const Color(0xFF4A1900),
             primaryContainer: const Color(0xFF7A2E02),
             onPrimaryContainer: const Color(0xFFFFDBC7),
+            surface: const Color(0xFF000000),
+            onSurface: const Color(0xFFF7F2EE),
+            surfaceContainerLowest: const Color(0xFF000000),
+            surfaceContainerLow: const Color(0xFF0A0A0A),
+            surfaceContainer: const Color(0xFF121212),
+            surfaceContainerHigh: const Color(0xFF1A1A1A),
+            surfaceContainerHighest: const Color(0xFF242424),
+            onSurfaceVariant: const Color(0xFFD0C6BF),
+            outline: const Color(0xFF6F625B),
+            outlineVariant: const Color(0xFF3D3935),
           );
 
     final base = ThemeData(
@@ -55,7 +65,8 @@ abstract final class KanafTheme {
       brightness: brightness,
       useMaterial3: true,
       fontFamily: fontBody,
-      scaffoldBackgroundColor: isLight ? const Color(0xFFFBF9F7) : scheme.surface,
+      scaffoldBackgroundColor:
+          isLight ? const Color(0xFFFBF9F7) : scheme.surface,
       splashFactory: InkSparkle.splashFactory,
     );
 
@@ -164,7 +175,8 @@ abstract final class KanafTheme {
           final selected = states.contains(WidgetState.selected);
           return IconThemeData(
             size: 24,
-            color: selected ? scheme.onPrimaryContainer : scheme.onSurfaceVariant,
+            color:
+                selected ? scheme.onPrimaryContainer : scheme.onSurfaceVariant,
           );
         }),
       ),

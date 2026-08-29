@@ -6,6 +6,7 @@ import '../services/api_service.dart';
 import '../theme/kanaf_motion.dart';
 import '../theme/kanaf_tokens.dart';
 import '../widgets/kanaf_layout.dart';
+import '../l10n/kanaf_localizations.dart';
 
 /// شاشة تأكيد الرمز وتعيين كلمة المرور الجديدة.
 ///
@@ -68,7 +69,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('كلمة مرور جديدة'),
+        title: Text(context.tr('reset.appBar')),
         leading: const BackButton(),
       ),
       body: KanafBackdrop(
@@ -107,15 +108,15 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                               : const Icon(Icons.check_circle_outline_rounded),
                           label: Text(
                             _isLoading
-                                ? 'جاري التحديث...'
-                                : 'تحديث كلمة المرور',
+                                ? context.tr('common.loading')
+                                : context.tr('reset.submit'),
                           ),
                         ),
                       ),
                       const SizedBox(height: KanafSpacing.md),
                       TextButton(
                         onPressed: _isLoading ? null : _goToLogin,
-                        child: const Text('العودة لتسجيل الدخول'),
+                        child: Text(context.tr('forgot.backToLogin')),
                       ),
                     ],
                   ),
@@ -129,10 +130,10 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   }
 
   Widget _buildHeader() {
-    return const KanafHeroBand(
+    return KanafHeroBand(
       showLogo: false,
-      title: 'أدخل الرمز وكلمتك الجديدة',
-      subtitle: 'الرمز صالح لمدة ١٥ دقيقة ولمرة واحدة فقط.',
+      title: context.tr('reset.title'),
+      subtitle: context.tr('reset.subtitle'),
     );
   }
 
@@ -145,15 +146,15 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           textInputAction: TextInputAction.next,
           autocorrect: false,
           enabled: !_isLoading,
-          decoration: const InputDecoration(
-            labelText: 'البريد الإلكتروني',
-            prefixIcon: Icon(Icons.mail_outline_rounded),
+          decoration: InputDecoration(
+            labelText: context.tr('common.email'),
+            prefixIcon: const Icon(Icons.mail_outline_rounded),
           ),
           validator: (value) {
             final email = value?.trim() ?? '';
-            if (email.isEmpty) return 'أدخل البريد الإلكتروني';
+            if (email.isEmpty) return context.tr('validation.emailRequired');
             if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
-              return 'صيغة البريد الإلكتروني غير صحيحة';
+              return context.tr('validation.emailInvalid');
             }
             return null;
           },
@@ -176,15 +177,15 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
             letterSpacing: 10,
             fontFeatures: const [FontFeature.tabularFigures()],
           ),
-          decoration: const InputDecoration(
-            labelText: 'رمز التحقق',
-            hintText: '000000',
+          decoration: InputDecoration(
+            labelText: context.tr('common.verificationCode'),
+            hintText: context.tr('auth.codeHint'),
             counterText: '',
           ),
           validator: (value) {
             final code = value?.trim() ?? '';
-            if (code.isEmpty) return 'أدخل رمز التحقق';
-            if (code.length != 6) return 'الرمز يتكون من ٦ أرقام';
+            if (code.isEmpty) return context.tr('validation.codeRequired');
+            if (code.length != 6) return context.tr('validation.codeLength');
             return null;
           },
           onFieldSubmitted: (_) => _passwordFocus.requestFocus(),
@@ -198,8 +199,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           autofillHints: const [AutofillHints.newPassword],
           enabled: !_isLoading,
           decoration: InputDecoration(
-            labelText: 'كلمة المرور الجديدة',
-            helperText: '٨ خانات على الأقل، مع حروف وأرقام',
+            labelText: context.tr('reset.newPassword'),
+            helperText: context.tr('auth.passwordHelper'),
             prefixIcon: const Icon(Icons.lock_outline_rounded),
             suffixIcon: IconButton(
               onPressed: () =>
@@ -214,11 +215,13 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           // نفس قواعد الخادم في `_is_valid_registration_password`.
           validator: (value) {
             final password = value?.trim() ?? '';
-            if (password.isEmpty) return 'أدخل كلمة المرور';
-            if (password.length < 8) return 'كلمة المرور أقل من ٨ خانات';
+            if (password.isEmpty)
+              return context.tr('validation.passwordRequired');
+            if (password.length < 8)
+              return context.tr('validation.passwordTooShort');
             if (!RegExp(r'[A-Za-z]').hasMatch(password) ||
                 !RegExp(r'[0-9]').hasMatch(password)) {
-              return 'يجب أن تحتوي على حروف وأرقام';
+              return context.tr('validation.passwordWeak');
             }
             return null;
           },
@@ -237,7 +240,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           textInputAction: TextInputAction.done,
           enabled: !_isLoading,
           decoration: InputDecoration(
-            labelText: 'تأكيد كلمة المرور',
+            labelText: context.tr('common.confirmPassword'),
             prefixIcon: const Icon(Icons.lock_reset_outlined),
             suffixIcon: IconButton(
               onPressed: () =>
@@ -251,9 +254,10 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           ),
           validator: (value) {
             final confirmation = value?.trim() ?? '';
-            if (confirmation.isEmpty) return 'أعد إدخال كلمة المرور';
+            if (confirmation.isEmpty)
+              return context.tr('validation.confirmPasswordRequired');
             if (confirmation != _passwordController.text.trim()) {
-              return 'كلمة المرور وتأكيدها غير متطابقين';
+              return context.tr('validation.passwordMismatch');
             }
             return null;
           },
@@ -279,7 +283,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       setState(() => _isLoading = false);
 
       // الوصول إلى هنا يعني أن الخادم أكد التحديث فعلاً.
-      _showMessage('تم تحديث كلمة المرور. يمكنك تسجيل الدخول الآن.');
+      _showMessage(context.tr('reset.success'));
       _goToLogin();
     } catch (error) {
       debugPrint('Password reset confirm failed: $error');
@@ -288,7 +292,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       _showMessage(
         error is ApiServiceException
             ? error.message
-            : 'تعذر تحديث كلمة المرور حالياً. حاول مرة أخرى.',
+            : context.tr('reset.failed'),
       );
     }
   }
@@ -306,7 +310,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         content: Text(message),
         duration: const Duration(seconds: 6),
         action: SnackBarAction(
-          label: 'حسناً',
+          label: context.tr('common.ok'),
           onPressed: () => ScaffoldMessenger.of(context).hideCurrentSnackBar(),
         ),
       ),

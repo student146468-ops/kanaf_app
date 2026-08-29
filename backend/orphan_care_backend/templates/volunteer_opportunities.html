@@ -1,0 +1,220 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="page-shell" dir="rtl">
+    <div class="panel">
+        <h3 class="panel-title">
+            إدارة فرص التطوع
+            <span class="panel-kicker"><i class="fas fa-handshake-angle"></i></span>
+        </h3>
+
+        {% if form_errors %}
+        <div class="opportunity-alert error" role="alert">
+            {% for field, errors in form_errors.items %}
+                <div><strong>{{ field }}:</strong> {{ errors|join:"، " }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if care_homes_count == 0 %}
+        <div class="opportunity-alert error" role="alert">
+            لا توجد أي دار رعاية مسجلة في قاعدة البيانات. أضف دار رعاية حقيقية أولًا حتى تستطيع نشر فرصة تطوع.
+        </div>
+        {% endif %}
+
+        <form method="POST" class="form-grid" autocomplete="off">
+            {% csrf_token %}
+
+            <div>
+                <label for="opportunityTitle">عنوان الفرصة</label>
+                <input id="opportunityTitle" name="title" type="text" required placeholder="مثال: مساعدة في توزيع السلال الغذائية">
+            </div>
+
+            <div>
+                <label for="opportunityCareHome">دار الرعاية</label>
+                <select id="opportunityCareHome" name="care_home" required>
+                    <option value="">اختر دار الرعاية</option>
+                    {% for care_home in care_homes %}
+                    <option value="{{ care_home.id }}">{{ care_home.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label for="opportunityCategory">التصنيف</label>
+                <select id="opportunityCategory" name="category" required>
+                    {% for value, label in opportunity_category_choices %}
+                    <option value="{{ value }}">
+                        {% if value == "education" %}تعليم
+                        {% elif value == "logistics" %}لوجستيات
+                        {% elif value == "health" %}صحة
+                        {% elif value == "psychological" %}دعم نفسي
+                        {% elif value == "events" %}فعاليات
+                        {% else %}عام{% endif %}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label for="opportunityStatus">الحالة</label>
+                <select id="opportunityStatus" name="status" required>
+                    {% for value, label in opportunity_status_choices %}
+                    <option value="{{ value }}">
+                        {% if value == "open" %}مفتوحة
+                        {% elif value == "closed" %}مغلقة
+                        {% elif value == "completed" %}مكتملة
+                        {% else %}{{ label }}{% endif %}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label for="opportunityRequiredVolunteers">عدد المتطوعين المطلوب</label>
+                <input id="opportunityRequiredVolunteers" name="required_volunteers" type="number" min="1" step="1" value="1" required>
+            </div>
+
+            <div>
+                <label for="opportunityLocation">المكان</label>
+                <input id="opportunityLocation" name="location" type="text" placeholder="طرابلس">
+            </div>
+
+            <div>
+                <label for="opportunityStartDate">تاريخ البداية</label>
+                <input id="opportunityStartDate" name="start_date" type="datetime-local">
+            </div>
+
+            <div>
+                <label for="opportunityEndDate">تاريخ النهاية</label>
+                <input id="opportunityEndDate" name="end_date" type="datetime-local">
+            </div>
+
+            <div>
+                <label for="opportunitySkills">المهارات المطلوبة</label>
+                <input id="opportunitySkills" name="required_skills" type="text" placeholder="تنظيم، تعليم، نقل">
+            </div>
+
+            <div>
+                <label for="opportunityImageUrl">رابط الصورة</label>
+                <input id="opportunityImageUrl" name="image_url" type="url" placeholder="https://example.com/image.jpg">
+            </div>
+
+            <div class="opportunity-form-wide">
+                <label for="opportunityDescription">الوصف</label>
+                <textarea id="opportunityDescription" name="description" rows="3" required placeholder="اكتب تفاصيل فرصة التطوع"></textarea>
+            </div>
+
+            <div class="opportunity-actions">
+                <button type="submit" {% if care_homes_count == 0 %}disabled{% endif %}>
+                    <i class="fas fa-plus"></i>
+                    إضافة فرصة تطوع
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="panel content-card">
+        <h3 class="panel-title">
+            قائمة فرص التطوع
+            <span class="panel-kicker">{{ opportunities|length }}</span>
+        </h3>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>العنوان</th>
+                        <th>دار الرعاية</th>
+                        <th>التصنيف</th>
+                        <th>المكان</th>
+                        <th>المتطوعون</th>
+                        <th>الطلبات</th>
+                        <th>الحالة</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for opportunity in opportunities %}
+                    <tr>
+                        <td class="name-cell">{{ opportunity.title }}</td>
+                        <td>{{ opportunity.care_home.name }}</td>
+                        <td>
+                            {% if opportunity.category == "education" %}تعليم
+                            {% elif opportunity.category == "logistics" %}لوجستيات
+                            {% elif opportunity.category == "health" %}صحة
+                            {% elif opportunity.category == "psychological" %}دعم نفسي
+                            {% elif opportunity.category == "events" %}فعاليات
+                            {% else %}عام{% endif %}
+                        </td>
+                        <td>{{ opportunity.location|default:"-" }}</td>
+                        <td>{{ opportunity.current_volunteers }} / {{ opportunity.required_volunteers }}</td>
+                        <td>{{ opportunity.applications.count }}</td>
+                        <td>
+                            <span class="badge badge-green">
+                                {% if opportunity.status == "open" %}مفتوحة
+                                {% elif opportunity.status == "closed" %}مغلقة
+                                {% elif opportunity.status == "completed" %}مكتملة
+                                {% else %}{{ opportunity.status }}{% endif %}
+                            </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="empty-state">لا توجد فرص تطوع مسجلة حاليًا.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<style>
+    .opportunity-alert {
+        margin-bottom: 14px;
+        border-radius: 14px;
+        padding: 12px 14px;
+        font-weight: 900;
+        background: rgba(255, 229, 209, 0.78);
+        color: var(--orange-800);
+        border: 1px solid rgba(255, 122, 0, 0.24);
+    }
+
+    .opportunity-alert.error {
+        background: rgba(254, 226, 226, 0.84);
+        color: #991b1b;
+        border-color: rgba(220, 38, 38, 0.20);
+    }
+
+    .opportunity-form-wide {
+        grid-column: 1 / -1;
+    }
+
+    textarea {
+        width: 100%;
+        padding: 12px 14px;
+        border: 1px solid rgba(255,255,255,0.64);
+        border-radius: 14px;
+        outline: none;
+        color: var(--text);
+        background: rgba(255, 248, 242, 0.56);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.68), 0 8px 18px rgba(126, 50, 0, 0.08);
+        font-family: inherit;
+        font-weight: 800;
+        resize: vertical;
+    }
+
+    textarea:focus {
+        border-color: rgba(255, 122, 0, 0.72);
+        background: rgba(255, 255, 255, 0.72);
+        box-shadow: 0 0 0 4px rgba(255, 122, 0, 0.16), inset 0 1px 0 rgba(255,255,255,0.86);
+    }
+
+    .opportunity-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+</style>
+{% endblock %}

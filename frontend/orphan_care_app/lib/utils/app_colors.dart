@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 /// [AppColors] - الهوية البصرية الجديدة المحسّنة لتطبيق "كَنَفْ"
 /// ألوان فاتحة ومريحة للعين مع تصميم احترافي وحديث

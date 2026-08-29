@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 import '../theme/kanaf_motion.dart';
 import '../views/about/about_app_screen.dart';

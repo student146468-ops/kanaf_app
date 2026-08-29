@@ -1,4 +1,4 @@
-class DonationModel {
+﻿class DonationModel {
   final int id;
   final String donorName;
   final String donationType;

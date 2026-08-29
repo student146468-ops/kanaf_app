@@ -5,6 +5,7 @@ import '../services/api_service.dart';
 import '../theme/kanaf_motion.dart';
 import '../theme/kanaf_tokens.dart';
 import '../widgets/kanaf_layout.dart';
+import '../l10n/kanaf_localizations.dart';
 
 /// شاشة طلب رمز استعادة كلمة المرور.
 ///
@@ -37,7 +38,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('استعادة كلمة المرور'),
+        title: Text(context.tr('forgot.appBar')),
         leading: const BackButton(),
       ),
       body: KanafBackdrop(
@@ -69,17 +70,18 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           autofillHints: const [AutofillHints.email],
                           autocorrect: false,
                           enabled: !_isLoading,
-                          decoration: const InputDecoration(
-                            labelText: 'البريد الإلكتروني',
-                            hintText: 'name@example.com',
-                            prefixIcon: Icon(Icons.mail_outline_rounded),
+                          decoration: InputDecoration(
+                            labelText: context.tr('common.email'),
+                            hintText: context.tr('auth.emailHint'),
+                            prefixIcon: const Icon(Icons.mail_outline_rounded),
                           ),
                           validator: (value) {
                             final email = value?.trim() ?? '';
-                            if (email.isEmpty) return 'أدخل البريد الإلكتروني';
+                            if (email.isEmpty)
+                              return context.tr('validation.emailRequired');
                             if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
                                 .hasMatch(email)) {
-                              return 'صيغة البريد الإلكتروني غير صحيحة';
+                              return context.tr('validation.emailInvalid');
                             }
                             return null;
                           },
@@ -100,16 +102,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                 )
                               : const Icon(Icons.send_outlined),
                           label: Text(
-                            _isLoading ? 'جاري الإرسال...' : 'إرسال رمز التحقق',
+                            _isLoading
+                                ? context.tr('phone.resending')
+                                : context.tr('forgot.sendCode'),
                           ),
                         ),
                       ),
                       const SizedBox(height: KanafSpacing.md),
                       TextButton(
-                        onPressed: _isLoading
-                            ? null
-                            : () => Navigator.pop(context),
-                        child: const Text('العودة لتسجيل الدخول'),
+                        onPressed:
+                            _isLoading ? null : () => Navigator.pop(context),
+                        child: Text(context.tr('forgot.backToLogin')),
                       ),
                     ],
                   ),
@@ -123,11 +126,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
 
   Widget _buildHeader() {
-    return const KanafHeroBand(
+    return KanafHeroBand(
       showLogo: false,
-      title: 'نسيت كلمة المرور؟',
-      subtitle: 'أدخل بريدك وسنرسل لك رمز تحقق من ٦ أرقام '
-          'صالحاً لمدة ١٥ دقيقة.',
+      title: context.tr('forgot.title'),
+      subtitle: context.tr('forgot.subtitle'),
     );
   }
 
@@ -145,7 +147,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       // الخادم يعيد 200 حتى لبريد غير مسجّل (منعاً لجرد الحسابات)،
       // فالرسالة صيغت لتكون صادقة في الحالتين.
       _showMessage(
-        'إن كان البريد مسجلاً لدينا فسيصلك رمز التحقق خلال دقائق.',
+        context.tr('forgot.sentIfExists'),
       );
       await Navigator.pushNamed(
         context,
@@ -160,7 +162,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       _showMessage(
         error is ApiServiceException
             ? error.message
-            : 'تعذر إرسال رمز الاستعادة حالياً. حاول مرة أخرى.',
+            : context.tr('forgot.sendFailed'),
       );
     }
   }
@@ -171,7 +173,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         content: Text(message),
         duration: const Duration(seconds: 6),
         action: SnackBarAction(
-          label: 'حسناً',
+          label: context.tr('common.ok'),
           onPressed: () => ScaffoldMessenger.of(context).hideCurrentSnackBar(),
         ),
       ),

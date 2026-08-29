@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../theme/kanaf_motion.dart';
 import '../../theme/kanaf_tokens.dart';
 import '../../widgets/kanaf_layout.dart';
+import '../../l10n/kanaf_localizations.dart';
 
 /// عن تطبيق كَنَفْ.
 ///
@@ -42,7 +43,7 @@ class AboutAppScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('عن كَنَفْ'),
+        title: Text(context.tr('settings.aboutTitle')),
         leading: const BackButton(),
       ),
       body: KanafBackdrop(
@@ -56,11 +57,11 @@ class AboutAppScreen extends StatelessWidget {
               KanafSpacing.xxl,
             ),
             children: [
-              const KanafStaggeredEntrance(index: 0, child: _IntroCard()),
+              KanafStaggeredEntrance(index: 0, child: _IntroCard()),
               const SizedBox(height: KanafSpacing.xxl),
-              const KanafStaggeredEntrance(
+              KanafStaggeredEntrance(
                 index: 1,
-                child: KanafSectionHeader(title: 'فكرة المشروع'),
+                child: KanafSectionHeader(title: context.tr('about.ideaTitle')),
               ),
               const SizedBox(height: KanafSpacing.md),
               KanafStaggeredEntrance(
@@ -75,9 +76,10 @@ class AboutAppScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: KanafSpacing.xxl),
-              const KanafStaggeredEntrance(
+              KanafStaggeredEntrance(
                 index: 3,
-                child: KanafSectionHeader(title: 'ماذا يقدّم كَنَفْ؟'),
+                child: KanafSectionHeader(
+                    title: context.tr('about.featuresTitle')),
               ),
               const SizedBox(height: KanafSpacing.md),
               KanafStaggeredEntrance(
@@ -95,12 +97,13 @@ class AboutAppScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: KanafSpacing.xxl),
-              const KanafStaggeredEntrance(
+              KanafStaggeredEntrance(
                 index: 5,
-                child: KanafSectionHeader(title: 'المشروع'),
+                child:
+                    KanafSectionHeader(title: context.tr('about.projectTitle')),
               ),
               const SizedBox(height: KanafSpacing.md),
-              const KanafStaggeredEntrance(
+              KanafStaggeredEntrance(
                 index: 6,
                 child: KanafCard(
                   child: Column(
@@ -136,7 +139,7 @@ class _IntroCard extends StatelessWidget {
         children: [
           const KanafLogo(size: 84),
           const SizedBox(height: KanafSpacing.lg),
-          Text('كَنَفْ', style: context.texts.headlineMedium),
+          Text(context.tr('app.name'), style: context.texts.headlineMedium),
           const SizedBox(height: KanafSpacing.xs),
           Text(
             'في كَنَفِ من يحتاجك',

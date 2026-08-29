@@ -32,11 +32,11 @@ class OrphanModel {
       imageUrl: json['image_url'],
       bio: json['bio'],
       needs: json['needs'],
-      createdAt: json['created_at'] != null 
-          ? DateTime.parse(json['created_at']) 
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'])
           : null,
-      updatedAt: json['updated_at'] != null 
-          ? DateTime.parse(json['updated_at']) 
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'])
           : null,
     );
   }
@@ -82,5 +82,6 @@ class OrphanModel {
   }
 
   @override
-  String toString() => 'OrphanModel(id: $id, name: $name, age: $age, status: $status)';
+  String toString() =>
+      'OrphanModel(id: $id, name: $name, age: $age, status: $status)';
 }
