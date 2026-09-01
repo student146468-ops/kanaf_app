@@ -13,6 +13,14 @@ from .models import (
     VolunteerApplication,
     VolunteerOpportunity,
 )
+from .notification_events import (
+    notify_donation_created,
+    notify_donation_status_changed,
+    notify_need_published,
+    notify_volunteer_application_status_changed,
+    notify_volunteer_application_submitted,
+    notify_volunteer_opportunity_published,
+)
 
 
 @admin.register(UserProfile)
@@ -34,6 +42,17 @@ class DonationAdmin(admin.ModelAdmin):
     list_display = ['donor_name', 'item_type', 'status']
     list_filter = ['status']
     search_fields = ['donor_name', 'item_type']
+
+    def save_model(self, request, obj, form, change):
+        previous_status = None
+        if change:
+            previous_status = Donation.objects.filter(pk=obj.pk).values_list('status', flat=True).first()
+        super().save_model(request, obj, form, change)
+        if change:
+            if previous_status != obj.status:
+                notify_donation_status_changed(obj)
+        else:
+            notify_donation_created(obj, actor=request.user)
 
 
 @admin.register(Volunteer)
@@ -94,6 +113,11 @@ class NeedAdmin(admin.ModelAdmin):
         }),
     )
 
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        if not change:
+            notify_need_published(obj, actor=request.user)
+
 
 @admin.register(VolunteerOpportunity)
 class VolunteerOpportunityAdmin(admin.ModelAdmin):
@@ -119,12 +143,28 @@ class VolunteerOpportunityAdmin(admin.ModelAdmin):
         }),
     )
 
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        if not change:
+            notify_volunteer_opportunity_published(obj, actor=request.user)
+
 
 @admin.register(VolunteerApplication)
 class VolunteerApplicationAdmin(admin.ModelAdmin):
     list_display = ['opportunity', 'user', 'status', 'created_at']
     list_filter = ['status']
     search_fields = ['opportunity__title', 'user__username', 'message']
+
+    def save_model(self, request, obj, form, change):
+        previous_status = None
+        if change:
+            previous_status = VolunteerApplication.objects.filter(pk=obj.pk).values_list('status', flat=True).first()
+        super().save_model(request, obj, form, change)
+        if change:
+            if previous_status != obj.status:
+                notify_volunteer_application_status_changed(obj)
+        else:
+            notify_volunteer_application_submitted(obj, actor=request.user)
 
 
 @admin.register(CareHome)

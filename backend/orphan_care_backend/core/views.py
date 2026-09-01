@@ -21,6 +21,10 @@ from management.models import (
     VolunteerApplication,
     VolunteerOpportunity,
 )
+from management.notification_events import (
+    notify_management_status_changed,
+    notify_volunteer_opportunity_published,
+)
 from management.serializers import (
     DonationSerializer,
     InventorySerializer,
@@ -183,7 +187,8 @@ def volunteer_opportunities_view(request):
         }
         serializer = VolunteerOpportunitySerializer(data=data, context={'request': request})
         if serializer.is_valid():
-            serializer.save()
+            opportunity = serializer.save()
+            notify_volunteer_opportunity_published(opportunity, actor=request.user)
             messages.success(request, 'تمت إضافة فرصة التطوع بنجاح.')
             return redirect('volunteer_opportunities_list')
         context['form_errors'] = serializer.errors
@@ -351,6 +356,7 @@ def _update_management_status(request, model_class, pk, allowed_choices, redirec
 
     record.status = new_status
     record.save(update_fields=['status', 'updated_at'])
+    notify_management_status_changed(record)
     messages.success(request, f'تم تحديث حالة {label} إلى {_status_label(new_status)}.')
     return redirect(redirect_name)
 

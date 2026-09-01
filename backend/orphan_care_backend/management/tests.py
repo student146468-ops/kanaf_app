@@ -743,6 +743,47 @@ class AuthApiTests(APITestCase):
         notification.refresh_from_db()
         self.assertTrue(notification.is_read)
 
+    def test_notification_patch_mark_as_read_and_unread_count(self):
+        user = get_user_model().objects.create_user(username='patchreaduser', password='StrongPass123!')
+        read_notification = Notification.objects.create(
+            user=user,
+            title='Already read',
+            message='Message',
+            is_read=True,
+        )
+        unread_notification = Notification.objects.create(user=user, title='Unread', message='Message')
+        self.client.force_authenticate(user=user)
+
+        count_response = self.client.get('/api/notifications/unread-count/')
+        self.assertEqual(count_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(count_response.json()['unread_count'], 1)
+
+        response = self.client.patch(f'/api/notifications/{unread_notification.id}/mark_as_read/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        unread_notification.refresh_from_db()
+        read_notification.refresh_from_db()
+        self.assertTrue(unread_notification.is_read)
+        self.assertTrue(read_notification.is_read)
+
+        count_response = self.client.get('/api/notifications/unread-count/')
+        self.assertEqual(count_response.json()['unread_count'], 0)
+
+    def test_staff_notifications_are_scoped_to_current_user(self):
+        staff = get_user_model().objects.create_user(
+            username='notify-staff',
+            password='StrongPass123!',
+            is_staff=True,
+        )
+        other = get_user_model().objects.create_user(username='notify-staff-other', password='StrongPass123!')
+        Notification.objects.create(user=staff, title='Staff own', message='Visible')
+        Notification.objects.create(user=other, title='Other user', message='Hidden')
+        self.client.force_authenticate(user=staff)
+
+        response = self.client.get('/api/notifications/')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual([item['title'] for item in response.json()], ['Staff own'])
+
     def test_profiles_are_scoped_to_current_user(self):
         user = get_user_model().objects.create_user(username='profileowner', password='StrongPass123!')
         other = get_user_model().objects.create_user(username='profileother', password='StrongPass123!')
@@ -1151,6 +1192,12 @@ class ManagementStatusUpdateTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.donation.refresh_from_db()
         self.assertEqual(self.donation.status, Donation.STATUS_ACCEPTED)
+        notification = Notification.objects.get(
+            user=self.donor,
+            notification_type=Notification.TYPE_STATUS_UPDATE,
+            title='Donation status updated',
+        )
+        self.assertFalse(notification.is_read)
         self.assertContains(response, 'تم تحديث حالة التبرع إلى مقبول.')
 
     def test_get_cannot_update_donation_status(self):
@@ -1203,6 +1250,12 @@ class ManagementStatusUpdateTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.application.refresh_from_db()
         self.assertEqual(self.application.status, VolunteerApplication.STATUS_ACCEPTED)
+        notification = Notification.objects.get(
+            user=self.volunteer,
+            notification_type=Notification.TYPE_VOLUNTEER,
+            title='Volunteer application status updated',
+        )
+        self.assertFalse(notification.is_read)
         self.assertContains(response, 'تم تحديث حالة طلب التطوع إلى مقبول.')
 
     def test_get_cannot_update_volunteer_application_status(self):
@@ -2206,6 +2259,47 @@ class CareHomeSurfaceApiTests(APITestCase):
         self.assertEqual(with_home.status_code, status.HTTP_201_CREATED)
         self.assertEqual(with_home.json()['care_home'], self.care_home.id)
 
+    def test_published_volunteer_opportunity_creates_notification_for_volunteers(self):
+        staff = User.objects.create_user(
+            username='volunteer-notification-admin',
+            password='StaffPass123!',
+            is_staff=True,
+        )
+        volunteer = User.objects.create_user(
+            username='notified-volunteer@example.com',
+            email='notified-volunteer@example.com',
+            password='VolunteerPass123',
+        )
+        UserProfile.objects.create(user=volunteer, role=UserProfile.ROLE_VOLUNTEER)
+        self.client.force_authenticate(user=staff)
+
+        response = self.client.post(
+            '/api/volunteer-opportunities/',
+            {
+                'title': 'Packing food baskets',
+                'description': 'Help prepare weekly baskets',
+                'category': VolunteerOpportunity.CATEGORY_LOGISTICS,
+                'required_volunteers': 4,
+                'care_home': self.care_home.id,
+                'status': VolunteerOpportunity.STATUS_OPEN,
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        notification = Notification.objects.get(
+            user=volunteer,
+            notification_type=Notification.TYPE_VOLUNTEER,
+        )
+        self.assertEqual(notification.title, 'New volunteer opportunity')
+
+        self.client.force_authenticate(user=volunteer)
+        api_response = self.client.get('/api/notifications/')
+        self.assertEqual(api_response.status_code, status.HTTP_200_OK)
+        self.assertTrue(
+            any(item['id'] == notification.id for item in api_response.json())
+        )
+
     def test_volunteer_opportunities_api_reads_saved_database_rows(self):
         VolunteerOpportunity.objects.create(
             title='مساعدة في السلال الغذائية',
@@ -2552,3 +2646,38 @@ class CareHomeSurfaceApiTests(APITestCase):
         self.assertEqual(detail_response.status_code, status.HTTP_200_OK)
         self.assertEqual(detail_response.json()['title'], 'School supplies')
         self.assertEqual(detail_response.json()['care_home'], self.care_home.id)
+
+    def test_published_need_creates_notification_for_donors(self):
+        donor = User.objects.create_user(
+            username='need-notified-donor@example.com',
+            email='need-notified-donor@example.com',
+            password='DonorPass123',
+        )
+        UserProfile.objects.create(user=donor, role=UserProfile.ROLE_DONOR)
+        self.client.force_authenticate(user=self.manager)
+
+        response = self.client.post(
+            '/api/needs/',
+            {
+                'title': 'Food basket notification',
+                'description': 'Notify donors about a new need',
+                'category': 'food',
+                'required_quantity': '30',
+                'priority': Need.PRIORITY_URGENT,
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        notification = Notification.objects.get(
+            user=donor,
+            notification_type=Notification.TYPE_STATUS_UPDATE,
+        )
+        self.assertEqual(notification.title, 'New urgent need')
+
+        self.client.force_authenticate(user=donor)
+        api_response = self.client.get('/api/notifications/')
+        self.assertEqual(api_response.status_code, status.HTTP_200_OK)
+        self.assertTrue(
+            any(item['id'] == notification.id for item in api_response.json())
+        )

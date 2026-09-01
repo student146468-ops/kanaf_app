@@ -551,15 +551,62 @@ class SafeDestroyMixin:
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-def _create_notification(user, notification_type, title, message):
-    if not user:
-        return
-    Notification.objects.create(
+def _create_notification(
+    user,
+    notification_type,
+    title,
+    message,
+):
+    if not user or not getattr(user, 'is_active', True):
+        return None
+    notification = Notification.objects.create(
         user=user,
         notification_type=notification_type,
         title=title,
         message=message,
     )
+    logger.info(
+        'Notification created user_id=%s type=%s',
+        user.pk,
+        notification_type,
+    )
+    return notification
+
+
+def _notification_users_by_role(role, exclude_user_ids=()):
+    excluded = {user_id for user_id in exclude_user_ids if user_id}
+    return (
+        User.objects.filter(is_active=True, profile__role=role)
+        .exclude(pk__in=excluded)
+        .distinct()
+    )
+
+
+def _create_notifications_for_role(
+    role,
+    notification_type,
+    title,
+    message,
+    exclude_user_ids=(),
+):
+    created = []
+    for user in _notification_users_by_role(role, exclude_user_ids):
+        notification = _create_notification(
+            user,
+            notification_type,
+            title,
+            message,
+        )
+        if notification is not None:
+            created.append(notification)
+    return created
+
+
+def _care_home_notification_user(care_home):
+    manager = getattr(care_home, 'manager', None)
+    if manager and getattr(manager, 'is_active', True):
+        return manager
+    return None
 ORPHAN_WAITING_STATUSES = ['ينتظر كفالة', 'ظٹظ†طھط¸ط± ظƒظپط§ظ„ط©']
 DONATION_ACTIVE_STATUSES = ['قيد التنفيذ', 'ظ‚ظٹط¯ ط§ظ„طھظ†ظپظٹط°']
 
@@ -1263,11 +1310,26 @@ class DonationViewSet(SafeDestroyMixin, viewsets.ModelViewSet):
             or self.request.user.username
             or self.request.user.email
         )
-        serializer.save(
+        donation = serializer.save(
             user=self.request.user,
             donor_name=donor_name,
             status=Donation.STATUS_PENDING,
         )
+        _create_notification(
+            self.request.user,
+            Notification.TYPE_DONATION,
+            'Donation request received',
+            'Your donation request was received and is pending review.',
+        )
+        if donation.need and donation.need.care_home:
+            care_home_user = _care_home_notification_user(donation.need.care_home)
+            if care_home_user and care_home_user.pk != self.request.user.pk:
+                _create_notification(
+                    care_home_user,
+                    Notification.TYPE_DONATION,
+                    'New donation request',
+                    f'A new donation was submitted for {donation.need.title}.',
+                )
 
     def perform_update(self, serializer):
         previous_status = serializer.instance.status
@@ -1275,7 +1337,7 @@ class DonationViewSet(SafeDestroyMixin, viewsets.ModelViewSet):
         if donation.user_id and previous_status != donation.status:
             _create_notification(
                 donation.user,
-                Notification.TYPE_DONATION,
+                Notification.TYPE_STATUS_UPDATE,
                 'Donation status updated',
                 f'Your donation request is now {donation.status}.',
             )
@@ -1400,9 +1462,24 @@ class NeedViewSet(SafeDestroyMixin, viewsets.ModelViewSet):
             raise serializers.ValidationError({'care_home': 'care_home is required.'})
         # نربط الاحتياج بدار منشئه تلقائياً حتى يظهر في ملف الدار
         # وفي تصفح المتبرع، بدل أن يبقى معلّقاً بلا صاحب.
-        serializer.save(
+        need = serializer.save(
             created_by=self.request.user,
             care_home=care_home,
+        )
+        care_home_user = _care_home_notification_user(care_home)
+        if care_home_user:
+            _create_notification(
+                care_home_user,
+                Notification.TYPE_STATUS_UPDATE,
+                'Need published',
+                f'The need "{need.title}" was published for {care_home.name}.',
+            )
+        _create_notifications_for_role(
+            UserProfile.ROLE_DONOR,
+            Notification.TYPE_STATUS_UPDATE,
+            'New urgent need',
+            f'{care_home.name} published a new need: {need.title}.',
+            exclude_user_ids=[self.request.user.pk],
         )
 
     def perform_update(self, serializer):
@@ -1490,7 +1567,22 @@ class VolunteerOpportunityViewSet(SafeDestroyMixin, viewsets.ModelViewSet):
         )
         if care_home is None:
             raise serializers.ValidationError({'care_home': 'care_home is required.'})
-        serializer.save(care_home=care_home)
+        opportunity = serializer.save(care_home=care_home)
+        care_home_user = _care_home_notification_user(care_home)
+        if care_home_user:
+            _create_notification(
+                care_home_user,
+                Notification.TYPE_VOLUNTEER,
+                'Volunteer opportunity published',
+                f'The opportunity "{opportunity.title}" was published for {care_home.name}.',
+            )
+        _create_notifications_for_role(
+            UserProfile.ROLE_VOLUNTEER,
+            Notification.TYPE_VOLUNTEER,
+            'New volunteer opportunity',
+            f'{care_home.name} published a new volunteer opportunity: {opportunity.title}.',
+            exclude_user_ids=[self.request.user.pk],
+        )
 
     def perform_update(self, serializer):
         instance = self.get_object()
@@ -1525,6 +1617,21 @@ class VolunteerOpportunityViewSet(SafeDestroyMixin, viewsets.ModelViewSet):
                 message=request.data.get('message', ''),
             )
             created = True
+        if created:
+            _create_notification(
+                request.user,
+                Notification.TYPE_VOLUNTEER,
+                'Volunteer application submitted',
+                f'Your application for {opportunity.title} was submitted.',
+            )
+            care_home_user = _care_home_notification_user(opportunity.care_home)
+            if care_home_user and care_home_user.pk != request.user.pk:
+                _create_notification(
+                    care_home_user,
+                    Notification.TYPE_VOLUNTEER,
+                    'New volunteer application',
+                    f'A volunteer applied to {opportunity.title}.',
+                )
         serializer = VolunteerApplicationSerializer(application)
         return Response(serializer.data, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
 
@@ -1561,7 +1668,21 @@ class VolunteerApplicationViewSet(SafeDestroyMixin, viewsets.ModelViewSet):
     def perform_create(self, serializer):
         if _profile_role(self.request.user) != UserProfile.ROLE_VOLUNTEER:
             raise PermissionDenied('Only volunteer users can apply to opportunities.')
-        serializer.save(user=self.request.user)
+        application = serializer.save(user=self.request.user)
+        _create_notification(
+            self.request.user,
+            Notification.TYPE_VOLUNTEER,
+            'Volunteer application submitted',
+            f'Your application for {application.opportunity.title} was submitted.',
+        )
+        care_home_user = _care_home_notification_user(application.opportunity.care_home)
+        if care_home_user and care_home_user.pk != self.request.user.pk:
+            _create_notification(
+                care_home_user,
+                Notification.TYPE_VOLUNTEER,
+                'New volunteer application',
+                f'A volunteer applied to {application.opportunity.title}.',
+            )
 
     def _may_review(self, application):
         """من يملك البتّ في هذا الطلب: الطاقم أو مدير الدار صاحبة الفرصة."""
@@ -1821,18 +1942,20 @@ class NotificationViewSet(SafeDestroyMixin, viewsets.ModelViewSet):
     def get_queryset(self):
         if getattr(self, 'swagger_fake_view', False):
             return Notification.objects.none()
-        if self.request.user.is_staff:
-            return Notification.objects.select_related('user').all()
         return Notification.objects.select_related('user').filter(user=self.request.user)
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['get'], url_path='unread-count')
     def unread_count(self, request):
         return Response({'unread_count': self.get_queryset().filter(is_read=False).count()})
 
-    @action(detail=True, methods=['post'])
+    @action(detail=False, methods=['get'], url_path='unread_count')
+    def unread_count_legacy(self, request):
+        return self.unread_count(request)
+
+    @action(detail=True, methods=['post', 'patch'])
     def mark_as_read(self, request, pk=None):
         notification = self.get_object()
         notification.is_read = True
@@ -1873,7 +1996,7 @@ class DashboardStatsView(APIView):
             'total_needs': Need.objects.exclude(status=Need.STATUS_ARCHIVED).count(),
             'open_needs': Need.objects.filter(status=Need.STATUS_OPEN).count(),
             'total_volunteer_opportunities': VolunteerOpportunity.objects.count(),
-            'unread_notifications': Notification.objects.filter(is_read=False).count() if request.user.is_staff else Notification.objects.filter(user=request.user, is_read=False).count(),
+            'unread_notifications': Notification.objects.filter(user=request.user, is_read=False).count(),
             'orphans_waiting': Orphan.objects.filter(status__in=ORPHAN_WAITING_STATUSES).count(),
             'active_donations': Donation.objects.filter(status__in=DONATION_ACTIVE_STATUSES).count(),
         })
