@@ -183,8 +183,9 @@ def volunteer_opportunities_view(request):
             'start_date': request.POST.get('start_date') or None,
             'end_date': request.POST.get('end_date') or None,
             'status': request.POST.get('status') or VolunteerOpportunity.STATUS_OPEN,
-            'image_url': request.POST.get('image_url', '').strip(),
         }
+        if request.FILES.get('image'):
+            data['image'] = request.FILES['image']
         serializer = VolunteerOpportunitySerializer(data=data, context={'request': request})
         if serializer.is_valid():
             opportunity = serializer.save()

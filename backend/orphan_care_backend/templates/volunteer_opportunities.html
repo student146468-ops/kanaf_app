@@ -24,7 +24,7 @@
 
         <div id="opportunityAlert" class="opportunity-alert" hidden></div>
 
-        <form id="opportunityForm" method="POST" class="form-grid" autocomplete="off">
+        <form id="opportunityForm" method="POST" class="form-grid" autocomplete="off" enctype="multipart/form-data">
             {% csrf_token %}
             <input type="hidden" id="opportunityId" name="opportunity_id">
 
@@ -99,8 +99,9 @@
             </div>
 
             <div>
-                <label for="opportunityImageUrl">رابط الصورة</label>
-                <input id="opportunityImageUrl" name="image_url" type="url" placeholder="https://example.com/image.jpg">
+                <label for="opportunityImage">رفع صورة</label>
+                <input id="opportunityImage" name="image" type="file" accept="image/*">
+                <div id="opportunityImagePreview" class="image-upload-preview" hidden></div>
             </div>
 
             <div class="opportunity-form-wide">
@@ -154,7 +155,7 @@
                         data-start-date="{{ opportunity.start_date|date:'Y-m-d\TH:i' }}"
                         data-end-date="{{ opportunity.end_date|date:'Y-m-d\TH:i' }}"
                         data-status="{{ opportunity.status }}"
-                        data-image-url="{{ opportunity.image_url|escape }}"
+                        data-image-url="{{ opportunity.display_image_url|escape }}"
                     >
                         <td class="name-cell">{{ opportunity.title }}</td>
                         <td>{{ opportunity.care_home.name }}</td>
@@ -247,6 +248,19 @@
         flex-wrap: wrap;
     }
 
+    .image-upload-preview {
+        width: 100%;
+        min-height: 120px;
+        margin-top: 10px;
+        overflow: hidden;
+        border-radius: 16px;
+        border: 1px solid rgba(126, 50, 0, 0.14);
+        background: rgba(255, 248, 242, 0.72);
+        background-position: center;
+        background-size: cover;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.68), 0 8px 18px rgba(126, 50, 0, 0.08);
+    }
+
     .opportunity-secondary-button {
         min-height: 50px;
         border: 1px solid rgba(126, 50, 0, 0.18);
@@ -294,6 +308,8 @@
         const alertBox = document.getElementById('opportunityAlert');
         const submitButton = document.getElementById('opportunitySubmitButton');
         const cancelButton = document.getElementById('opportunityCancelButton');
+        const imageInput = document.getElementById('opportunityImage');
+        const imagePreview = document.getElementById('opportunityImagePreview');
         const csrfToken = form.querySelector('input[name="csrfmiddlewaretoken"]').value;
         let editingId = null;
 
@@ -333,20 +349,37 @@
             return body;
         }
 
+        function showImagePreview(url) {
+            if (!url) {
+                imagePreview.hidden = true;
+                imagePreview.style.backgroundImage = '';
+                return;
+            }
+            imagePreview.hidden = false;
+            imagePreview.style.backgroundImage = `url("${url}")`;
+        }
+
         function payloadFromForm() {
-            const payload = {
-                title: document.getElementById('opportunityTitle').value.trim(),
-                description: document.getElementById('opportunityDescription').value.trim(),
-                category: document.getElementById('opportunityCategory').value,
-                care_home: Number(document.getElementById('opportunityCareHome').value),
-                required_volunteers: Number(document.getElementById('opportunityRequiredVolunteers').value),
-                required_skills: document.getElementById('opportunitySkills').value.trim(),
-                location: document.getElementById('opportunityLocation').value.trim(),
-                start_date: document.getElementById('opportunityStartDate').value || null,
-                end_date: document.getElementById('opportunityEndDate').value || null,
-                status: document.getElementById('opportunityStatus').value,
-                image_url: document.getElementById('opportunityImageUrl').value.trim()
-            };
+            const payload = new FormData();
+            payload.append('title', document.getElementById('opportunityTitle').value.trim());
+            payload.append('description', document.getElementById('opportunityDescription').value.trim());
+            payload.append('category', document.getElementById('opportunityCategory').value);
+            payload.append('care_home', document.getElementById('opportunityCareHome').value);
+            payload.append('required_volunteers', document.getElementById('opportunityRequiredVolunteers').value);
+            payload.append('required_skills', document.getElementById('opportunitySkills').value.trim());
+            payload.append('location', document.getElementById('opportunityLocation').value.trim());
+            payload.append('status', document.getElementById('opportunityStatus').value);
+            const startDate = document.getElementById('opportunityStartDate').value;
+            const endDate = document.getElementById('opportunityEndDate').value;
+            if (startDate) {
+                payload.append('start_date', startDate);
+            }
+            if (endDate) {
+                payload.append('end_date', endDate);
+            }
+            if (imageInput.files && imageInput.files[0]) {
+                payload.append('image', imageInput.files[0]);
+            }
             return payload;
         }
 
@@ -356,6 +389,8 @@
             document.getElementById('opportunityRequiredVolunteers').value = '1';
             document.getElementById('opportunityStatus').value = 'open';
             document.getElementById('opportunityId').value = '';
+            imageInput.value = '';
+            showImagePreview('');
             submitButton.innerHTML = '<i class="fas fa-plus"></i> إضافة فرصة تطوع';
             cancelButton.hidden = true;
             setAlert('', false);
@@ -374,7 +409,8 @@
             document.getElementById('opportunityStartDate').value = row.dataset.startDate || '';
             document.getElementById('opportunityEndDate').value = row.dataset.endDate || '';
             document.getElementById('opportunityStatus').value = row.dataset.status || 'open';
-            document.getElementById('opportunityImageUrl').value = row.dataset.imageUrl || '';
+            imageInput.value = '';
+            showImagePreview(row.dataset.imageUrl || '');
             submitButton.innerHTML = '<i class="fas fa-floppy-disk"></i> حفظ التعديل';
             cancelButton.hidden = false;
             setAlert('', false);
@@ -393,11 +429,10 @@
                     method: wasEditing ? 'PATCH' : 'POST',
                     headers: {
                         'Accept': 'application/json',
-                        'Content-Type': 'application/json',
                         'X-CSRFToken': csrfToken
                     },
                     credentials: 'same-origin',
-                    body: JSON.stringify(payloadFromForm())
+                    body: payloadFromForm()
                 });
                 await parseResponse(response);
                 window.location.reload();
@@ -435,6 +470,10 @@
 
         form.addEventListener('submit', saveOpportunity);
         cancelButton.addEventListener('click', resetForm);
+        imageInput.addEventListener('change', function () {
+            const file = imageInput.files && imageInput.files[0];
+            showImagePreview(file ? URL.createObjectURL(file) : '');
+        });
         document.querySelectorAll('[data-action="edit-opportunity"]').forEach(function (button) {
             button.addEventListener('click', function () {
                 startEdit(button.closest('tr'));

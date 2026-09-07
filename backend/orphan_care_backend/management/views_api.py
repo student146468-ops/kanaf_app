@@ -16,7 +16,7 @@ from django.db import transaction
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import extend_schema, inline_serializer
-from rest_framework import filters, serializers, status, viewsets
+from rest_framework import filters, parsers, serializers, status, viewsets
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
@@ -1422,6 +1422,7 @@ class NeedViewSet(SafeDestroyMixin, viewsets.ModelViewSet):
     serializer_class = NeedSerializer
     authentication_classes = [JWTAuthentication, SessionAuthentication]
     permission_classes = [NeedWritePermission]
+    parser_classes = [parsers.JSONParser, parsers.FormParser, parsers.MultiPartParser]
     pagination_class = None
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = [
@@ -1520,6 +1521,7 @@ class VolunteerOpportunityViewSet(SafeDestroyMixin, viewsets.ModelViewSet):
     serializer_class = VolunteerOpportunitySerializer
     authentication_classes = [JWTAuthentication, SessionAuthentication]
     permission_classes = [CareHomeManagerWritePermission]
+    parser_classes = [parsers.JSONParser, parsers.FormParser, parsers.MultiPartParser]
     protect_related_on_delete = True
     protected_related_names = ('applications',)
     protected_delete_detail = 'Cannot delete this volunteer opportunity because it has saved applications.'

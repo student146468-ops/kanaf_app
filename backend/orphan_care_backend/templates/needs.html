@@ -16,7 +16,7 @@
         </div>
         {% endif %}
 
-        <form id="needForm" class="form-grid" autocomplete="off">
+        <form id="needForm" class="form-grid" autocomplete="off" enctype="multipart/form-data">
             {% csrf_token %}
             <input type="hidden" id="needId" name="need_id">
 
@@ -69,8 +69,9 @@
             </div>
 
             <div>
-                <label for="needImageUrl">رابط الصورة</label>
-                <input id="needImageUrl" name="image_url" type="url" placeholder="https://example.com/image.jpg">
+                <label for="needImage">رفع صورة</label>
+                <input id="needImage" name="image" type="file" accept="image/*">
+                <div id="needImagePreview" class="image-upload-preview" hidden></div>
             </div>
 
             <div class="needs-form-wide">
@@ -148,6 +149,19 @@
         align-items: center;
         gap: 10px;
         flex-wrap: wrap;
+    }
+
+    .image-upload-preview {
+        width: 100%;
+        min-height: 120px;
+        margin-top: 10px;
+        overflow: hidden;
+        border-radius: 16px;
+        border: 1px solid rgba(126, 50, 0, 0.14);
+        background: rgba(255, 248, 242, 0.72);
+        background-position: center;
+        background-size: cover;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.68), 0 8px 18px rgba(126, 50, 0, 0.08);
     }
 
     .needs-secondary-button {
@@ -262,6 +276,8 @@
         const submitButton = document.getElementById('needSubmitButton');
         const cancelButton = document.getElementById('needCancelButton');
         const countBadge = document.getElementById('needsCount');
+        const imageInput = document.getElementById('needImage');
+        const imagePreview = document.getElementById('needImagePreview');
         const csrfToken = form.querySelector('input[name="csrfmiddlewaretoken"]').value;
         let editingId = null;
 
@@ -310,20 +326,31 @@
             return body;
         }
 
+        function showImagePreview(url) {
+            if (!url) {
+                imagePreview.hidden = true;
+                imagePreview.style.backgroundImage = '';
+                return;
+            }
+            imagePreview.hidden = false;
+            imagePreview.style.backgroundImage = `url("${url}")`;
+        }
+
         function payloadFromForm() {
-            const payload = {
-                title: document.getElementById('needTitle').value.trim(),
-                description: document.getElementById('needDescription').value.trim(),
-                category: document.getElementById('needCategory').value.trim(),
-                required_quantity: document.getElementById('needRequiredQuantity').value.trim(),
-                fulfilled_quantity: document.getElementById('needFulfilledQuantity').value || '0',
-                priority: document.getElementById('needPriority').value,
-                status: document.getElementById('needStatus').value,
-                image_url: document.getElementById('needImageUrl').value.trim()
-            };
+            const payload = new FormData();
+            payload.append('title', document.getElementById('needTitle').value.trim());
+            payload.append('description', document.getElementById('needDescription').value.trim());
+            payload.append('category', document.getElementById('needCategory').value.trim());
+            payload.append('required_quantity', document.getElementById('needRequiredQuantity').value.trim());
+            payload.append('fulfilled_quantity', document.getElementById('needFulfilledQuantity').value || '0');
+            payload.append('priority', document.getElementById('needPriority').value);
+            payload.append('status', document.getElementById('needStatus').value);
+            if (imageInput.files && imageInput.files[0]) {
+                payload.append('image', imageInput.files[0]);
+            }
             const careHome = document.getElementById('needCareHome').value;
             if (careHome) {
-                payload.care_home = Number(careHome);
+                payload.append('care_home', careHome);
             }
             return payload;
         }
@@ -333,6 +360,8 @@
             form.reset();
             document.getElementById('needFulfilledQuantity').value = '0';
             document.getElementById('needStatus').value = 'open';
+            imageInput.value = '';
+            showImagePreview('');
             submitButton.innerHTML = '<i class="fas fa-plus"></i> إضافة احتياج';
             cancelButton.hidden = true;
         }
@@ -346,7 +375,8 @@
             document.getElementById('needFulfilledQuantity').value = need.fulfilled_quantity || 0;
             document.getElementById('needPriority').value = need.priority || 'medium';
             document.getElementById('needStatus').value = need.status || 'open';
-            document.getElementById('needImageUrl').value = need.image_url || '';
+            imageInput.value = '';
+            showImagePreview(need.image_url || need.image || '');
             if (need.care_home) {
                 document.getElementById('needCareHome').value = need.care_home;
             }
@@ -427,11 +457,10 @@
                     method: wasEditing ? 'PATCH' : 'POST',
                     headers: {
                         'Accept': 'application/json',
-                        'Content-Type': 'application/json',
                         'X-CSRFToken': csrfToken
                     },
                     credentials: 'same-origin',
-                    body: JSON.stringify(payloadFromForm())
+                    body: payloadFromForm()
                 });
                 await parseResponse(response);
                 resetForm();
@@ -473,6 +502,10 @@
 
         form.addEventListener('submit', saveNeed);
         cancelButton.addEventListener('click', resetForm);
+        imageInput.addEventListener('change', function () {
+            const file = imageInput.files && imageInput.files[0];
+            showImagePreview(file ? URL.createObjectURL(file) : '');
+        });
         loadNeeds();
     });
 </script>

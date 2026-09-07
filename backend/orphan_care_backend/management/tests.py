@@ -1,10 +1,12 @@
 import json
 import re
+import tempfile
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.conf import settings
 from django.core.cache import cache
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
@@ -29,6 +31,18 @@ from management.models import (
 )
 
 User = get_user_model()
+
+
+def _tiny_gif(name='image.gif'):
+    return SimpleUploadedFile(
+        name,
+        (
+            b'GIF87a\x01\x00\x01\x00\x80\x00\x00\x00\x00\x00'
+            b'\xff\xff\xff,\x00\x00\x00\x00\x01\x00\x01\x00'
+            b'\x00\x02\x02D\x01\x00;'
+        ),
+        content_type='image/gif',
+    )
 
 
 def _create_care_home(name='Test Care Home', manager=None):
@@ -1409,6 +1423,29 @@ class ManagementNeedsDashboardTests(TestCase):
         self.assertEqual(list_response.status_code, status.HTTP_200_OK)
         self.assertEqual(list_response.json()[0]['id'], need_id)
 
+    def test_staff_can_upload_need_image_from_dashboard_api(self):
+        with tempfile.TemporaryDirectory() as media_root, self.settings(MEDIA_ROOT=media_root):
+            response = self.client.post(
+                reverse('need-list'),
+                data={
+                    'title': 'Dashboard image need',
+                    'description': 'Created with uploaded image',
+                    'category': 'food',
+                    'required_quantity': '30',
+                    'fulfilled_quantity': '5',
+                    'priority': Need.PRIORITY_URGENT,
+                    'status': Need.STATUS_OPEN,
+                    'care_home': self.care_home.id,
+                    'image': _tiny_gif('need-dashboard.gif'),
+                },
+            )
+
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+            body = response.json()
+            self.assertTrue(body['image_url'].startswith('http://testserver/media/needs/'))
+            need = Need.objects.get(pk=body['id'])
+            self.assertTrue(need.image.name.startswith('needs/'))
+
     def test_staff_can_update_need_from_dashboard_api(self):
         need = Need.objects.create(
             title='Needs edit source',
@@ -1527,6 +1564,35 @@ class ManagementVolunteerOpportunitiesDashboardTests(TestCase):
         self.assertEqual(opportunity.care_home, self.care_home)
         self.assertEqual(opportunity.required_volunteers, 3)
         self.assertEqual(opportunity.status, VolunteerOpportunity.STATUS_OPEN)
+
+    def test_staff_can_upload_volunteer_opportunity_image_from_api(self):
+        with tempfile.TemporaryDirectory() as media_root, self.settings(MEDIA_ROOT=media_root):
+            response = self.client.post(
+                reverse('volunteer_opportunity-list'),
+                data={
+                    'title': 'Dashboard opportunity image',
+                    'description': 'Created with uploaded image',
+                    'category': VolunteerOpportunity.CATEGORY_LOGISTICS,
+                    'care_home': self.care_home.id,
+                    'required_volunteers': '3',
+                    'required_skills': 'organizing',
+                    'location': 'Tripoli',
+                    'status': VolunteerOpportunity.STATUS_OPEN,
+                    'image': _tiny_gif('opportunity-dashboard.gif'),
+                },
+            )
+
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+            body = response.json()
+            self.assertTrue(
+                body['image_url'].startswith(
+                    'http://testserver/media/volunteer_opportunities/',
+                )
+            )
+            opportunity = VolunteerOpportunity.objects.get(pk=body['id'])
+            self.assertTrue(
+                opportunity.image.name.startswith('volunteer_opportunities/')
+            )
 
     def test_volunteer_opportunities_dashboard_renders_edit_and_delete_actions(self):
         VolunteerOpportunity.objects.create(

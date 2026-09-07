@@ -270,6 +270,7 @@ class Need(models.Model):
     required_quantity = models.CharField(max_length=100)
     fulfilled_quantity = models.DecimalField(max_digits=12, decimal_places=2, default=0, validators=[MinValueValidator(0)])
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_OPEN, db_index=True)
+    image = models.ImageField(upload_to='needs/', blank=True)
     image_url = models.URLField(blank=True)
     deadline = models.DateField(null=True, blank=True, db_index=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_needs')
@@ -296,6 +297,15 @@ class Need(models.Model):
 
     def __str__(self):
         return self.title
+
+    @property
+    def display_image_url(self):
+        if self.image:
+            try:
+                return self.image.url
+            except ValueError:
+                pass
+        return self.image_url or ''
 
     def clean(self):
         super().clean()
@@ -368,6 +378,7 @@ class VolunteerOpportunity(models.Model):
     end_date = models.DateTimeField(null=True, blank=True)
     location = models.CharField(max_length=200, blank=True, db_index=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_OPEN, db_index=True)
+    image = models.ImageField(upload_to='volunteer_opportunities/', blank=True)
     image_url = models.URLField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -389,6 +400,15 @@ class VolunteerOpportunity(models.Model):
 
     def __str__(self):
         return self.title
+
+    @property
+    def display_image_url(self):
+        if self.image:
+            try:
+                return self.image.url
+            except ValueError:
+                pass
+        return self.image_url or ''
 
     def clean(self):
         super().clean()

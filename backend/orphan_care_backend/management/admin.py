@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils.html import format_html
 
 from .models import (
     CareHome,
@@ -88,7 +89,7 @@ class NeedAdmin(admin.ModelAdmin):
     ]
     list_filter = ['status', 'priority', 'category', 'care_home']
     search_fields = ['title', 'description', 'category', 'care_home__name']
-    readonly_fields = ['created_at', 'updated_at']
+    readonly_fields = ['image_preview', 'created_at', 'updated_at']
     autocomplete_fields = ['care_home', 'created_by']
     fieldsets = (
         (None, {
@@ -106,7 +107,7 @@ class NeedAdmin(admin.ModelAdmin):
             'fields': ('required_quantity', 'fulfilled_quantity')
         }),
         ('Media and timing', {
-            'fields': ('image_url', 'deadline')
+            'fields': ('image', 'image_preview', 'deadline')
         }),
         ('Audit', {
             'fields': ('created_by', 'created_at', 'updated_at')
@@ -118,13 +119,23 @@ class NeedAdmin(admin.ModelAdmin):
         if not change:
             notify_need_published(obj, actor=request.user)
 
+    @admin.display(description='Image preview')
+    def image_preview(self, obj):
+        image_url = obj.display_image_url if obj else ''
+        if not image_url:
+            return '-'
+        return format_html(
+            '<img src="{}" style="max-width: 220px; max-height: 140px; border-radius: 12px;" />',
+            image_url,
+        )
+
 
 @admin.register(VolunteerOpportunity)
 class VolunteerOpportunityAdmin(admin.ModelAdmin):
     list_display = ['title', 'care_home', 'category', 'status', 'required_volunteers', 'current_volunteers', 'start_date']
     list_filter = ['status', 'category', 'care_home']
     search_fields = ['title', 'description', 'required_skills', 'location', 'care_home__name']
-    readonly_fields = ['current_volunteers', 'created_at', 'updated_at']
+    readonly_fields = ['current_volunteers', 'image_preview', 'created_at', 'updated_at']
     fieldsets = (
         (None, {
             'fields': ('title', 'description', 'care_home', 'category', 'status')
@@ -136,7 +147,7 @@ class VolunteerOpportunityAdmin(admin.ModelAdmin):
             'fields': ('location', 'start_date', 'end_date')
         }),
         ('Media', {
-            'fields': ('image_url',)
+            'fields': ('image', 'image_preview')
         }),
         ('Audit', {
             'fields': ('created_at', 'updated_at')
@@ -147,6 +158,16 @@ class VolunteerOpportunityAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
         if not change:
             notify_volunteer_opportunity_published(obj, actor=request.user)
+
+    @admin.display(description='Image preview')
+    def image_preview(self, obj):
+        image_url = obj.display_image_url if obj else ''
+        if not image_url:
+            return '-'
+        return format_html(
+            '<img src="{}" style="max-width: 220px; max-height: 140px; border-radius: 12px;" />',
+            image_url,
+        )
 
 
 @admin.register(VolunteerApplication)

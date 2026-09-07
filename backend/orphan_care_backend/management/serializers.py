@@ -1,6 +1,7 @@
 import re
 from decimal import Decimal, InvalidOperation
 
+from django.conf import settings
 from rest_framework import serializers
 
 from .models import (
@@ -37,6 +38,41 @@ def _validate_required_text(value, field_name):
     if value is None or not str(value).strip():
         raise serializers.ValidationError(f'{field_name} is required.')
     return str(value).strip()
+
+
+def _validate_uploaded_image(value):
+    if not value:
+        return value
+    max_size = 5 * 1024 * 1024
+    if getattr(value, 'size', 0) > max_size:
+        raise serializers.ValidationError('Image size must not exceed 5 MB.')
+    content_type = getattr(value, 'content_type', '')
+    if content_type and not content_type.startswith('image/'):
+        raise serializers.ValidationError('Uploaded file must be an image.')
+    return value
+
+
+def _absolute_display_image_url(instance, request):
+    image_url = getattr(instance, 'display_image_url', '') or ''
+    if not image_url:
+        return ''
+    if image_url.startswith(('http://', 'https://')):
+        return image_url
+    if image_url.startswith('//'):
+        return f'https:{image_url}'
+    first_segment = image_url.split('/')[0]
+    if (
+        not image_url.startswith('/')
+        and '.' in first_segment
+        and ' ' not in first_segment
+        and '\\' not in first_segment
+    ):
+        return f'https://{image_url}'
+    if not image_url.startswith('/'):
+        image_url = f"{settings.MEDIA_URL.rstrip('/')}/{image_url.lstrip('/')}"
+    if request is not None:
+        return request.build_absolute_uri(image_url)
+    return image_url
 
 
 class OrphanSerializer(serializers.ModelSerializer):
@@ -207,6 +243,9 @@ class NeedSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('fulfilled_quantity must be zero or greater.')
         return value
 
+    def validate_image(self, value):
+        return _validate_uploaded_image(value)
+
     def validate(self, attrs):
         attrs = super().validate(attrs)
 
@@ -244,6 +283,14 @@ class NeedSerializer(serializers.ModelSerializer):
             return None
         remaining = max(target - Decimal(obj.fulfilled_quantity), Decimal('0'))
         return float(remaining)
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['image_url'] = _absolute_display_image_url(
+            instance,
+            self.context.get('request'),
+        )
+        return data
 
 
 class SponsorSerializer(serializers.ModelSerializer):
@@ -301,6 +348,9 @@ class VolunteerOpportunitySerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('current_volunteers must be zero or greater.')
         return value
 
+    def validate_image(self, value):
+        return _validate_uploaded_image(value)
+
     def validate(self, attrs):
         request = self.context.get('request')
         user = getattr(request, 'user', None)
@@ -356,6 +406,14 @@ class VolunteerOpportunitySerializer(serializers.ModelSerializer):
     def get_my_application_status(self, obj):
         application = self._current_user_application(obj)
         return application.status if application else None
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['image_url'] = _absolute_display_image_url(
+            instance,
+            self.context.get('request'),
+        )
+        return data
 
 
 class VolunteerApplicationSerializer(serializers.ModelSerializer):
