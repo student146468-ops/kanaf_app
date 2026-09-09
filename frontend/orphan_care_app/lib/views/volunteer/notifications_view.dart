@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../../providers/app_provider_scope.dart';
 import '../../router/kanaf_router.dart';
+import '../../services/api_config.dart';
 import '../../theme/kanaf_motion.dart';
 import '../../theme/kanaf_tokens.dart';
 import '../../widgets/kanaf_layout.dart';
@@ -30,6 +31,8 @@ class NotificationsView extends StatefulWidget {
 
 class _NotificationsViewState extends State<NotificationsView> {
   _NotificationFilter _filter = _NotificationFilter.all;
+  final Set<int> _deletingNotificationIds = {};
+  bool _isDeletingAll = false;
 
   @override
   void initState() {
@@ -61,9 +64,25 @@ class _NotificationsViewState extends State<NotificationsView> {
         actions: [
           if (unread > 0)
             TextButton.icon(
-              onPressed: () => _markAll(provider),
+              onPressed: provider.isSaving || _isDeletingAll
+                  ? null
+                  : () => _markAll(provider),
               icon: const Icon(Icons.done_all_rounded, size: 18),
               label: Text(context.tr('notifications.selectAll')),
+            ),
+          if (all.isNotEmpty)
+            IconButton(
+              tooltip: context.tr('notifications.deleteAll'),
+              onPressed: provider.isSaving || _isDeletingAll
+                  ? null
+                  : () => _deleteAll(provider),
+              icon: _isDeletingAll
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.delete_sweep_outlined),
             ),
           const SizedBox(width: KanafSpacing.xs),
         ],
@@ -109,6 +128,8 @@ class _NotificationsViewState extends State<NotificationsView> {
                           data: visible[index],
                           dateFormat: dateFormat,
                           onTap: () => _open(provider, visible[index]),
+                          onDelete: () => _deleteOne(provider, visible[index]),
+                          isDeleting: _isDeleting(visible[index]['id']),
                         ),
                       ),
                     ),
@@ -120,6 +141,11 @@ class _NotificationsViewState extends State<NotificationsView> {
         ),
       ),
     );
+  }
+
+  bool _isDeleting(Object? rawId) {
+    final id = rawId is int ? rawId : int.tryParse(rawId?.toString() ?? '');
+    return id != null && _deletingNotificationIds.contains(id);
   }
 
   Widget _buildFilters(List<Map<String, dynamic>> all) {
@@ -176,6 +202,84 @@ class _NotificationsViewState extends State<NotificationsView> {
       );
     }
   }
+
+  Future<void> _deleteOne(dynamic provider, Map<String, dynamic> item) async {
+    final id = int.tryParse(item['id']?.toString() ?? '');
+    if (id == null) return;
+    final confirmed = await _confirm(
+      title: context.tr('notifications.deleteConfirmTitle'),
+      message: context.tr('notifications.deleteConfirmMessage'),
+      action: context.tr('notifications.delete'),
+    );
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _deletingNotificationIds.add(id));
+    final done = await provider.deleteNotification(id);
+    if (!mounted) return;
+    setState(() => _deletingNotificationIds.remove(id));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          done
+              ? context.tr('notifications.deleteSuccess')
+              : provider.errorMessage ??
+                  context.tr('notifications.deleteFailed'),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _deleteAll(dynamic provider) async {
+    final confirmed = await _confirm(
+      title: context.tr('notifications.deleteAllConfirmTitle'),
+      message: context.tr('notifications.deleteAllConfirmMessage'),
+      action: context.tr('notifications.deleteAll'),
+    );
+    if (confirmed != true || !mounted || _isDeletingAll) return;
+
+    setState(() => _isDeletingAll = true);
+    final done = await provider.deleteAllNotifications();
+    if (!mounted) return;
+    setState(() {
+      _isDeletingAll = false;
+      _deletingNotificationIds.clear();
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          done
+              ? context.tr('notifications.deleteAllSuccess')
+              : provider.errorMessage ??
+                  context.tr('notifications.deleteAllFailed'),
+        ),
+      ),
+    );
+  }
+
+  Future<bool?> _confirm({
+    required String title,
+    required String message,
+    required String action,
+  }) {
+    return showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(context.tr('common.cancel')),
+          ),
+          FilledButton.icon(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            icon: const Icon(Icons.delete_outline_rounded),
+            label: Text(action),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 enum _NotificationFilter {
@@ -204,11 +308,15 @@ class _NotificationCard extends StatelessWidget {
     required this.data,
     required this.dateFormat,
     required this.onTap,
+    required this.onDelete,
+    required this.isDeleting,
   });
 
   final Map<String, dynamic> data;
   final DateFormat dateFormat;
   final VoidCallback onTap;
+  final VoidCallback onDelete;
+  final bool isDeleting;
 
   /// الأيقونة تتبع نوع الإشعار كما يعرّفه `Notification.TYPE_CHOICES`.
   static IconData _iconFor(String type) => switch (type) {
@@ -227,6 +335,9 @@ class _NotificationCard extends StatelessWidget {
     final message = data['message']?.toString() ?? '';
     final created = DateTime.tryParse(data['created_at']?.toString() ?? '');
     final type = data['notification_type']?.toString() ?? 'message';
+    final imageUrl = (data['image_url'] ?? data['image'] ?? data['imageUrl'])
+        ?.toString()
+        .trim();
 
     return KanafCard(
       onTap: onTap,
@@ -274,6 +385,19 @@ class _NotificationCard extends StatelessWidget {
                         ),
                       ),
                     ],
+                    IconButton(
+                      tooltip: context.tr('notifications.delete'),
+                      onPressed: isDeleting ? null : onDelete,
+                      icon: isDeleting
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Icon(Icons.delete_outline_rounded),
+                    ),
                   ],
                 ),
                 if (message.isNotEmpty) ...[
@@ -292,10 +416,42 @@ class _NotificationCard extends StatelessWidget {
                     style: context.texts.labelSmall,
                   ),
                 ],
+                if (imageUrl != null && imageUrl.isNotEmpty) ...[
+                  const SizedBox(height: KanafSpacing.md),
+                  _NotificationImage(imageUrl: imageUrl),
+                ],
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _NotificationImage extends StatelessWidget {
+  const _NotificationImage({required this.imageUrl});
+
+  final String imageUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colors;
+    return ClipRRect(
+      borderRadius: KanafRadii.md,
+      child: AspectRatio(
+        aspectRatio: 16 / 9,
+        child: Image.network(
+          ApiConfig.resolveBackendUrl(imageUrl),
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => ColoredBox(
+            color: scheme.surfaceContainerHighest,
+            child: Icon(
+              Icons.image_not_supported_outlined,
+              color: scheme.onSurfaceVariant,
+            ),
+          ),
+        ),
       ),
     );
   }

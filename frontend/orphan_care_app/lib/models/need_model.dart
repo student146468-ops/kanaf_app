@@ -1,5 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 
+import '../l10n/kanaf_localizations.dart';
+
 class NeedModel {
   final int id;
   final String title;
@@ -54,7 +56,13 @@ class NeedModel {
       requiredQuantity: json['required_quantity']?.toString() ?? '',
       fulfilledQuantity: _asDouble(json['fulfilled_quantity']),
       status: json['status']?.toString() ?? '',
-      imageUrl: json['image_url']?.toString(),
+      imageUrl: _asNullableString(
+        json['image_url'] ??
+            json['image'] ??
+            json['imageUrl'] ??
+            json['photo'] ??
+            json['photo_url'],
+      ),
       deadline: _asDate(json['deadline']),
       createdAt: _asDate(json['created_at']),
       updatedAt: _asDate(json['updated_at']),
@@ -91,6 +99,7 @@ class NeedModel {
       'required_quantity': requiredQuantity,
       'fulfilled_quantity': fulfilledQuantity,
       'status': status,
+      'image_url': imageUrl,
       'deadline': deadline?.toIso8601String().split('T').first,
     };
   }
@@ -105,11 +114,25 @@ class NeedModel {
         _ => 'قيد التنفيذ',
       };
 
+  String statusLabelFor(BuildContext context) => switch (status) {
+        'completed' => context.tr('status.completed'),
+        'archived' => context.tr('status.closed'),
+        'open' => context.tr('status.open'),
+        _ => context.tr('status.pending'),
+      };
+
   String get priorityLabel => switch (priority) {
         'urgent' => 'عاجل',
         'low' => 'منخفض',
         'medium' => 'متوسط',
         _ => priority.isEmpty ? 'متوسط' : priority,
+      };
+
+  String priorityLabelFor(BuildContext context) => switch (priority) {
+        'urgent' => context.tr('priority.urgent'),
+        'low' => context.tr('priority.low'),
+        'medium' => context.tr('priority.medium'),
+        _ => priority.isEmpty ? context.tr('priority.medium') : priority,
       };
 
   String get categoryLabel => switch (category) {
@@ -118,6 +141,14 @@ class NeedModel {
         'clothes' => 'كسوة',
         'education' => 'تعليمي',
         _ => category.isEmpty ? 'احتياج' : category,
+      };
+
+  String categoryLabelFor(BuildContext context) => switch (category) {
+        'medical' => context.tr('category.need.medical'),
+        'food' => context.tr('category.need.food'),
+        'clothes' => context.tr('category.need.clothes'),
+        'education' => context.tr('category.need.education'),
+        _ => category.isEmpty ? context.tr('category.need.default') : category,
       };
 
   IconData get icon => switch (category) {

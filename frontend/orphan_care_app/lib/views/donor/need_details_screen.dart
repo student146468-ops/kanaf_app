@@ -4,9 +4,11 @@ import 'package:intl/intl.dart';
 import '../../models/need_model.dart';
 import '../../providers/app_provider_scope.dart';
 import '../../router/kanaf_router.dart';
+import '../../services/api_config.dart';
 import '../../theme/kanaf_motion.dart';
 import '../../theme/kanaf_tokens.dart';
 import '../../widgets/kanaf_layout.dart';
+import '../../widgets/kanaf_media_content_card.dart';
 import '../../widgets/kanaf_states.dart';
 import '../../l10n/kanaf_localizations.dart';
 
@@ -33,8 +35,6 @@ class NeedDetailsScreen extends StatefulWidget {
 class _NeedDetailsScreenState extends State<NeedDetailsScreen> {
   int? _needId;
 
-  static final DateFormat _dateFormat = DateFormat('d MMMM y', 'ar');
-
   @override
   void initState() {
     super.initState();
@@ -52,6 +52,10 @@ class _NeedDetailsScreenState extends State<NeedDetailsScreen> {
     final provider = AppProviderScope.of(context);
     final need = provider.selectedNeed;
     final isReady = need != null && need.id == _needId;
+    final dateFormat = DateFormat(
+      'd MMMM y',
+      Localizations.localeOf(context).languageCode,
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -83,85 +87,142 @@ class _NeedDetailsScreenState extends State<NeedDetailsScreen> {
                 ? null
                 : () => provider.fetchNeedDetails(_needId!),
             emptyIcon: Icons.search_off_rounded,
-            emptyTitle: 'تعذر العثور على الاحتياج',
-            emptyMessage: 'قد يكون اكتمل أو أُرشف من قِبل الدار.',
-            builder: (context) => Column(
-              children: [
-                Expanded(
-                  child: ListView(
-                    padding: const EdgeInsets.fromLTRB(
-                      KanafSpacing.pageInset,
-                      KanafSpacing.lg,
-                      KanafSpacing.pageInset,
-                      KanafSpacing.xxl,
-                    ),
-                    children: [
-                      KanafStaggeredEntrance(
-                        index: 0,
-                        child: _HeaderCard(need: need!),
+            emptyTitle: context.tr('need.notFoundTitle'),
+            emptyMessage: context.tr('need.notFoundMessage'),
+            builder: (context) {
+              final readyNeed = need!;
+              return Column(
+                children: [
+                  Expanded(
+                    child: ListView(
+                      padding: const EdgeInsets.fromLTRB(
+                        KanafSpacing.pageInset,
+                        KanafSpacing.lg,
+                        KanafSpacing.pageInset,
+                        KanafSpacing.xxl,
                       ),
-                      const SizedBox(height: KanafSpacing.lg),
-                      KanafStaggeredEntrance(
-                        index: 1,
-                        child: _ProgressCard(need: need),
-                      ),
-                      if (need.description.trim().isNotEmpty) ...[
-                        const SizedBox(height: KanafSpacing.xxl),
+                      children: [
                         KanafStaggeredEntrance(
-                          index: 2,
-                          child: _DescriptionSection(text: need.description),
-                        ),
-                      ],
-                      const SizedBox(height: KanafSpacing.xxl),
-                      KanafStaggeredEntrance(
-                        index: 3,
-                        child: _FactsSection(
-                          need: need,
-                          dateFormat: _dateFormat,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                KanafActionBar(
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: FilledButton.icon(
-                          onPressed: need.status == 'open'
-                              ? () => Navigator.pushNamed(
-                                    context,
-                                    KanafRoutes.financialDonation,
-                                    arguments: {'need_id': need.id},
-                                  )
-                              : null,
-                          icon: const Icon(Icons.payments_outlined),
-                          label: Text(
-                            need.status == 'open' ? 'تبرّع الآن' : 'اكتمل',
-                          ),
-                        ),
-                      ),
-                      if (need.status == 'open') ...[
-                        const SizedBox(width: KanafSpacing.md),
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: () => Navigator.pushNamed(
+                          index: 0,
+                          child: KanafMediaContentCard.need(
+                            context: context,
+                            need: readyNeed,
+                            onDonate: () => Navigator.pushNamed(
+                              context,
+                              KanafRoutes.financialDonation,
+                              arguments: {'need_id': readyNeed.id},
+                            ),
+                            onInkindDonate: () => Navigator.pushNamed(
                               context,
                               KanafRoutes.inkindDonation,
-                              arguments: {'need_id': need.id},
+                              arguments: {'need_id': readyNeed.id},
                             ),
-                            icon: const Icon(Icons.inventory_2_outlined),
-                            label: Text(context.tr('need.inkindDonate')),
+                          ),
+                        ),
+                        const SizedBox(height: KanafSpacing.lg),
+                        KanafStaggeredEntrance(
+                          index: 1,
+                          child: _FactsSection(
+                            need: readyNeed,
+                            dateFormat: dateFormat,
                           ),
                         ),
                       ],
-                    ],
+                    ),
                   ),
-                ),
-              ],
-            ),
+                  KanafActionBar(
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: FilledButton.icon(
+                            onPressed: readyNeed.status == 'open'
+                                ? () => Navigator.pushNamed(
+                                      context,
+                                      KanafRoutes.financialDonation,
+                                      arguments: {'need_id': readyNeed.id},
+                                    )
+                                : null,
+                            icon: const Icon(Icons.payments_outlined),
+                            label: Text(
+                              readyNeed.status == 'open'
+                                  ? context.tr('need.contributeNow')
+                                  : context.tr('need.completed'),
+                            ),
+                          ),
+                        ),
+                        if (readyNeed.status == 'open') ...[
+                          const SizedBox(width: KanafSpacing.md),
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () => Navigator.pushNamed(
+                                context,
+                                KanafRoutes.inkindDonation,
+                                arguments: {'need_id': readyNeed.id},
+                              ),
+                              icon: const Icon(Icons.inventory_2_outlined),
+                              label: Text(context.tr('need.inkindDonate')),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _NeedImage extends StatelessWidget {
+  const _NeedImage({required this.imageUrl});
+
+  final String imageUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colors;
+    final resolvedUrl = ApiConfig.buildImageUrl(imageUrl);
+    if (resolvedUrl == null) {
+      return _NeedImageFallback(scheme: scheme);
+    }
+    return ClipRRect(
+      borderRadius: KanafRadii.lg,
+      child: AspectRatio(
+        aspectRatio: 16 / 9,
+        child: Image.network(
+          resolvedUrl,
+          headers: ApiConfig.imageRequestHeaders,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            ApiConfig.logImageLoadError(
+              source: imageUrl,
+              resolved: resolvedUrl,
+              error: error,
+            );
+            return _NeedImageFallback(scheme: scheme);
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _NeedImageFallback extends StatelessWidget {
+  const _NeedImageFallback({required this.scheme});
+
+  final ColorScheme scheme;
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: scheme.surfaceContainerHighest,
+      child: Icon(
+        Icons.image_not_supported_outlined,
+        color: scheme.onSurfaceVariant,
       ),
     );
   }
@@ -196,7 +257,10 @@ class _HeaderCard extends StatelessWidget {
               children: [
                 Text(need.title, style: context.texts.titleLarge),
                 const SizedBox(height: KanafSpacing.xs),
-                Text(need.categoryLabel, style: context.texts.bodySmall),
+                Text(
+                  need.categoryLabelFor(context),
+                  style: context.texts.bodySmall,
+                ),
                 const SizedBox(height: KanafSpacing.sm),
                 Wrap(
                   spacing: KanafSpacing.xs,
@@ -339,21 +403,33 @@ class _FactsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final rows = <Widget>[
       if ((need.careHomeName ?? '').isNotEmpty)
-        KanafDetailRow(label: 'دار الرعاية', value: need.careHomeName!),
+        KanafDetailRow(
+          label: context.tr('need.careHome'),
+          value: need.careHomeName!,
+        ),
       if ((need.careHomeLocation ?? '').isNotEmpty)
-        KanafDetailRow(label: 'الموقع', value: need.careHomeLocation!),
-      KanafDetailRow(label: 'الأولوية', value: need.priorityLabel),
-      KanafDetailRow(label: 'التصنيف', value: need.categoryLabel),
+        KanafDetailRow(
+          label: context.tr('need.location'),
+          value: need.careHomeLocation!,
+        ),
+      KanafDetailRow(
+        label: context.tr('need.priority'),
+        value: need.priorityLabelFor(context),
+      ),
+      KanafDetailRow(
+        label: context.tr('need.category'),
+        value: need.categoryLabelFor(context),
+      ),
       if (need.needType.isNotEmpty)
-        KanafDetailRow(label: 'النوع', value: need.needType),
+        KanafDetailRow(label: context.tr('need.type'), value: need.needType),
       if (need.deadline != null)
         KanafDetailRow(
-          label: 'آخر موعد',
+          label: context.tr('need.deadline'),
           value: dateFormat.format(need.deadline!),
         ),
       if (need.createdAt != null)
         KanafDetailRow(
-          label: 'نُشر في',
+          label: context.tr('need.publishedAt'),
           value: dateFormat.format(need.createdAt!),
         ),
     ];

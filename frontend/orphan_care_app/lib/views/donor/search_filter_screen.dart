@@ -4,9 +4,11 @@ import 'package:intl/intl.dart';
 import '../../models/need_model.dart';
 import '../../providers/app_provider_scope.dart';
 import '../../router/kanaf_router.dart';
+import '../../services/api_config.dart';
 import '../../theme/kanaf_motion.dart';
 import '../../theme/kanaf_tokens.dart';
 import '../../widgets/kanaf_layout.dart';
+import '../../widgets/kanaf_media_content_card.dart';
 import '../../widgets/kanaf_states.dart';
 import '../../l10n/kanaf_localizations.dart';
 
@@ -59,7 +61,8 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
   Widget build(BuildContext context) {
     final provider = AppProviderScope.of(context);
     final all = provider.needs;
-    final visible = _applyCategory(_applyQuery(_filter.apply(all)));
+    final visible =
+        _applyCategory(context, _applyQuery(context, _filter.apply(all)));
 
     return Scaffold(
       appBar: AppBar(
@@ -130,10 +133,30 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
                           const SizedBox(height: KanafSpacing.md),
                       itemBuilder: (context, index) => KanafStaggeredEntrance(
                         index: index,
-                        child: _NeedCard(
+                        child: KanafMediaContentCard.need(
+                          context: context,
                           need: visible[index],
-                          dateFormat: DateFormat('d MMM y',
-                              Localizations.localeOf(context).languageCode),
+                          onTap: () => Navigator.pushNamed(
+                            context,
+                            KanafRoutes.needDetails,
+                            arguments: <String, dynamic>{
+                              'id': visible[index].id,
+                            },
+                          ),
+                          onDonate: visible[index].status == 'open'
+                              ? () => Navigator.pushNamed(
+                                    context,
+                                    KanafRoutes.financialDonation,
+                                    arguments: {'need_id': visible[index].id},
+                                  )
+                              : null,
+                          onInkindDonate: visible[index].status == 'open'
+                              ? () => Navigator.pushNamed(
+                                    context,
+                                    KanafRoutes.inkindDonation,
+                                    arguments: {'need_id': visible[index].id},
+                                  )
+                              : null,
                         ),
                       ),
                     ),
@@ -178,7 +201,7 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
     final categories = <String>{
       _allCategory,
       ...all
-          .map((need) => need.categoryLabel)
+          .map((need) => need.categoryLabelFor(context))
           .where((label) => label.trim().isNotEmpty),
     }.toList();
 
@@ -208,21 +231,21 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
     );
   }
 
-  List<NeedModel> _applyQuery(List<NeedModel> items) {
+  List<NeedModel> _applyQuery(BuildContext context, List<NeedModel> items) {
     if (_query.isEmpty) return items;
     final needle = _query.toLowerCase();
     return items.where((need) {
       return need.title.toLowerCase().contains(needle) ||
           need.description.toLowerCase().contains(needle) ||
-          need.categoryLabel.contains(_query) ||
+          need.categoryLabelFor(context).toLowerCase().contains(needle) ||
           need.category.toLowerCase().contains(needle);
     }).toList();
   }
 
-  List<NeedModel> _applyCategory(List<NeedModel> items) {
+  List<NeedModel> _applyCategory(BuildContext context, List<NeedModel> items) {
     if (_selectedCategory == _allCategory) return items;
     return items
-        .where((need) => need.categoryLabel == _selectedCategory)
+        .where((need) => need.categoryLabelFor(context) == _selectedCategory)
         .toList();
   }
 }
@@ -271,6 +294,14 @@ class _NeedCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          AspectRatio(
+            aspectRatio: 16 / 9,
+            child: ClipRRect(
+              borderRadius: KanafRadii.md,
+              child: _NeedImageTile(need: need),
+            ),
+          ),
+          const SizedBox(height: KanafSpacing.md),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -295,7 +326,10 @@ class _NeedCard extends StatelessWidget {
                       style: context.texts.titleSmall,
                     ),
                     const SizedBox(height: KanafSpacing.xxs),
-                    Text(need.categoryLabel, style: context.texts.bodySmall),
+                    Text(
+                      need.categoryLabelFor(context),
+                      style: context.texts.bodySmall,
+                    ),
                   ],
                 ),
               ),
@@ -408,6 +442,58 @@ class _NeedCard extends StatelessWidget {
   static String _formatNumber(double value) {
     if (value == value.roundToDouble()) return value.round().toString();
     return value.toStringAsFixed(1);
+  }
+}
+
+class _NeedImageTile extends StatelessWidget {
+  const _NeedImageTile({required this.need});
+
+  final NeedModel need;
+
+  @override
+  Widget build(BuildContext context) {
+    final imageUrl = need.imageUrl?.trim();
+    if (imageUrl != null && imageUrl.isNotEmpty) {
+      final resolvedUrl = ApiConfig.buildImageUrl(imageUrl);
+      if (resolvedUrl == null) {
+        return _NeedImagePlaceholder(need: need);
+      }
+      return Image.network(
+        resolvedUrl,
+        headers: ApiConfig.imageRequestHeaders,
+        fit: BoxFit.cover,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return _NeedImagePlaceholder(need: need);
+        },
+        errorBuilder: (context, error, stackTrace) {
+          ApiConfig.logImageLoadError(
+            source: imageUrl,
+            resolved: resolvedUrl,
+            error: error,
+          );
+          return _NeedImagePlaceholder(need: need);
+        },
+      );
+    }
+    return _NeedImagePlaceholder(need: need);
+  }
+}
+
+class _NeedImagePlaceholder extends StatelessWidget {
+  const _NeedImagePlaceholder({required this.need});
+
+  final NeedModel need;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colors;
+    return ColoredBox(
+      color: scheme.surfaceContainerHighest.withOpacity(0.55),
+      child: Center(
+        child: Icon(need.icon, size: 42, color: scheme.primary),
+      ),
+    );
   }
 }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../services/api_config.dart';
 import '../../theme/kanaf_motion.dart';
 import '../../theme/kanaf_tokens.dart';
 import '../../widgets/kanaf_layout.dart';
@@ -31,6 +32,9 @@ class NotificationDetailScreen extends StatelessWidget {
     final created = DateTime.tryParse(
       args?['created_at']?.toString() ?? args?['timestamp']?.toString() ?? '',
     );
+    final imageUrl = (args?['image_url'] ?? args?['image'] ?? args?['imageUrl'])
+        ?.toString()
+        .trim();
 
     final (icon, tone) = _styleFor(type, context);
 
@@ -56,6 +60,27 @@ class NotificationDetailScreen extends StatelessWidget {
                   padding: const EdgeInsets.all(KanafSpacing.xxl),
                   child: Column(
                     children: [
+                      if (imageUrl != null && imageUrl.isNotEmpty) ...[
+                        ClipRRect(
+                          borderRadius: KanafRadii.lg,
+                          child: AspectRatio(
+                            aspectRatio: 16 / 9,
+                            child: Image.network(
+                              ApiConfig.resolveBackendUrl(imageUrl),
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  ColoredBox(
+                                color: context.colors.surfaceContainerHighest,
+                                child: Icon(
+                                  Icons.image_not_supported_outlined,
+                                  color: context.colors.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: KanafSpacing.xl),
+                      ],
                       Container(
                         width: 68,
                         height: 68,

@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../router/kanaf_router.dart';
 import '../services/api_service.dart';
+import '../services/push_notification_service.dart';
 import '../theme/kanaf_motion.dart';
 import '../theme/kanaf_tokens.dart';
 import '../utils/auth_navigation.dart';
@@ -122,15 +125,19 @@ class _LoginScreenState extends State<LoginScreen> {
       controller: _emailController,
       keyboardType: TextInputType.emailAddress,
       textInputAction: TextInputAction.next,
-      autofillHints: const [AutofillHints.email],
+      autofillHints: const [
+        AutofillHints.username,
+        AutofillHints.email,
+        AutofillHints.telephoneNumber,
+      ],
       autocorrect: false,
       enabled: !_isLoading,
       decoration: InputDecoration(
-        labelText: context.tr('common.email'),
-        hintText: context.tr('auth.emailHint'),
+        labelText: context.tr('auth.loginIdentifier'),
+        hintText: context.tr('auth.loginIdentifierHint'),
         prefixIcon: const Icon(Icons.mail_outline_rounded),
       ),
-      validator: _validateEmail,
+      validator: _validateLoginIdentifier,
       onFieldSubmitted: (_) => _passwordFocus.requestFocus(),
     );
   }
@@ -210,13 +217,23 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  String? _validateEmail(String? value) {
-    final email = value?.trim() ?? '';
-    if (email.isEmpty) return context.tr('validation.emailRequired');
+  String? _validateLoginIdentifier(String? value) {
+    final identifier = value?.trim() ?? '';
+    if (identifier.isEmpty) {
+      return context.tr('validation.loginIdentifierRequired');
+    }
     // تحقق بنيوي بسيط: الصحة النهائية مسؤولية الخادم، لكن هذا يمنع
     // رحلة شبكة مؤكدة الفشل بسبب خطأ مطبعي واضح.
-    final pattern = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
-    if (!pattern.hasMatch(email)) return context.tr('validation.emailInvalid');
+    final emailPattern = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+    final compactPhone = identifier.replaceAll(RegExp(r'[\s\-()]'), '');
+    final phonePattern = RegExp(r'^(091|092|093|094)[0-9]{7}$');
+    final internationalPhonePattern =
+        RegExp(r'^(\+218|00218|218)(91|92|93|94)[0-9]{7}$');
+    if (!emailPattern.hasMatch(identifier) &&
+        !phonePattern.hasMatch(compactPhone) &&
+        !internationalPhonePattern.hasMatch(compactPhone)) {
+      return context.tr('validation.loginIdentifierInvalid');
+    }
     return null;
   }
 
@@ -235,6 +252,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       // إبلاغ النظام أن الدخول نجح ليحفظ مدير كلمات المرور البيانات.
       TextInput.finishAutofillContext();
+      unawaited(PushNotificationService.instance.registerCurrentDevice());
 
       AuthNavigation.navigateByRole(
         context,

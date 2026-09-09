@@ -375,6 +375,12 @@ class KanafStatusChip extends StatelessWidget {
           scheme.surfaceContainerHighest,
           Icons.archive_outlined,
         ),
+      'urgent' => (
+          context.tr('status.urgent'),
+          scheme.onErrorContainer,
+          scheme.errorContainer,
+          Icons.priority_high_rounded,
+        ),
       _ => (
           status,
           scheme.onSurfaceVariant,

@@ -7,3 +7,9 @@ frontend/orphan_care_app/READY_APK/Kanaf-anywhere-debug.apk
 
 # مخرجات فشل الاختبارات الذهبية (تشخيصية مؤقتة)
 **/test/failures/
+
+# Firebase credentials and app config must stay outside Git.
+firebase-service-account*.json
+backend/orphan_care_backend/firebase-service-account*.json
+frontend/orphan_care_app/android/app/google-services.json
+frontend/orphan_care_app/ios/Runner/GoogleService-Info.plist

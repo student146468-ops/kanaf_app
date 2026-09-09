@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../services/api_service.dart';
+import '../services/push_notification_service.dart';
 import '../theme/kanaf_tokens.dart';
 import '../utils/auth_navigation.dart';
 import '../widgets/kanaf_layout.dart';
@@ -169,6 +172,7 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
       );
       if (!mounted) return;
       setState(() => _isVerifying = false);
+      unawaited(PushNotificationService.instance.registerCurrentDevice());
       AuthNavigation.navigateByRole(
         context,
         AuthNavigation.roleFromAuthResponse(response) ?? _role,

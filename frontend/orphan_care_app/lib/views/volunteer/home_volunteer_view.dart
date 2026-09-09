@@ -4,9 +4,11 @@ import 'package:intl/intl.dart';
 import '../../models/volunteer_opportunity_model.dart';
 import '../../providers/app_provider_scope.dart';
 import '../../router/kanaf_router.dart';
+import '../../services/api_config.dart';
 import '../../theme/kanaf_motion.dart';
 import '../../theme/kanaf_tokens.dart';
 import '../../widgets/kanaf_layout.dart';
+import '../../widgets/kanaf_media_content_card.dart';
 import '../../widgets/kanaf_nav_shell.dart';
 import '../../widgets/kanaf_states.dart';
 import '../../l10n/kanaf_localizations.dart';
@@ -39,10 +41,6 @@ class _HomeVolunteerViewState extends State<HomeVolunteerView> {
     final provider = AppProviderScope.of(context);
     final all = provider.volunteerOpportunityModels;
     final visible = _filter.apply(all);
-    final dateFormat = DateFormat(
-      'd MMM y',
-      Localizations.localeOf(context).languageCode,
-    );
 
     return Scaffold(
       appBar: AppBar(
@@ -56,9 +54,7 @@ class _HomeVolunteerViewState extends State<HomeVolunteerView> {
             icon: const Icon(Icons.search_rounded),
           ),
           KanafNotificationButton(
-            unreadCount: provider.notifications
-                .where((notification) => notification['is_read'] != true)
-                .length,
+            unreadCount: provider.unreadNotificationsCount,
             route: KanafRoutes.volunteerNotifications,
           ),
           const SizedBox(width: KanafSpacing.xs),
@@ -105,9 +101,22 @@ class _HomeVolunteerViewState extends State<HomeVolunteerView> {
                           const SizedBox(height: KanafSpacing.md),
                       itemBuilder: (context, index) => KanafStaggeredEntrance(
                         index: index,
-                        child: _OpportunityCard(
-                          data: visible[index],
-                          dateFormat: dateFormat,
+                        child: KanafMediaContentCard.opportunity(
+                          context: context,
+                          opportunity: visible[index],
+                          onTap: () => Navigator.pushNamed(
+                            context,
+                            KanafRoutes.volunteerOpportunityDetails,
+                            arguments: visible[index].toRouteArguments(),
+                          ),
+                          onApply: visible[index].canApply
+                              ? () => Navigator.pushNamed(
+                                    context,
+                                    KanafRoutes.applyOpportunity,
+                                    arguments:
+                                        visible[index].toRouteArguments(),
+                                  )
+                              : null,
                         ),
                       ),
                     ),
@@ -193,6 +202,10 @@ class _OpportunityCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if ((data.imageUrl ?? '').trim().isNotEmpty) ...[
+            _OpportunityImage(imageUrl: data.imageUrl!.trim()),
+            const SizedBox(height: KanafSpacing.md),
+          ],
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -217,7 +230,10 @@ class _OpportunityCard extends StatelessWidget {
                       style: context.texts.titleSmall,
                     ),
                     const SizedBox(height: KanafSpacing.xxs),
-                    Text(data.categoryLabel, style: context.texts.bodySmall),
+                    Text(
+                      data.categoryLabelFor(context),
+                      style: context.texts.bodySmall,
+                    ),
                   ],
                 ),
               ),
@@ -310,6 +326,57 @@ class _OpportunityCard extends StatelessWidget {
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+class _OpportunityImage extends StatelessWidget {
+  const _OpportunityImage({required this.imageUrl});
+
+  final String imageUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colors;
+    final resolvedUrl = ApiConfig.buildImageUrl(imageUrl);
+    if (resolvedUrl == null) {
+      return _OpportunityImageFallback(scheme: scheme);
+    }
+    return ClipRRect(
+      borderRadius: KanafRadii.md,
+      child: AspectRatio(
+        aspectRatio: 16 / 9,
+        child: Image.network(
+          resolvedUrl,
+          headers: ApiConfig.imageRequestHeaders,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            ApiConfig.logImageLoadError(
+              source: imageUrl,
+              resolved: resolvedUrl,
+              error: error,
+            );
+            return _OpportunityImageFallback(scheme: scheme);
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _OpportunityImageFallback extends StatelessWidget {
+  const _OpportunityImageFallback({required this.scheme});
+
+  final ColorScheme scheme;
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: scheme.surfaceContainerHighest,
+      child: Icon(
+        Icons.image_not_supported_outlined,
+        color: scheme.onSurfaceVariant,
       ),
     );
   }

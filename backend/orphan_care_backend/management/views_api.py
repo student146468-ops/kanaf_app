@@ -80,6 +80,45 @@ def _is_valid_phone_number(phone_number):
     return bool(PHONE_NUMBER_PATTERN.fullmatch(phone_number))
 
 
+def _phone_login_candidates(identifier):
+    compact = re.sub(r'[\s\-()]', '', str(identifier or '').strip())
+    candidates = {compact}
+    if compact.startswith('+218') and len(compact) == 13:
+        candidates.add(f'0{compact[4:]}')
+    elif compact.startswith('00218') and len(compact) == 14:
+        candidates.add(f'0{compact[5:]}')
+    elif compact.startswith('218') and len(compact) == 12:
+        candidates.add(f'0{compact[3:]}')
+    return [candidate for candidate in candidates if candidate]
+
+
+def _find_user_for_login(identifier):
+    identifier = str(identifier or '').strip()
+    if '@' in identifier:
+        user = User.objects.filter(email__iexact=identifier).first()
+        if user is None:
+            user = User.objects.filter(username__iexact=identifier).first()
+        return user
+
+    user = User.objects.filter(username__iexact=identifier).first()
+    if user is None:
+        user = User.objects.filter(email__iexact=identifier).first()
+    if user is not None:
+        return user
+
+    phone_candidates = _phone_login_candidates(identifier)
+    if not phone_candidates:
+        return None
+
+    profile = (
+        UserProfile.objects.select_related('user')
+        .filter(phone_number__in=phone_candidates)
+        .order_by('user_id')
+        .first()
+    )
+    return profile.user if profile else None
+
+
 def _is_valid_registration_password(password):
     if not isinstance(password, str):
         return False
@@ -912,27 +951,26 @@ class LoginView(APIView):
             name='LoginRequest',
             fields={
                 'username': serializers.CharField(required=False),
-                'email': serializers.EmailField(required=False),
+                'email': serializers.CharField(required=False),
+                'phone_number': serializers.CharField(required=False),
                 'password': serializers.CharField(write_only=True),
             },
         ),
         responses={200: AUTH_RESPONSE_SCHEMA},
     )
     def post(self, request):
-        username_or_email = (request.data.get('username') or request.data.get('email') or '').strip()
+        login_identifier = (
+            request.data.get('username')
+            or request.data.get('email')
+            or request.data.get('phone_number')
+            or ''
+        ).strip()
         password = _normalize_password_input(request.data.get('password'))
 
-        if not username_or_email or not password:
-            return Response({'detail': _('username/email and password are required')}, status=status.HTTP_400_BAD_REQUEST)
+        if not login_identifier or not password:
+            return Response({'detail': _('username/email/phone and password are required')}, status=status.HTTP_400_BAD_REQUEST)
 
-        if '@' in username_or_email:
-            user = User.objects.filter(email__iexact=username_or_email).first()
-            if user is None:
-                user = User.objects.filter(username__iexact=username_or_email).first()
-        else:
-            user = User.objects.filter(username__iexact=username_or_email).first()
-            if user is None:
-                user = User.objects.filter(email__iexact=username_or_email).first()
+        user = _find_user_for_login(login_identifier)
         if user is None:
             return Response({'detail': _('invalid credentials')}, status=status.HTTP_401_UNAUTHORIZED)
 
@@ -1968,6 +2006,11 @@ class NotificationViewSet(SafeDestroyMixin, viewsets.ModelViewSet):
     def mark_all_as_read(self, request):
         self.get_queryset().filter(is_read=False).update(is_read=True)
         return Response({'status': 'read'})
+
+    @action(detail=False, methods=['delete'], url_path='delete-all')
+    def delete_all(self, request):
+        deleted_count, _ = self.get_queryset().delete()
+        return Response({'deleted': deleted_count}, status=status.HTTP_200_OK)
 
 
 class ProfileViewSet(viewsets.ReadOnlyModelViewSet):

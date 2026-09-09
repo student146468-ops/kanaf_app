@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import '../models/donation_model.dart';
 import '../models/donation_request.dart';
 import '../models/need_model.dart';
+import '../models/notification_model.dart';
 import '../models/orphan_model.dart';
 import '../models/volunteer_opportunity_model.dart';
 import '../models/volunteer_model.dart';
+import '../services/api_config.dart';
 import '../services/api_failure.dart';
 import '../services/api_service.dart';
 
@@ -42,6 +44,7 @@ class AppProvider extends ChangeNotifier {
   // مواعيد زيارة الدار — للقراءة فقط، يعرضها المتبرع في ملف الدار.
   List<Map<String, dynamic>> _visitHours = [];
   List<Map<String, dynamic>> _notifications = [];
+  int _unreadNotificationsCount = 0;
 
   bool get isLoading => _isLoading;
   bool get isSaving => _isSaving;
@@ -89,6 +92,10 @@ class AppProvider extends ChangeNotifier {
   Map<String, dynamic> get dashboardStats => _dashboardStats;
   List<Map<String, dynamic>> get visitHours => _visitHours;
   List<Map<String, dynamic>> get notifications => _notifications;
+  List<NotificationModel> get notificationModels => _notifications
+      .map((item) => NotificationModel.fromJson(item))
+      .toList(growable: false);
+  int get unreadNotificationsCount => _unreadNotificationsCount;
 
   Future<void> fetchOrphans() async {
     await _load(() async {
@@ -196,10 +203,12 @@ class AppProvider extends ChangeNotifier {
     }
     try {
       final data = await _apiService.getNeeds();
-      _needs = data
-          .map((item) =>
-              NeedModel.fromJson(Map<String, dynamic>.from(item as Map)))
-          .toList();
+      final mapped =
+          data.map((item) => Map<String, dynamic>.from(item as Map)).toList();
+      for (final item in mapped) {
+        _logImageTrace('need:list', item);
+      }
+      _needs = mapped.map(NeedModel.fromJson).toList();
       _clearNeedsFailure();
     } catch (e) {
       _recordNeedsFailure(e);
@@ -215,6 +224,9 @@ class AppProvider extends ChangeNotifier {
       final data = await _apiService.getVolunteerOpportunities();
       _volunteerOpportunities =
           data.map((item) => Map<String, dynamic>.from(item as Map)).toList();
+      for (final item in _volunteerOpportunities) {
+        _logImageTrace('volunteer_opportunity:list', item);
+      }
     }, notifyLoading: notifyLoading);
   }
 
@@ -245,9 +257,9 @@ class AppProvider extends ChangeNotifier {
     _isLoadingVolunteerOpportunityDetails = true;
     notifyListeners();
     try {
-      _selectedVolunteerOpportunity = VolunteerOpportunityModel.fromJson(
-        await _apiService.getVolunteerOpportunityDetails(id),
-      );
+      final data = await _apiService.getVolunteerOpportunityDetails(id);
+      _logImageTrace('volunteer_opportunity:details', data);
+      _selectedVolunteerOpportunity = VolunteerOpportunityModel.fromJson(data);
       _clearVolunteerOpportunityDetailsFailure();
     } catch (e) {
       _recordVolunteerOpportunityDetailsFailure(e);
@@ -265,7 +277,9 @@ class AppProvider extends ChangeNotifier {
     _isLoadingNeedDetails = true;
     notifyListeners();
     try {
-      _selectedNeed = NeedModel.fromJson(await _apiService.getNeedDetails(id));
+      final data = await _apiService.getNeedDetails(id);
+      _logImageTrace('need:details', data);
+      _selectedNeed = NeedModel.fromJson(data);
       _clearNeedDetailsFailure();
     } catch (e) {
       _recordNeedDetailsFailure(e);
@@ -299,14 +313,29 @@ class AppProvider extends ChangeNotifier {
       final data = await _apiService.getNotifications();
       _notifications =
           data.map((item) => Map<String, dynamic>.from(item as Map)).toList();
+      _unreadNotificationsCount =
+          _notifications.where((item) => item['is_read'] != true).length;
+    }, notifyLoading: notifyLoading);
+  }
+
+  Future<void> fetchUnreadNotificationsCount(
+      {bool notifyLoading = false}) async {
+    await _load(() async {
+      _unreadNotificationsCount =
+          await _apiService.getUnreadNotificationsCount();
     }, notifyLoading: notifyLoading);
   }
 
   Future<bool> markNotificationRead(int id) {
     return _save(() async {
       await _apiService.markNotificationRead(id);
-      final index = _notifications.indexWhere((item) => item['id'] == id);
-      if (index != -1) _notifications[index]['is_read'] = true;
+      final index = _notifications.indexWhere(
+        (item) => int.tryParse(item['id']?.toString() ?? '') == id,
+      );
+      if (index != -1 && _notifications[index]['is_read'] != true) {
+        _notifications[index]['is_read'] = true;
+        if (_unreadNotificationsCount > 0) _unreadNotificationsCount--;
+      }
     });
   }
 
@@ -316,6 +345,26 @@ class AppProvider extends ChangeNotifier {
       for (final notification in _notifications) {
         notification['is_read'] = true;
       }
+      _unreadNotificationsCount = 0;
+    });
+  }
+
+  Future<bool> deleteNotification(int id) {
+    return _save(() async {
+      await _apiService.deleteNotification(id);
+      _notifications.removeWhere(
+        (item) => int.tryParse(item['id']?.toString() ?? '') == id,
+      );
+      _unreadNotificationsCount =
+          _notifications.where((item) => item['is_read'] != true).length;
+    });
+  }
+
+  Future<bool> deleteAllNotifications() {
+    return _save(() async {
+      await _apiService.deleteAllNotifications();
+      _notifications = [];
+      _unreadNotificationsCount = 0;
     });
   }
 
@@ -350,6 +399,7 @@ class AppProvider extends ChangeNotifier {
     _dashboardStats = {};
     _visitHours = [];
     _notifications = [];
+    _unreadNotificationsCount = 0;
     _selectedOrphan = null;
     _selectedNeed = null;
     _selectedVolunteerOpportunity = null;
@@ -479,6 +529,20 @@ class AppProvider extends ChangeNotifier {
   void _clearVolunteerOpportunityDetailsFailure() {
     _volunteerOpportunityDetailsErrorMessage = null;
     _volunteerOpportunityDetailsErrorKind = null;
+  }
+
+  void _logImageTrace(String scope, Map<String, dynamic> data) {
+    final raw = data['image_url'] ??
+        data['image'] ??
+        data['imageUrl'] ??
+        data['photo'] ??
+        data['photo_url'];
+    final finalUrl = ApiConfig.buildImageUrl(raw?.toString());
+    debugPrint(
+      'Kanaf image trace [$scope id=${data['id']}] '
+      'RAW IMAGE VALUE=${raw?.toString() ?? '<null>'} '
+      'FINAL IMAGE URL=${finalUrl ?? '<null>'}',
+    );
   }
 
   void _replaceDonation(DonationModel updated) {

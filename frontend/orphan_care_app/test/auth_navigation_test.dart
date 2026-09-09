@@ -110,6 +110,23 @@ void main() {
       );
     });
 
+    test('builds image URLs without duplicating backend origin', () {
+      expect(
+        ApiConfig.buildImageUrl('https://cdn.example.com/photo.jpg'),
+        'https://cdn.example.com/photo.jpg',
+      );
+      expect(
+        ApiConfig.buildImageUrl('cdn.example.com/photo.jpg'),
+        'https://cdn.example.com/photo.jpg',
+      );
+      expect(
+        ApiConfig.buildImageUrl('/media/needs/photo.jpg'),
+        'https://kanafapp.pythonanywhere.com/media/needs/photo.jpg',
+      );
+      expect(ApiConfig.buildImageUrl(''), isNull);
+      expect(ApiConfig.buildImageUrl(null), isNull);
+    });
+
     test('does not expose technical details for missing login endpoint', () {
       final message = ApiService.friendlyMessageForDioException(
         DioException(

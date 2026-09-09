@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../../providers/app_provider_scope.dart';
 import '../../router/kanaf_router.dart';
+import '../../services/api_config.dart';
 import '../../theme/kanaf_motion.dart';
 import '../../theme/kanaf_tokens.dart';
 import '../../widgets/kanaf_layout.dart';
@@ -27,6 +28,8 @@ class _NotificationsCenterScreenState extends State<NotificationsCenterScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController =
       TabController(length: 2, vsync: this);
+  final Set<int> _deletingNotificationIds = {};
+  bool _isDeletingAll = false;
 
   @override
   void initState() {
@@ -72,8 +75,22 @@ class _NotificationsCenterScreenState extends State<NotificationsCenterScreen>
           if (unread.isNotEmpty)
             IconButton(
               tooltip: context.tr('notifications.markAllRead'),
-              onPressed: provider.isSaving ? null : _markAllRead,
+              onPressed:
+                  provider.isSaving || _isDeletingAll ? null : _markAllRead,
               icon: const Icon(Icons.done_all_rounded),
+            ),
+          if (all.isNotEmpty)
+            IconButton(
+              tooltip: context.tr('notifications.deleteAll'),
+              onPressed:
+                  provider.isSaving || _isDeletingAll ? null : _deleteAll,
+              icon: _isDeletingAll
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.delete_sweep_outlined),
             ),
         ],
       ),
@@ -132,11 +149,18 @@ class _NotificationsCenterScreenState extends State<NotificationsCenterScreen>
               data: items[index],
               dateFormat: dateFormat,
               onOpen: () => _open(items[index]),
+              onDelete: () => _deleteOne(items[index]),
+              isDeleting: _isDeleting(items[index]['id']),
             ),
           ),
         ),
       ),
     );
+  }
+
+  bool _isDeleting(Object? rawId) {
+    final id = rawId is int ? rawId : int.tryParse(rawId?.toString() ?? '');
+    return id != null && _deletingNotificationIds.contains(id);
   }
 
   Future<void> _markAllRead() async {
@@ -151,6 +175,86 @@ class _NotificationsCenterScreenState extends State<NotificationsCenterScreen>
               : provider.errorMessage ??
                   context.tr('notifications.updateFailed'),
         ),
+      ),
+    );
+  }
+
+  Future<void> _deleteOne(Map<String, dynamic> notification) async {
+    final id = int.tryParse(notification['id']?.toString() ?? '');
+    if (id == null) return;
+    final confirmed = await _confirm(
+      title: context.tr('notifications.deleteConfirmTitle'),
+      message: context.tr('notifications.deleteConfirmMessage'),
+      action: context.tr('notifications.delete'),
+    );
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _deletingNotificationIds.add(id));
+    final provider = AppProviderScope.of(context);
+    final done = await provider.deleteNotification(id);
+    if (!mounted) return;
+    setState(() => _deletingNotificationIds.remove(id));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          done
+              ? context.tr('notifications.deleteSuccess')
+              : provider.errorMessage ??
+                  context.tr('notifications.deleteFailed'),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _deleteAll() async {
+    final confirmed = await _confirm(
+      title: context.tr('notifications.deleteAllConfirmTitle'),
+      message: context.tr('notifications.deleteAllConfirmMessage'),
+      action: context.tr('notifications.deleteAll'),
+    );
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _isDeletingAll = true);
+    final provider = AppProviderScope.of(context);
+    final done = await provider.deleteAllNotifications();
+    if (!mounted) return;
+    setState(() {
+      _isDeletingAll = false;
+      _deletingNotificationIds.clear();
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          done
+              ? context.tr('notifications.deleteAllSuccess')
+              : provider.errorMessage ??
+                  context.tr('notifications.deleteAllFailed'),
+        ),
+      ),
+    );
+  }
+
+  Future<bool?> _confirm({
+    required String title,
+    required String message,
+    required String action,
+  }) {
+    return showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(context.tr('common.cancel')),
+          ),
+          FilledButton.icon(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            icon: const Icon(Icons.delete_outline_rounded),
+            label: Text(action),
+          ),
+        ],
       ),
     );
   }
@@ -175,11 +279,15 @@ class _CenterCard extends StatelessWidget {
     required this.data,
     required this.dateFormat,
     required this.onOpen,
+    required this.onDelete,
+    required this.isDeleting,
   });
 
   final Map<String, dynamic> data;
   final DateFormat dateFormat;
   final VoidCallback onOpen;
+  final VoidCallback onDelete;
+  final bool isDeleting;
 
   @override
   Widget build(BuildContext context) {
@@ -188,6 +296,9 @@ class _CenterCard extends StatelessWidget {
     final created = DateTime.tryParse(
       data['created_at']?.toString() ?? data['timestamp']?.toString() ?? '',
     );
+    final imageUrl = (data['image_url'] ?? data['image'] ?? data['imageUrl'])
+        ?.toString()
+        .trim();
 
     return KanafCard(
       onTap: onOpen,
@@ -198,6 +309,10 @@ class _CenterCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (imageUrl != null && imageUrl.isNotEmpty) ...[
+            _NotificationImage(imageUrl: imageUrl),
+            const SizedBox(height: KanafSpacing.md),
+          ],
           Row(
             children: [
               Expanded(
@@ -220,6 +335,17 @@ class _CenterCard extends StatelessWidget {
                     shape: BoxShape.circle,
                   ),
                 ),
+              IconButton(
+                tooltip: context.tr('notifications.delete'),
+                onPressed: isDeleting ? null : onDelete,
+                icon: isDeleting
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.delete_outline_rounded),
+              ),
             ],
           ),
           const SizedBox(height: KanafSpacing.xs),
@@ -239,6 +365,34 @@ class _CenterCard extends StatelessWidget {
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+class _NotificationImage extends StatelessWidget {
+  const _NotificationImage({required this.imageUrl});
+
+  final String imageUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colors;
+    return ClipRRect(
+      borderRadius: KanafRadii.md,
+      child: AspectRatio(
+        aspectRatio: 16 / 9,
+        child: Image.network(
+          ApiConfig.resolveBackendUrl(imageUrl),
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => ColoredBox(
+            color: scheme.surfaceContainerHighest,
+            child: Icon(
+              Icons.image_not_supported_outlined,
+              color: scheme.onSurfaceVariant,
+            ),
+          ),
+        ),
       ),
     );
   }

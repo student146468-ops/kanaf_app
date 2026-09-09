@@ -221,8 +221,17 @@ class ApiService {
     }
   }
 
-  Future<void> logout() async {
-    await _clearToken();
+  Future<void> logout({bool notifyServer = true}) async {
+    try {
+      if (notifyServer && (await _getToken()) != null) {
+        await _dio.post('/auth/logout/');
+      }
+    } on DioException catch (error) {
+      debugPrint(
+          'Kanaf server logout failed: ${_developerErrorSummary(error)}');
+    } finally {
+      await _clearToken();
+    }
   }
 
   /// يغيّر كلمة المرور من داخل الحساب.
@@ -503,6 +512,12 @@ class ApiService {
       _getList('/visit-hours/?care_home=$careHomeId');
 
   Future<List<dynamic>> getNotifications() => _getList('/notifications/');
+  Future<int> getUnreadNotificationsCount() async {
+    final data = await _getMap('/notifications/unread-count/');
+    final value = data['unread_count'] ?? data['count'] ?? 0;
+    return int.tryParse(value.toString()) ?? 0;
+  }
+
   Future<void> markNotificationRead(int id) => _send(
         'POST',
         '/notifications/$id/mark_as_read/',
@@ -513,6 +528,46 @@ class ApiService {
         '/notifications/mark_all_as_read/',
         'تعذر تحديث حالة الإشعارات',
       );
+
+  Future<void> deleteNotification(int id) => _send(
+        'DELETE',
+        '/notifications/$id/',
+        'تعذر حذف الإشعار',
+      );
+
+  Future<int> deleteAllNotifications() async {
+    try {
+      final response = await _dio.delete('/notifications/delete-all/');
+      final data = _extractMap(response.data);
+      return int.tryParse((data['deleted'] ?? 0).toString()) ?? 0;
+    } on DioException catch (e) {
+      throw await failureFor(e, fallback: 'تعذر حذف الإشعارات');
+    }
+  }
+
+  Future<void> registerDeviceToken(
+    String token, {
+    String platform = 'android',
+  }) async {
+    await _postMap('/notifications/device-token/', {
+      'token': token,
+      'platform': platform,
+    });
+  }
+
+  Future<void> deactivateDeviceToken(String token) async {
+    try {
+      await _dio.delete(
+        '/notifications/device-token/',
+        data: {'token': token},
+      );
+    } on DioException catch (e) {
+      throw await failureFor(
+        e,
+        fallback: 'تعذر تحديث إعدادات الإشعارات',
+      );
+    }
+  }
 
   Future<List<dynamic>> _getList(String path) async {
     try {
@@ -931,6 +986,8 @@ class ApiService {
           final keyText = key.toString().toLowerCase();
           if (keyText.contains('password') ||
               keyText.contains('token') ||
+              keyText.contains('email') ||
+              keyText.contains('phone') ||
               keyText == 'code' ||
               keyText.contains('otp') ||
               keyText == 'access' ||

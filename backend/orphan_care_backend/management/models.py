@@ -576,6 +576,7 @@ class Notification(models.Model):
     notification_type = models.CharField(max_length=20, choices=TYPE_CHOICES, default=TYPE_MESSAGE, db_index=True)
     title = models.CharField(max_length=200)
     message = models.TextField()
+    image_url = models.URLField(blank=True, default='')
     is_read = models.BooleanField(default=False, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
 

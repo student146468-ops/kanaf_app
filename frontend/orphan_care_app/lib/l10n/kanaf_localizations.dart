@@ -13,7 +13,8 @@ class KanafLocalizations {
       _KanafLocalizationsDelegate();
 
   static KanafLocalizations of(BuildContext context) =>
-      Localizations.of<KanafLocalizations>(context, KanafLocalizations)!;
+      Localizations.of<KanafLocalizations>(context, KanafLocalizations) ??
+      const KanafLocalizations(Locale('ar'), {});
 
   bool get isArabic => locale.languageCode == 'ar';
 

@@ -1,4 +1,6 @@
-﻿import 'package:flutter/material.dart';
+import 'dart:async';
+
+import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
@@ -6,13 +8,18 @@ import 'l10n/kanaf_localizations.dart';
 import 'providers/app_provider.dart';
 import 'providers/app_provider_scope.dart';
 import 'router/kanaf_router.dart';
+import 'services/api_service.dart';
+import 'services/push_notification_service.dart';
 import 'theme/kanaf_locale_controller.dart';
 import 'theme/kanaf_theme.dart';
 import 'theme/kanaf_theme_controller.dart';
 import 'utils/session_guard.dart';
 
+final GlobalKey<NavigatorState> kanafNavigatorKey = GlobalKey<NavigatorState>();
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  configureKanafFirebaseBackgroundHandler();
 
   // تهيئة بيانات التواريخ العربية قبل الإقلاع. بدونها يرمي
   // `DateFormat(..., 'ar')` استثناء LocaleDataException عند أول
@@ -33,16 +40,21 @@ Future<void> main() async {
       child: KanafApp(provider: provider),
     ),
   );
+
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    unawaited(
+      PushNotificationService.instance.initialize(
+        navigatorKey: kanafNavigatorKey,
+        apiService: ApiService(),
+      ),
+    );
+  });
 }
 
 class KanafApp extends StatelessWidget {
-  KanafApp({super.key, required this.provider});
+  const KanafApp({super.key, required this.provider});
 
   final AppProvider provider;
-
-  /// مفتاح الملاح — يتيح لحارس الجلسة إعادة التوجيه من خارج شجرة
-  /// الشاشات دون تمرير `BuildContext` عبر الطبقات.
-  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +65,7 @@ class KanafApp extends StatelessWidget {
       builder: (context, themeMode, _) => ValueListenableBuilder<Locale>(
         valueListenable: KanafLocaleController.instance,
         builder: (context, locale, _) => KanafSessionGuard(
-          navigatorKey: _navigatorKey,
+          navigatorKey: kanafNavigatorKey,
           provider: provider,
           child: _buildApp(themeMode, locale),
         ),
@@ -65,7 +77,7 @@ class KanafApp extends StatelessWidget {
     return MaterialApp(
       title: locale.languageCode == 'en' ? 'Kanaf' : 'كَنَفْ',
       debugShowCheckedModeBanner: false,
-      navigatorKey: _navigatorKey,
+      navigatorKey: kanafNavigatorKey,
 
       // ── التعريب ─────────────────────────────────────────────
       // تحديد `locale` عربي يجعل Flutter يقلب الاتجاه إلى RTL على

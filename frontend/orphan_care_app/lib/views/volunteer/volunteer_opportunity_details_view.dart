@@ -5,9 +5,11 @@ import '../../l10n/kanaf_localizations.dart';
 import '../../models/volunteer_opportunity_model.dart';
 import '../../providers/app_provider_scope.dart';
 import '../../router/kanaf_router.dart';
+import '../../services/api_config.dart';
 import '../../theme/kanaf_motion.dart';
 import '../../theme/kanaf_tokens.dart';
 import '../../widgets/kanaf_layout.dart';
+import '../../widgets/kanaf_media_content_card.dart';
 import '../../widgets/kanaf_states.dart';
 
 class VolunteerOpportunityDetailsView extends StatefulWidget {
@@ -75,10 +77,6 @@ class _VolunteerOpportunityDetailsViewState
       );
     }
 
-    final title = opportunity.title.isEmpty
-        ? context.tr('volunteer.defaultOpportunity')
-        : opportunity.title;
-
     return Scaffold(
       appBar: AppBar(
         title: Text(context.tr('volunteer.detailsTitle')),
@@ -116,43 +114,36 @@ class _VolunteerOpportunityDetailsViewState
                       ),
                       const SizedBox(height: KanafSpacing.lg),
                     ],
-                    if ((opportunity.imageUrl ?? '').isNotEmpty) ...[
-                      KanafStaggeredEntrance(
-                        index: 0,
-                        child: _OpportunityImage(
-                          imageUrl: opportunity.imageUrl!,
-                        ),
+                    KanafStaggeredEntrance(
+                      index: 0,
+                      child: KanafMediaContentCard.opportunity(
+                        context: context,
+                        opportunity: opportunity,
+                        onApply: opportunity.canApply
+                            ? () => Navigator.pushNamed(
+                                  context,
+                                  KanafRoutes.applyOpportunity,
+                                  arguments: opportunity.toRouteArguments(),
+                                )
+                            : null,
                       ),
-                      const SizedBox(height: KanafSpacing.lg),
-                    ],
+                    ),
+                    const SizedBox(height: KanafSpacing.lg),
                     KanafStaggeredEntrance(
                       index: 1,
-                      child: _HeaderCard(
-                        opportunity: opportunity,
-                        title: title,
-                      ),
-                    ),
-                    const SizedBox(height: KanafSpacing.lg),
-                    KanafStaggeredEntrance(
-                      index: 2,
-                      child: _CapacityCard(opportunity: opportunity),
-                    ),
-                    const SizedBox(height: KanafSpacing.lg),
-                    KanafStaggeredEntrance(
-                      index: 3,
                       child: _DetailsCard(opportunity: opportunity),
                     ),
                     if (opportunity.skills.isNotEmpty) ...[
                       const SizedBox(height: KanafSpacing.lg),
                       KanafStaggeredEntrance(
-                        index: 4,
+                        index: 2,
                         child: _SkillsSection(skills: opportunity.skills),
                       ),
                     ],
                     if (opportunity.description.isNotEmpty) ...[
                       const SizedBox(height: KanafSpacing.lg),
                       KanafStaggeredEntrance(
-                        index: 5,
+                        index: 3,
                         child: _DescriptionSection(
                           description: opportunity.description,
                         ),
@@ -211,21 +202,44 @@ class _OpportunityImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = context.colors;
+    final resolvedUrl = ApiConfig.buildImageUrl(imageUrl);
+    if (resolvedUrl == null) {
+      return _OpportunityImageFallback(scheme: scheme);
+    }
     return ClipRRect(
       borderRadius: KanafRadii.lg,
       child: AspectRatio(
         aspectRatio: 16 / 9,
         child: Image.network(
-          imageUrl,
+          resolvedUrl,
+          headers: ApiConfig.imageRequestHeaders,
           fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) => ColoredBox(
-            color: scheme.surfaceContainerHighest,
-            child: Icon(
-              Icons.image_not_supported_outlined,
-              color: scheme.onSurfaceVariant,
-            ),
-          ),
+          errorBuilder: (context, error, stackTrace) {
+            ApiConfig.logImageLoadError(
+              source: imageUrl,
+              resolved: resolvedUrl,
+              error: error,
+            );
+            return _OpportunityImageFallback(scheme: scheme);
+          },
         ),
+      ),
+    );
+  }
+}
+
+class _OpportunityImageFallback extends StatelessWidget {
+  const _OpportunityImageFallback({required this.scheme});
+
+  final ColorScheme scheme;
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: scheme.surfaceContainerHighest,
+      child: Icon(
+        Icons.image_not_supported_outlined,
+        color: scheme.onSurfaceVariant,
       ),
     );
   }
@@ -269,7 +283,7 @@ class _HeaderCard extends StatelessWidget {
                       KanafStatusChip(status: opportunity.myApplicationStatus!),
                     Chip(
                       visualDensity: VisualDensity.compact,
-                      label: Text(opportunity.categoryLabel),
+                      label: Text(opportunity.categoryLabelFor(context)),
                     ),
                   ],
                 ),

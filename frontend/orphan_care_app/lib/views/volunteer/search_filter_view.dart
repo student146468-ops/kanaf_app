@@ -4,9 +4,11 @@ import 'package:intl/intl.dart';
 import '../../models/volunteer_opportunity_model.dart';
 import '../../providers/app_provider_scope.dart';
 import '../../router/kanaf_router.dart';
+import '../../services/api_config.dart';
 import '../../theme/kanaf_motion.dart';
 import '../../theme/kanaf_tokens.dart';
 import '../../widgets/kanaf_layout.dart';
+import '../../widgets/kanaf_media_content_card.dart';
 import '../../widgets/kanaf_states.dart';
 import '../../l10n/kanaf_localizations.dart';
 
@@ -47,12 +49,7 @@ class _SearchFilterViewState extends State<SearchFilterView> {
   Widget build(BuildContext context) {
     final provider = AppProviderScope.of(context);
     final all = provider.volunteerOpportunityModels;
-    final visible = _applyCategory(_applyQuery(_scope.apply(all)));
-    final dateFormat = DateFormat(
-      'd MMM y',
-      Localizations.localeOf(context).languageCode,
-    );
-
+    final visible = _applyCategory(context, _applyQuery(_scope.apply(all)));
     return Scaffold(
       appBar: AppBar(
         title: Text(context.tr('volunteer.searchTitle')),
@@ -100,9 +97,22 @@ class _SearchFilterViewState extends State<SearchFilterView> {
                           const SizedBox(height: KanafSpacing.md),
                       itemBuilder: (context, index) => KanafStaggeredEntrance(
                         index: index,
-                        child: _ResultCard(
-                          data: visible[index],
-                          dateFormat: dateFormat,
+                        child: KanafMediaContentCard.opportunity(
+                          context: context,
+                          opportunity: visible[index],
+                          onTap: () => Navigator.pushNamed(
+                            context,
+                            KanafRoutes.volunteerOpportunityDetails,
+                            arguments: visible[index].toRouteArguments(),
+                          ),
+                          onApply: visible[index].canApply
+                              ? () => Navigator.pushNamed(
+                                    context,
+                                    KanafRoutes.applyOpportunity,
+                                    arguments:
+                                        visible[index].toRouteArguments(),
+                                  )
+                              : null,
                         ),
                       ),
                     ),
@@ -176,7 +186,7 @@ class _SearchFilterViewState extends State<SearchFilterView> {
   Widget _buildCategories(List<VolunteerOpportunityModel> all) {
     final categories = <String>{
       _allCategory,
-      ...all.map((item) => item.categoryLabel),
+      ...all.map((item) => item.categoryLabelFor(context)),
     }.toList();
 
     return SingleChildScrollView(
@@ -222,10 +232,13 @@ class _SearchFilterViewState extends State<SearchFilterView> {
   }
 
   List<VolunteerOpportunityModel> _applyCategory(
+    BuildContext context,
     List<VolunteerOpportunityModel> items,
   ) {
     if (_category == _allCategory) return items;
-    return items.where((item) => item.categoryLabel == _category).toList();
+    return items
+        .where((item) => item.categoryLabelFor(context) == _category)
+        .toList();
   }
 }
 
@@ -270,6 +283,10 @@ class _ResultCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if ((data.imageUrl ?? '').trim().isNotEmpty) ...[
+            _OpportunityImage(imageUrl: data.imageUrl!.trim()),
+            const SizedBox(height: KanafSpacing.md),
+          ],
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -296,7 +313,10 @@ class _ResultCard extends StatelessWidget {
                       style: context.texts.titleSmall,
                     ),
                     const SizedBox(height: KanafSpacing.xxs),
-                    Text(data.categoryLabel, style: context.texts.bodySmall),
+                    Text(
+                      data.categoryLabelFor(context),
+                      style: context.texts.bodySmall,
+                    ),
                   ],
                 ),
               ),
@@ -346,6 +366,57 @@ class _ResultCard extends StatelessWidget {
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+class _OpportunityImage extends StatelessWidget {
+  const _OpportunityImage({required this.imageUrl});
+
+  final String imageUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colors;
+    final resolvedUrl = ApiConfig.buildImageUrl(imageUrl);
+    if (resolvedUrl == null) {
+      return _OpportunityImageFallback(scheme: scheme);
+    }
+    return ClipRRect(
+      borderRadius: KanafRadii.md,
+      child: AspectRatio(
+        aspectRatio: 16 / 9,
+        child: Image.network(
+          resolvedUrl,
+          headers: ApiConfig.imageRequestHeaders,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            ApiConfig.logImageLoadError(
+              source: imageUrl,
+              resolved: resolvedUrl,
+              error: error,
+            );
+            return _OpportunityImageFallback(scheme: scheme);
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _OpportunityImageFallback extends StatelessWidget {
+  const _OpportunityImageFallback({required this.scheme});
+
+  final ColorScheme scheme;
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: scheme.surfaceContainerHighest,
+      child: Icon(
+        Icons.image_not_supported_outlined,
+        color: scheme.onSurfaceVariant,
       ),
     );
   }

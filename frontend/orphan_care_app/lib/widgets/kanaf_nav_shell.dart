@@ -134,17 +134,19 @@ class KanafNotificationButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colors;
-
     return IconButton(
       tooltip: context.tr('common.notifications'),
       onPressed: () => _openNotifications(context),
       icon: Badge(
         // الشارة تظهر فقط عند وجود غير مقروء — لا نقطة دائمة بلا معنى.
         isLabelVisible: unreadCount > 0,
-        backgroundColor: scheme.error,
-        textColor: scheme.onError,
-        label: Text(unreadCount > 99 ? '99+' : '$unreadCount'),
+        backgroundColor: KanafPalette.brandInk,
+        textColor: Colors.white,
+        label: Text(
+          unreadCount > 99 ? '99+' : '$unreadCount',
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontWeight: FontWeight.w800),
+        ),
         child: const Icon(Icons.notifications_outlined),
       ),
     );

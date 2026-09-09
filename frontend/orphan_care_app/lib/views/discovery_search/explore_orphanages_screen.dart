@@ -61,9 +61,9 @@ class _ExploreOrphanagesScreenState extends State<ExploreOrphanagesScreen> {
     final provider = AppProviderScope.of(context);
     final all = provider.careHomes;
     final needs = provider.needs;
-    final visible = _filter(all, needs);
+    final visible = _filter(context, all, needs);
     final cities = _citiesOf(all);
-    final categories = _categoriesOf(needs);
+    final categories = _categoriesOf(context, needs);
 
     return Scaffold(
       appBar: AppBar(title: Text(context.tr('search.orphanagesTitle'))),
@@ -166,6 +166,7 @@ class _ExploreOrphanagesScreenState extends State<ExploreOrphanagesScreen> {
   /// كانت التصفية السابقة على «المدينة» تطابق نصاً داخل عنوان مخترع،
   /// وهو معيار لا يصمد مع بيانات حقيقية بصيغ عناوين متنوعة.
   List<Map<String, dynamic>> _filter(
+    BuildContext context,
     List<Map<String, dynamic>> homes,
     List<NeedModel> needs,
   ) {
@@ -176,7 +177,9 @@ class _ExploreOrphanagesScreenState extends State<ExploreOrphanagesScreen> {
       }
       final homeNeeds = _needsForHome(home, needs);
       if (_selectedCategory != _allFilter &&
-          !homeNeeds.any((need) => need.categoryLabel == _selectedCategory)) {
+          !homeNeeds.any(
+            (need) => need.categoryLabelFor(context) == _selectedCategory,
+          )) {
         return false;
       }
       if (query.isEmpty) return true;
@@ -205,10 +208,10 @@ class _ExploreOrphanagesScreenState extends State<ExploreOrphanagesScreen> {
     return [_allFilter, ...cities.toList()..sort()];
   }
 
-  List<String> _categoriesOf(List<NeedModel> needs) {
+  List<String> _categoriesOf(BuildContext context, List<NeedModel> needs) {
     final categories = needs
         .where((need) => need.status == 'open')
-        .map((need) => need.categoryLabel)
+        .map((need) => need.categoryLabelFor(context))
         .where((category) => category.isNotEmpty)
         .toSet();
     return [_allFilter, ...categories.toList()..sort()];
@@ -549,9 +552,9 @@ class _NeedsSnapshot extends StatelessWidget {
   Widget build(BuildContext context) {
     final grouped = <String, List<NeedModel>>{};
     for (final need in needs) {
-      grouped.putIfAbsent(need.categoryLabel, () => []).add(need);
+      grouped.putIfAbsent(need.categoryLabelFor(context), () => []).add(need);
     }
-    final visible = grouped.entries.take(3).toList();
+    final visible = grouped.entries.toList();
 
     return Column(
       children: [

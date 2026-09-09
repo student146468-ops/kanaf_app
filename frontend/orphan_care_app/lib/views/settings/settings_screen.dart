@@ -231,15 +231,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     // ظ…ط³ط­ ط§ظ„طھظˆظƒظ† ط£ظˆظ„ط§ظ‹: ظ„ظˆ ط§ظ†طھظ‚ظ„ظ†ط§ ظ‚ط¨ظ„ ط§ظ„ظ…ط³ط­ ظ„ط¨ظ‚ظٹطھ ط§ظ„ط¬ظ„ط³ط© طµط§ظ„ط­ط©طŒ
     // ظˆظ„ط£ط¹ط§ط¯طھ ط´ط§ط´ط© ط§ظ„ط¨ط¯ط§ظٹط© ط§ظ„ظ…ط³طھط®ط¯ظ… ط¥ظ„ظ‰ ط­ط³ط§ط¨ظ‡ ط¹ظ†ط¯ ط¥ط¹ط§ط¯ط© ط§ظ„طھط´ط؛ظٹظ„.
-    await _apiService.logout();
-    // ظˆطھظپط±ظٹط؛ ط§ظ„ط°ط§ظƒط±ط© ط­طھظ‰ ظ„ط§ ظٹط±ظ‰ ط§ظ„ظ…ط³طھط®ط¯ظ… ط§ظ„طھط§ظ„ظٹ ط¨ظٹط§ظ†ط§طھ ط§ظ„ط³ط§ط¨ظ‚.
-    provider.clearAll();
+    try {
+      await _apiService.logout();
+      // ظˆطھظپط±ظٹط؛ ط§ظ„ط°ط§ظƒط±ط© ط­طھظ‰ ظ„ط§ ظٹط±ظ‰ ط§ظ„ظ…ط³طھط®ط¯ظ… ط§ظ„طھط§ظ„ظٹ ط¨ظٹط§ظ†ط§طھ ط§ظ„ط³ط§ط¨ظ‚.
+      provider.clearAll();
 
-    if (!mounted) return;
-    Navigator.of(context).pushNamedAndRemoveUntil(
-      KanafRoutes.login,
-      (route) => false,
-    );
+      if (!mounted) return;
+      Navigator.of(context).pushNamedAndRemoveUntil(
+        KanafRoutes.login,
+        (route) => false,
+      );
+    } catch (error) {
+      debugPrint('Kanaf logout failed: $error');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.tr('settings.logoutFailed'))),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoggingOut = false);
+      }
+    }
   }
 
   Future<void> _showLanguageDialog() async {

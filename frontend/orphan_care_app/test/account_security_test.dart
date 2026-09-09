@@ -24,7 +24,7 @@ void main() {
       final api = ApiService();
       expect(await api.isAuthenticated(), isTrue);
 
-      await api.logout();
+      await api.logout(notifyServer: false);
 
       expect(await api.isAuthenticated(), isFalse);
       expect(await api.getSavedRole(), isNull);

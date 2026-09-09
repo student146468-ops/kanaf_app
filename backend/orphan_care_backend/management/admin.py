@@ -198,4 +198,4 @@ class CareHomeAdmin(admin.ModelAdmin):
 class NotificationAdmin(admin.ModelAdmin):
     list_display = ['title', 'user', 'notification_type', 'is_read', 'created_at']
     list_filter = ['notification_type', 'is_read']
-    search_fields = ['title', 'message', 'user__username']
+    search_fields = ['title', 'message', 'image_url', 'user__username']

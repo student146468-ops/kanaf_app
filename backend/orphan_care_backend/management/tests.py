@@ -277,6 +277,50 @@ class AuthApiTests(APITestCase):
         self.assertIn('token', body)
         self.assertIn('user', body)
 
+    def test_login_accepts_registered_phone_number(self):
+        user = get_user_model().objects.create_user(
+            username='phone-login',
+            email='phone-login@example.com',
+            password='StrongPass123!',
+        )
+        UserProfile.objects.create(
+            user=user,
+            role=UserProfile.ROLE_DONOR,
+            phone_number='0912345678',
+            is_verified=True,
+        )
+
+        response = self.client.post(reverse('token_obtain_pair'), {
+            'email': '0912345678',
+            'password': 'StrongPass123!',
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('access', response.json())
+        self.assertEqual(response.json()['user']['email'], user.email)
+
+    def test_login_accepts_libyan_international_phone_number(self):
+        user = get_user_model().objects.create_user(
+            username='intl-phone-login',
+            email='intl-phone-login@example.com',
+            password='StrongPass123!',
+        )
+        UserProfile.objects.create(
+            user=user,
+            role=UserProfile.ROLE_VOLUNTEER,
+            phone_number='0923456789',
+            is_verified=True,
+        )
+
+        response = self.client.post(reverse('token_obtain_pair'), {
+            'email': '+218923456789',
+            'password': 'StrongPass123!',
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('access', response.json())
+        self.assertEqual(response.json()['user']['email'], user.email)
+
     def test_orphan_list_returns_array_for_frontend_compatibility(self):
         user = get_user_model().objects.create_user(username='listuser', password='StrongPass123!')
         Orphan.objects.create(name='Test Orphan', age=9)
@@ -1005,6 +1049,47 @@ class DeleteApiTests(APITestCase):
         self.assertEqual(other_response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertEqual(own_response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Notification.objects.filter(pk=mine.pk).exists())
+        self.assertTrue(Notification.objects.filter(pk=theirs.pk).exists())
+
+    def test_notification_delete_updates_unread_count(self):
+        read = Notification.objects.create(
+            user=self.user,
+            title='DELETE_TEST_NOTIFICATION_READ',
+            message='Mine',
+            is_read=True,
+        )
+        unread = Notification.objects.create(
+            user=self.user,
+            title='DELETE_TEST_NOTIFICATION_UNREAD',
+            message='Mine',
+            is_read=False,
+        )
+        self.client.force_authenticate(user=self.user)
+
+        before = self.client.get('/api/notifications/unread-count/')
+        response = self.client.delete(f'/api/notifications/{unread.id}/')
+        after = self.client.get('/api/notifications/unread-count/')
+
+        self.assertEqual(before.status_code, status.HTTP_200_OK)
+        self.assertEqual(before.json()['unread_count'], 1)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(after.status_code, status.HTTP_200_OK)
+        self.assertEqual(after.json()['unread_count'], 0)
+        self.assertTrue(Notification.objects.filter(pk=read.pk).exists())
+        self.assertFalse(Notification.objects.filter(pk=unread.pk).exists())
+
+    def test_notification_delete_all_is_scoped_to_owner(self):
+        other = get_user_model().objects.create_user(username='delete-all-notification-other', password='StrongPass123!')
+        mine_read = Notification.objects.create(user=self.user, title='DELETE_ALL_READ', message='Mine', is_read=True)
+        mine_unread = Notification.objects.create(user=self.user, title='DELETE_ALL_UNREAD', message='Mine')
+        theirs = Notification.objects.create(user=other, title='DELETE_ALL_OTHER', message='Theirs')
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.delete('/api/notifications/delete-all/')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json()['deleted'], 2)
+        self.assertFalse(Notification.objects.filter(pk__in=[mine_read.pk, mine_unread.pk]).exists())
         self.assertTrue(Notification.objects.filter(pk=theirs.pk).exists())
 
     def test_deleting_approved_volunteer_application_updates_opportunity_count(self):

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/kanaf_localizations.dart';
+
 class VolunteerOpportunityModel {
   final int id;
   final String title;
@@ -58,7 +60,13 @@ class VolunteerOpportunityModel {
       description: json['description']?.toString() ?? '',
       category: json['category']?.toString() ?? 'general',
       requiredSkills: json['required_skills']?.toString() ?? '',
-      imageUrl: _asNullableString(json['image_url']),
+      imageUrl: _asNullableString(
+        json['image_url'] ??
+            json['image'] ??
+            json['imageUrl'] ??
+            json['photo'] ??
+            json['photo_url'],
+      ),
       careHomeId: json['care_home'] == null ? null : _asInt(json['care_home']),
       careHomeName: _asNullableString(json['care_home_name']),
       careHomeLocation: _asNullableString(json['care_home_location']),
@@ -140,13 +148,55 @@ class VolunteerOpportunityModel {
     return 'تطوع عام';
   }
 
-  IconData get icon => switch (categoryLabel) {
-        'تعليم' => Icons.school_outlined,
-        'دعم صحي' => Icons.health_and_safety_outlined,
-        'لوجستي' => Icons.local_shipping_outlined,
-        'فعاليات' => Icons.celebration_outlined,
+  IconData get icon => switch (_categoryKey) {
+        'education' => Icons.school_outlined,
+        'health' => Icons.health_and_safety_outlined,
+        'logistics' => Icons.local_shipping_outlined,
+        'events' => Icons.celebration_outlined,
         _ => Icons.volunteer_activism_outlined,
       };
+
+  String categoryLabelFor(BuildContext context) => switch (_categoryKey) {
+        'education' => context.tr('category.volunteer.education'),
+        'health' => context.tr('category.volunteer.health'),
+        'logistics' => context.tr('category.volunteer.logistics'),
+        'events' => context.tr('category.volunteer.events'),
+        _ => context.tr('category.volunteer.general'),
+      };
+
+  String get _categoryKey {
+    switch (category) {
+      case 'education':
+      case 'logistics':
+      case 'events':
+        return category;
+      case 'health':
+      case 'psychological':
+        return 'health';
+    }
+    final text = '$title $description $requiredSkills'.toLowerCase();
+    if (text.contains('teach') ||
+        text.contains('تعليم') ||
+        text.contains('تدريس')) {
+      return 'education';
+    }
+    if (text.contains('medical') ||
+        text.contains('صحي') ||
+        text.contains('نفسي')) {
+      return 'health';
+    }
+    if (text.contains('logistic') ||
+        text.contains('تنظيم') ||
+        text.contains('نقل')) {
+      return 'logistics';
+    }
+    if (text.contains('event') ||
+        text.contains('فعالية') ||
+        text.contains('نشاط')) {
+      return 'events';
+    }
+    return 'general';
+  }
 
   List<String> get skills {
     return requiredSkills

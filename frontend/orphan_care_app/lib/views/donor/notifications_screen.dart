@@ -21,6 +21,9 @@ class NotificationsScreen extends StatefulWidget {
 }
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
+  final Set<int> _deletingNotificationIds = {};
+  bool _isDeletingAll = false;
+
   @override
   void initState() {
     super.initState();
@@ -49,7 +52,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         actions: [
           if (unread > 0)
             TextButton.icon(
-              onPressed: provider.isSaving ? null : _markAllRead,
+              onPressed:
+                  provider.isSaving || _isDeletingAll ? null : _markAllRead,
               icon: const Icon(Icons.done_all_rounded, size: 18),
               label: Text(
                 context.tr(
@@ -57,6 +61,19 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   args: {'count': unread},
                 ),
               ),
+            ),
+          if (notifications.isNotEmpty)
+            TextButton.icon(
+              onPressed:
+                  provider.isSaving || _isDeletingAll ? null : _deleteAll,
+              icon: _isDeletingAll
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.delete_sweep_outlined, size: 18),
+              label: Text(context.tr('notifications.deleteAll')),
             ),
           const SizedBox(width: KanafSpacing.xs),
         ],
@@ -92,6 +109,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     data: notifications[index],
                     dateFormat: dateFormat,
                     onOpen: () => _open(notifications[index]),
+                    onDelete: () => _deleteOne(notifications[index]),
+                    isDeleting: _isDeleting(
+                      notifications[index]['id'],
+                    ),
                   ),
                 ),
               ),
@@ -100,6 +121,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         ),
       ),
     );
+  }
+
+  bool _isDeleting(Object? rawId) {
+    final id = rawId is int ? rawId : int.tryParse(rawId?.toString() ?? '');
+    return id != null && _deletingNotificationIds.contains(id);
   }
 
   Future<void> _markAllRead() async {
@@ -116,6 +142,88 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               : provider.errorMessage ??
                   context.tr('notifications.updateFailed'),
         ),
+      ),
+    );
+  }
+
+  Future<void> _deleteOne(Map<String, dynamic> notification) async {
+    final raw = notification['id'];
+    final id = raw is int ? raw : int.tryParse(raw?.toString() ?? '');
+    if (id == null || _deletingNotificationIds.contains(id)) return;
+
+    final confirmed = await _confirmDelete(
+      title: context.tr('notifications.deleteConfirmTitle'),
+      message: context.tr('notifications.deleteConfirmMessage'),
+      action: context.tr('notifications.delete'),
+    );
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _deletingNotificationIds.add(id));
+    final provider = AppProviderScope.of(context);
+    final done = await provider.deleteNotification(id);
+    if (!mounted) return;
+    setState(() => _deletingNotificationIds.remove(id));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          done
+              ? context.tr('notifications.deleteSuccess')
+              : provider.errorMessage ??
+                  context.tr('notifications.deleteFailed'),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _deleteAll() async {
+    final confirmed = await _confirmDelete(
+      title: context.tr('notifications.deleteAllConfirmTitle'),
+      message: context.tr('notifications.deleteAllConfirmMessage'),
+      action: context.tr('notifications.deleteAll'),
+    );
+    if (confirmed != true || !mounted || _isDeletingAll) return;
+
+    setState(() => _isDeletingAll = true);
+    final provider = AppProviderScope.of(context);
+    final done = await provider.deleteAllNotifications();
+    if (!mounted) return;
+    setState(() {
+      _isDeletingAll = false;
+      _deletingNotificationIds.clear();
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          done
+              ? context.tr('notifications.deleteAllSuccess')
+              : provider.errorMessage ??
+                  context.tr('notifications.deleteAllFailed'),
+        ),
+      ),
+    );
+  }
+
+  Future<bool?> _confirmDelete({
+    required String title,
+    required String message,
+    required String action,
+  }) {
+    return showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(context.tr('common.cancel')),
+          ),
+          FilledButton.icon(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            icon: const Icon(Icons.delete_outline_rounded),
+            label: Text(action),
+          ),
+        ],
       ),
     );
   }
@@ -176,11 +284,15 @@ class _NotificationCard extends StatelessWidget {
     required this.data,
     required this.dateFormat,
     required this.onOpen,
+    required this.onDelete,
+    required this.isDeleting,
   });
 
   final Map<String, dynamic> data;
   final DateFormat dateFormat;
   final VoidCallback onOpen;
+  final VoidCallback onDelete;
+  final bool isDeleting;
 
   @override
   Widget build(BuildContext context) {
@@ -246,6 +358,19 @@ class _NotificationCard extends StatelessWidget {
                           shape: BoxShape.circle,
                         ),
                       ),
+                    IconButton(
+                      tooltip: context.tr('notifications.delete'),
+                      onPressed: isDeleting ? null : onDelete,
+                      icon: isDeleting
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Icon(Icons.delete_outline_rounded),
+                    ),
                   ],
                 ),
                 if (message.isNotEmpty) ...[
