@@ -43,7 +43,8 @@ class PushNotificationService {
   final FlutterLocalNotificationsPlugin _localNotifications =
       FlutterLocalNotificationsPlugin();
 
-  final FirebaseMessaging _messaging = FirebaseMessaging.instance;
+  // Construct messaging only after the default Firebase app exists.
+  late final FirebaseMessaging _messaging;
 
   GlobalKey<NavigatorState>? _navigatorKey;
   ApiService? _apiService;
@@ -62,6 +63,7 @@ class PushNotificationService {
 
     try {
       await Firebase.initializeApp();
+      _messaging = FirebaseMessaging.instance;
       _firebaseReady = true;
     } catch (error, stackTrace) {
       debugPrint('Kanaf FCM disabled: Firebase config is missing. $error');
@@ -92,9 +94,10 @@ class PushNotificationService {
   Future<void> registerCurrentDevice({String? tokenOverride}) async {
     if (!_firebaseReady) return;
     final apiService = _apiService;
-    if (apiService == null || !await apiService.isAuthenticated()) return;
+    if (apiService == null) return;
 
     try {
+      if (!await apiService.isAuthenticated()) return;
       final token = tokenOverride ?? await _messaging.getToken();
       if (token == null || token.trim().isEmpty) return;
       debugPrint('FCM TOKEN RECEIVED');
@@ -112,9 +115,10 @@ class PushNotificationService {
   Future<void> deactivateCurrentDeviceToken() async {
     if (!_firebaseReady) return;
     final apiService = _apiService;
-    if (apiService == null || !await apiService.isAuthenticated()) return;
+    if (apiService == null) return;
 
     try {
+      if (!await apiService.isAuthenticated()) return;
       final token = await _messaging.getToken();
       if (token == null || token.trim().isEmpty) return;
       await apiService.deactivateDeviceToken(token.trim());

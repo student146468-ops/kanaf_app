@@ -11,7 +11,9 @@ import '../widgets/kanaf_layout.dart';
 import '../l10n/kanaf_localizations.dart';
 
 class EmailVerificationScreen extends StatefulWidget {
-  const EmailVerificationScreen({super.key});
+  const EmailVerificationScreen({super.key, this.apiService});
+
+  final ApiService? apiService;
 
   @override
   State<EmailVerificationScreen> createState() =>
@@ -19,7 +21,7 @@ class EmailVerificationScreen extends StatefulWidget {
 }
 
 class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
-  final ApiService _apiService = ApiService();
+  late final ApiService _apiService = widget.apiService ?? ApiService();
   final _formKey = GlobalKey<FormState>();
   final _codeController = TextEditingController();
 
@@ -158,6 +160,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
   }
 
   Future<void> _verify() async {
+    if (_isVerifying || _isResending) return;
     final form = _formKey.currentState;
     if (form == null || !form.validate()) return;
     if (_email.isEmpty) {
@@ -173,7 +176,6 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
         code: _codeController.text.trim(),
       );
       if (!mounted) return;
-      setState(() => _isVerifying = false);
       unawaited(PushNotificationService.instance.registerCurrentDevice());
       if (_role != null) {
         await _apiService.saveActiveRole(_role!);
@@ -196,6 +198,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
   }
 
   Future<void> _resend() async {
+    if (_isVerifying || _isResending) return;
     if (_email.isEmpty) {
       _showMessage(context.tr('emailVerification.missingEmail'));
       return;
