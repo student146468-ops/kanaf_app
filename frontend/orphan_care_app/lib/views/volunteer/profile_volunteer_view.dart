@@ -62,6 +62,7 @@ class _ProfileVolunteerViewState extends State<ProfileVolunteerView> {
         title: Text(context.tr('common.profile')),
         centerTitle: false,
         actions: [
+          const KanafRoleSwitchButton(currentRole: 'volunteer'),
           IconButton(
             tooltip: context.tr('common.settings'),
             onPressed: () => Navigator.pushNamed(context, KanafRoutes.settings),
@@ -108,10 +109,11 @@ class _ProfileVolunteerViewState extends State<ProfileVolunteerView> {
                 KanafStaggeredEntrance(
                   index: 2,
                   child: KanafSectionHeader(
-                      title: context.tr('volunteer.myRecord')),
+                    title: context.tr('volunteer.myRecord'),
+                  ),
                 ),
                 const SizedBox(height: KanafSpacing.md),
-                KanafStaggeredEntrance(index: 3, child: _MenuCard()),
+                const KanafStaggeredEntrance(index: 3, child: _MenuCard()),
               ],
             ),
           ),
@@ -150,19 +152,15 @@ class _IdentityCard extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  KanafPalette.seed.withOpacity(0.22),
-                  KanafPalette.ember.withOpacity(0.14),
+                  KanafPalette.seed.withValues(alpha: 0.22),
+                  KanafPalette.ember.withValues(alpha: 0.14),
                 ],
                 begin: Alignment.topRight,
                 end: Alignment.bottomLeft,
               ),
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              Icons.person_rounded,
-              size: 34,
-              color: scheme.primary,
-            ),
+            child: Icon(Icons.person_rounded, size: 34, color: scheme.primary),
           ),
           const SizedBox(width: KanafSpacing.lg),
           Expanded(
@@ -243,17 +241,17 @@ class _MenuCard extends StatelessWidget {
     (
       'volunteer.menuHistory',
       Icons.history_edu_outlined,
-      KanafRoutes.myVolunteerHistory
+      KanafRoutes.myVolunteerHistory,
     ),
     (
       'volunteer.menuCertificates',
       Icons.workspace_premium_outlined,
-      KanafRoutes.myCertificates
+      KanafRoutes.myCertificates,
     ),
     (
       'volunteer.menuSchedule',
       Icons.event_note_outlined,
-      KanafRoutes.mySchedule
+      KanafRoutes.mySchedule,
     ),
     ('common.settings', Icons.settings_outlined, KanafRoutes.settings),
   ];

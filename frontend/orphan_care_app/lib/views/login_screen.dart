@@ -167,8 +167,9 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
       validator: (value) {
-        if (value == null || value.isEmpty)
+        if (value == null || value.isEmpty) {
           return context.tr('validation.passwordRequired');
+        }
         return null;
       },
       onFieldSubmitted: (_) => _handleLogin(),
@@ -192,11 +193,11 @@ class _LoginScreenState extends State<LoginScreen> {
           children: [
             const Expanded(child: Divider()),
             Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: KanafSpacing.lg,
+              padding: const EdgeInsets.symmetric(horizontal: KanafSpacing.lg),
+              child: Text(
+                context.tr('auth.or'),
+                style: context.texts.bodySmall,
               ),
-              child:
-                  Text(context.tr('auth.or'), style: context.texts.bodySmall),
             ),
             const Expanded(child: Divider()),
           ],
@@ -205,12 +206,7 @@ class _LoginScreenState extends State<LoginScreen> {
         OutlinedButton(
           onPressed: _isLoading
               ? null
-              : () => Navigator.pushNamed(
-                    context,
-                    KanafRoutes.register,
-                    // نمرّر الدور المختار مسبقاً حتى لا يُسأل عنه مرتين.
-                    arguments: ModalRoute.of(context)?.settings.arguments,
-                  ),
+              : () => Navigator.pushNamed(context, KanafRoutes.register),
           child: Text(context.tr('auth.createAccount')),
         ),
       ],
@@ -227,8 +223,9 @@ class _LoginScreenState extends State<LoginScreen> {
     final emailPattern = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
     final compactPhone = identifier.replaceAll(RegExp(r'[\s\-()]'), '');
     final phonePattern = RegExp(r'^(091|092|093|094)[0-9]{7}$');
-    final internationalPhonePattern =
-        RegExp(r'^(\+218|00218|218)(91|92|93|94)[0-9]{7}$');
+    final internationalPhonePattern = RegExp(
+      r'^(\+218|00218|218)(91|92|93|94)[0-9]{7}$',
+    );
     if (!emailPattern.hasMatch(identifier) &&
         !phonePattern.hasMatch(compactPhone) &&
         !internationalPhonePattern.hasMatch(compactPhone)) {
@@ -254,9 +251,17 @@ class _LoginScreenState extends State<LoginScreen> {
       TextInput.finishAutofillContext();
       unawaited(PushNotificationService.instance.registerCurrentDevice());
 
+      final selectedRole = AuthNavigation.normalizeRole(
+        ModalRoute.of(context)?.settings.arguments?.toString(),
+      );
+      if (selectedRole != null) {
+        await _apiService.saveActiveRole(selectedRole);
+        if (!mounted) return;
+      }
+
       AuthNavigation.navigateByRole(
         context,
-        AuthNavigation.roleFromAuthResponse(response),
+        selectedRole ?? AuthNavigation.roleFromAuthResponse(response),
       );
     } catch (error) {
       debugPrint('Login failed: $error');

@@ -5,7 +5,6 @@ import '../../l10n/kanaf_localizations.dart';
 import '../../models/volunteer_opportunity_model.dart';
 import '../../providers/app_provider_scope.dart';
 import '../../router/kanaf_router.dart';
-import '../../services/api_config.dart';
 import '../../theme/kanaf_motion.dart';
 import '../../theme/kanaf_tokens.dart';
 import '../../widgets/kanaf_layout.dart';
@@ -194,108 +193,6 @@ class _VolunteerOpportunityDetailsViewState
   }
 }
 
-class _OpportunityImage extends StatelessWidget {
-  const _OpportunityImage({required this.imageUrl});
-
-  final String imageUrl;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = context.colors;
-    final resolvedUrl = ApiConfig.buildImageUrl(imageUrl);
-    if (resolvedUrl == null) {
-      return _OpportunityImageFallback(scheme: scheme);
-    }
-    return ClipRRect(
-      borderRadius: KanafRadii.lg,
-      child: AspectRatio(
-        aspectRatio: 16 / 9,
-        child: Image.network(
-          resolvedUrl,
-          headers: ApiConfig.imageRequestHeaders,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) {
-            ApiConfig.logImageLoadError(
-              source: imageUrl,
-              resolved: resolvedUrl,
-              error: error,
-            );
-            return _OpportunityImageFallback(scheme: scheme);
-          },
-        ),
-      ),
-    );
-  }
-}
-
-class _OpportunityImageFallback extends StatelessWidget {
-  const _OpportunityImageFallback({required this.scheme});
-
-  final ColorScheme scheme;
-
-  @override
-  Widget build(BuildContext context) {
-    return ColoredBox(
-      color: scheme.surfaceContainerHighest,
-      child: Icon(
-        Icons.image_not_supported_outlined,
-        color: scheme.onSurfaceVariant,
-      ),
-    );
-  }
-}
-
-class _HeaderCard extends StatelessWidget {
-  const _HeaderCard({required this.opportunity, required this.title});
-
-  final VolunteerOpportunityModel opportunity;
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = context.colors;
-    return KanafCard(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 54,
-            height: 54,
-            decoration: BoxDecoration(
-              color: scheme.primary.withOpacity(0.12),
-              borderRadius: KanafRadii.md,
-            ),
-            child: Icon(opportunity.icon, size: 27, color: scheme.primary),
-          ),
-          const SizedBox(width: KanafSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: context.texts.titleLarge),
-                const SizedBox(height: KanafSpacing.sm),
-                Wrap(
-                  spacing: KanafSpacing.xs,
-                  runSpacing: KanafSpacing.xs,
-                  children: [
-                    KanafStatusChip(status: opportunity.status),
-                    if (opportunity.hasApplication)
-                      KanafStatusChip(status: opportunity.myApplicationStatus!),
-                    Chip(
-                      visualDensity: VisualDensity.compact,
-                      label: Text(opportunity.categoryLabelFor(context)),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 String _applicationStatusLabel(BuildContext context, String status) {
   return switch (status.trim().toLowerCase()) {
     'accepted' || 'approved' => context.tr('status.accepted'),
@@ -304,63 +201,6 @@ String _applicationStatusLabel(BuildContext context, String status) {
     'pending' => context.tr('status.pending'),
     _ => status,
   };
-}
-
-class _CapacityCard extends StatelessWidget {
-  const _CapacityCard({required this.opportunity});
-
-  final VolunteerOpportunityModel opportunity;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = context.colors;
-    return KanafCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(
-                context.tr('volunteer.volunteers'),
-                style: context.texts.titleSmall,
-              ),
-              const Spacer(),
-              Text(
-                context.tr(
-                  'volunteer.capacityCount',
-                  args: {
-                    'current': opportunity.currentVolunteers,
-                    'required': opportunity.requiredVolunteers,
-                  },
-                ),
-                style: context.texts.labelMedium?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: KanafSpacing.md),
-          ClipRRect(
-            borderRadius: KanafRadii.pill,
-            child: LinearProgressIndicator(
-              value: opportunity.capacityRatio,
-              minHeight: 8,
-            ),
-          ),
-          const SizedBox(height: KanafSpacing.sm),
-          Text(
-            opportunity.effectiveRemainingSlots == 0
-                ? context.tr('volunteer.capacityFull')
-                : context.tr(
-                    'volunteer.remainingSlots',
-                    args: {'count': opportunity.effectiveRemainingSlots},
-                  ),
-            style: context.texts.bodySmall,
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class _DetailsCard extends StatelessWidget {

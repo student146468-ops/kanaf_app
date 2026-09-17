@@ -155,7 +155,7 @@ class _CertificateCard extends StatelessWidget {
                   width: 62,
                   height: 62,
                   decoration: BoxDecoration(
-                    color: KanafPalette.seed.withOpacity(0.14),
+                    color: KanafPalette.seed.withValues(alpha: 0.14),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -189,7 +189,7 @@ class _CertificateCard extends StatelessWidget {
                   width: 64,
                   height: 2,
                   decoration: BoxDecoration(
-                    color: scheme.primary.withOpacity(0.4),
+                    color: scheme.primary.withValues(alpha: 0.4),
                     borderRadius: KanafRadii.pill,
                   ),
                 ),

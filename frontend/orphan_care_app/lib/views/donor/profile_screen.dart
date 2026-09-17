@@ -50,6 +50,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       appBar: AppBar(
         title: Text(context.tr('common.profile')),
         actions: [
+          const KanafRoleSwitchButton(currentRole: 'donor'),
           IconButton(
             tooltip: context.tr('common.settings'),
             onPressed: () => Navigator.pushNamed(context, KanafRoutes.settings),
@@ -83,10 +84,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: _ProfileHeader(user: user),
                 ),
                 const SizedBox(height: KanafSpacing.xxl),
-                KanafStaggeredEntrance(
-                  index: 1,
-                  child: _buildStats(stats),
-                ),
+                KanafStaggeredEntrance(index: 1, child: _buildStats(stats)),
                 const SizedBox(height: KanafSpacing.xxl),
                 KanafStaggeredEntrance(index: 2, child: _buildMenu()),
               ],
@@ -254,11 +252,12 @@ class _ProfileHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = context.colors;
-    final name = _firstNonEmpty(
-      user,
-      const ['first_name', 'full_name', 'name', 'username'],
-      fallback: context.tr('role.donor'),
-    );
+    final name = _firstNonEmpty(user, const [
+      'first_name',
+      'full_name',
+      'name',
+      'username',
+    ], fallback: context.tr('role.donor'));
     final email = _firstNonEmpty(user, const ['email'], fallback: '');
     final phone = _firstNonEmpty(user, const ['phone_number'], fallback: '');
 
@@ -295,7 +294,7 @@ class _ProfileHeader extends StatelessWidget {
                         vertical: KanafSpacing.xs,
                       ),
                       decoration: BoxDecoration(
-                        color: scheme.primary.withOpacity(0.12),
+                        color: scheme.primary.withValues(alpha: 0.12),
                         borderRadius: KanafRadii.pill,
                       ),
                       child: Text(

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../router/kanaf_router.dart';
 import '../services/api_service.dart';
@@ -88,8 +88,7 @@ class _SplashScreenState extends State<SplashScreen>
       // ط¨ظ„ط§ طھظپط³ظٹط±. ظ†طھط­ظ‚ظ‚ ط§ظ„ط¢ظ† ط¨ظ†ط¯ط§ط، ظˆط§ط­ط¯ ط®ظپظٹظپ ظ‚ط¨ظ„ ط§ظ„ط¯ط®ظˆظ„.
       try {
         final me = await api.getMe();
-        // ط§ظ„ط¯ظˆط± ط§ظ„ظ‚ط§ط¯ظ… ظ…ظ† ط§ظ„ط®ط§ط¯ظ… ط£ط­ط¯ط« ظ…ظ† ط§ظ„ظ…ط­ظپظˆط¸ ظ…ط­ظ„ظٹط§ظ‹.
-        final freshRole = AuthNavigation.roleFromAuthResponse(me) ?? role;
+        final freshRole = role ?? AuthNavigation.roleFromAuthResponse(me);
         return _Session(isAuthenticated: true, role: freshRole);
       } on ApiServiceException catch (e) {
         // ط§ظ†ظ‚ط·ط§ط¹ ط§ظ„ط´ط¨ظƒط© ظ„ظٹط³ ط¯ظ„ظٹظ„ط§ظ‹ ط¹ظ„ظ‰ ط¨ط·ظ„ط§ظ† ط§ظ„ط¬ظ„ط³ط© â€” ظ†ط¯ط®ظ„ ط¨ط§ظ„ط¯ظˆط±
@@ -213,8 +212,8 @@ class _SplashWaves extends StatelessWidget {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      KanafPalette.ember.withOpacity(0.42),
-                      KanafPalette.ember.withOpacity(0.66),
+                      KanafPalette.ember.withValues(alpha: 0.42),
+                      KanafPalette.ember.withValues(alpha: 0.66),
                     ],
                   ),
                 ),

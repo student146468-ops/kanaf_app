@@ -180,8 +180,8 @@ class _HeaderCard extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  KanafPalette.seed.withOpacity(0.22),
-                  KanafPalette.ember.withOpacity(0.12),
+                  KanafPalette.seed.withValues(alpha: 0.22),
+                  KanafPalette.ember.withValues(alpha: 0.12),
                 ],
                 begin: Alignment.topRight,
                 end: Alignment.bottomLeft,
@@ -423,7 +423,7 @@ class _NeedTile extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: scheme.primary.withOpacity(0.12),
+                  color: scheme.primary.withValues(alpha: 0.12),
                   borderRadius: KanafRadii.sm,
                 ),
                 child: Icon(need.icon, size: 22, color: scheme.primary),

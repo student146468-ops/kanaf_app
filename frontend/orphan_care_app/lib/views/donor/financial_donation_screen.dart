@@ -184,7 +184,7 @@ class _FinancialDonationScreenState extends State<FinancialDonationScreen> {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: scheme.primary.withOpacity(0.12),
+              color: scheme.primary.withValues(alpha: 0.12),
               borderRadius: KanafRadii.sm,
             ),
             child: Icon(Icons.apartment_rounded, color: scheme.primary),
@@ -317,27 +317,29 @@ class _FinancialDonationScreenState extends State<FinancialDonationScreen> {
         const SizedBox(height: KanafSpacing.md),
         KanafCard(
           padding: EdgeInsets.zero,
-          child: Column(
-            children: [
-              for (var i = 0; i < _paymentMethods.length; i++) ...[
-                if (i > 0) const Divider(height: 1, indent: KanafSpacing.lg),
-                RadioListTile<String>(
-                  value: _paymentMethods[i].name,
-                  groupValue: _selectedPaymentMethod,
-                  onChanged: (value) {
-                    if (value != null) {
-                      setState(() => _selectedPaymentMethod = value);
-                    }
-                  },
-                  title: Text(
-                      _paymentMethodLabel(context, _paymentMethods[i].name)),
-                  secondary: Icon(_paymentMethods[i].icon),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: KanafSpacing.md,
+          child: RadioGroup<String>(
+            groupValue: _selectedPaymentMethod,
+            onChanged: (value) {
+              if (value != null) {
+                setState(() => _selectedPaymentMethod = value);
+              }
+            },
+            child: Column(
+              children: [
+                for (var i = 0; i < _paymentMethods.length; i++) ...[
+                  if (i > 0) const Divider(height: 1, indent: KanafSpacing.lg),
+                  RadioListTile<String>(
+                    value: _paymentMethods[i].name,
+                    title: Text(
+                        _paymentMethodLabel(context, _paymentMethods[i].name)),
+                    secondary: Icon(_paymentMethods[i].icon),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: KanafSpacing.md,
+                    ),
                   ),
-                ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ],

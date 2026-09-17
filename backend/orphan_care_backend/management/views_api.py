@@ -614,6 +614,14 @@ def _create_notification(
 
 def _notification_users_by_role(role, exclude_user_ids=()):
     excluded = {user_id for user_id in exclude_user_ids if user_id}
+    if role in {UserProfile.ROLE_DONOR, UserProfile.ROLE_VOLUNTEER}:
+        return (
+            User.objects.filter(is_active=True)
+            .exclude(is_staff=True)
+            .exclude(managed_care_homes__isnull=False)
+            .exclude(pk__in=excluded)
+            .distinct()
+        )
     return (
         User.objects.filter(is_active=True, profile__role=role)
         .exclude(pk__in=excluded)
@@ -1341,8 +1349,6 @@ class DonationViewSet(SafeDestroyMixin, viewsets.ModelViewSet):
         return queryset.filter(user=self.request.user)
 
     def perform_create(self, serializer):
-        if _profile_role(self.request.user) != UserProfile.ROLE_DONOR:
-            raise serializers.ValidationError({'detail': 'Only donor users can create donations.'})
         donor_name = (
             self.request.user.get_full_name()
             or self.request.user.username
@@ -1636,8 +1642,6 @@ class VolunteerOpportunityViewSet(SafeDestroyMixin, viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def apply(self, request, pk=None):
-        if _profile_role(request.user) != UserProfile.ROLE_VOLUNTEER:
-            return Response({'detail': 'Only volunteer users can apply to opportunities.'}, status=status.HTTP_403_FORBIDDEN)
         with transaction.atomic():
             opportunity = VolunteerOpportunity.objects.select_for_update().get(pk=self.get_object().pk)
             existing = VolunteerApplication.objects.filter(
@@ -1706,8 +1710,6 @@ class VolunteerApplicationViewSet(SafeDestroyMixin, viewsets.ModelViewSet):
         return queryset.filter(user=user)
 
     def perform_create(self, serializer):
-        if _profile_role(self.request.user) != UserProfile.ROLE_VOLUNTEER:
-            raise PermissionDenied('Only volunteer users can apply to opportunities.')
         application = serializer.save(user=self.request.user)
         _create_notification(
             self.request.user,

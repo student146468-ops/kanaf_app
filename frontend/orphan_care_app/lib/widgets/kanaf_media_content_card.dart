@@ -158,11 +158,11 @@ class KanafMediaContentCard extends StatelessWidget {
     final scheme = context.colors;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final borderColor = isDark
-        ? KanafPalette.ember.withOpacity(0.24)
-        : KanafPalette.brandInk.withOpacity(0.14);
+        ? KanafPalette.ember.withValues(alpha: 0.24)
+        : KanafPalette.brandInk.withValues(alpha: 0.14);
     final background = isDark
         ? const Color(0xFF100B08)
-        : scheme.surfaceContainerLow.withOpacity(0.96);
+        : scheme.surfaceContainerLow.withValues(alpha: 0.96);
 
     return Material(
       color: background,
@@ -173,14 +173,14 @@ class KanafMediaContentCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
-        splashColor: KanafPalette.seed.withOpacity(0.08),
-        highlightColor: KanafPalette.seed.withOpacity(0.04),
+        splashColor: KanafPalette.seed.withValues(alpha: 0.08),
+        highlightColor: KanafPalette.seed.withValues(alpha: 0.04),
         child: DecoratedBox(
           decoration: BoxDecoration(
             borderRadius: KanafRadii.xl,
             boxShadow: [
               BoxShadow(
-                color: KanafPalette.seed.withOpacity(isDark ? 0.16 : 0.10),
+                color: KanafPalette.seed.withValues(alpha: isDark ? 0.16 : 0.10),
                 blurRadius: 24,
                 offset: const Offset(0, 12),
               ),
@@ -395,9 +395,9 @@ class _IconTile extends StatelessWidget {
       width: compact ? 42 : 54,
       height: compact ? 42 : 54,
       decoration: BoxDecoration(
-        color: KanafPalette.seed.withOpacity(0.12),
+        color: KanafPalette.seed.withValues(alpha: 0.12),
         borderRadius: KanafRadii.md,
-        border: Border.all(color: KanafPalette.ember.withOpacity(0.32)),
+        border: Border.all(color: KanafPalette.ember.withValues(alpha: 0.32)),
       ),
       child: Icon(icon, color: KanafPalette.ember, size: compact ? 21 : 27),
     );
@@ -479,10 +479,10 @@ class _ProgressBlock extends StatelessWidget {
                   vertical: KanafSpacing.xs,
                 ),
                 decoration: BoxDecoration(
-                  color: KanafPalette.seed.withOpacity(0.10),
+                  color: KanafPalette.seed.withValues(alpha: 0.10),
                   borderRadius: KanafRadii.pill,
                   border: Border.all(
-                    color: KanafPalette.ember.withOpacity(0.24),
+                    color: KanafPalette.ember.withValues(alpha: 0.24),
                   ),
                 ),
                 child: Text(
@@ -504,7 +504,7 @@ class _ProgressBlock extends StatelessWidget {
               value: progress,
               minHeight: compact ? 6 : 8,
               backgroundColor:
-                  context.colors.surfaceContainerHighest.withOpacity(0.64),
+                  context.colors.surfaceContainerHighest.withValues(alpha: 0.64),
               color: KanafPalette.ember,
             ),
           ),
@@ -569,13 +569,13 @@ class _ImagePlaceholder extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: isDark
-            ? Colors.white.withOpacity(0.07)
-            : KanafPalette.seed.withOpacity(0.08),
+            ? Colors.white.withValues(alpha: 0.07)
+            : KanafPalette.seed.withValues(alpha: 0.08),
       ),
       child: Center(
         child: Icon(
           icon,
-          color: KanafPalette.ember.withOpacity(isDark ? 0.90 : 0.82),
+          color: KanafPalette.ember.withValues(alpha: isDark ? 0.90 : 0.82),
           size: 42,
         ),
       ),

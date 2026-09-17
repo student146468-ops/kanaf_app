@@ -1,13 +1,52 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:kanaf/l10n/kanaf_localizations.dart';
 import 'package:kanaf/router/kanaf_router.dart';
 import 'package:kanaf/theme/kanaf_motion.dart';
 import 'package:kanaf/theme/kanaf_theme.dart';
 import 'package:kanaf/theme/kanaf_tokens.dart';
 import 'package:kanaf/views/donor/donation_success_screen.dart';
 import 'package:kanaf/widgets/kanaf_states.dart';
+
+class _TestKanafLocalizationsDelegate
+    extends LocalizationsDelegate<KanafLocalizations> {
+  const _TestKanafLocalizationsDelegate();
+
+  static const _values = <String, String>{
+    'status.pending': 'قيد المراجعة',
+    'status.accepted': 'مقبول',
+    'status.completed': 'مكتمل',
+    'status.rejected': 'مرفوض',
+    'donation.resultSuccessTitle': 'تم تسجيل مساهمتك',
+    'donation.resultSuccessMessage':
+        'تمت العملية بنجاح وحُفظت تفاصيلها في سجل تبرعاتك.',
+    'donation.resultPendingMessage':
+        'وصلت مساهمتك إلى المنظومة. ستراجعها دار الرعاية وتظهر تحديثاتها في السجل.',
+    'donation.status': 'الحالة',
+    'donation.type': 'نوع التبرع',
+    'donation.date': 'التاريخ',
+    'donation.reference': 'الرقم المرجعي',
+    'donation.viewHistory': 'عرض السجل',
+    'donation.successBackHome': 'العودة للرئيسية',
+    'donation.genericType': 'مساهمة',
+    'common.copy': 'نسخ',
+    'common.dinar': 'د.ل',
+  };
+
+  @override
+  bool isSupported(Locale locale) => true;
+
+  @override
+  Future<KanafLocalizations> load(Locale locale) =>
+      SynchronousFuture(KanafLocalizations(locale, _values));
+
+  @override
+  bool shouldReload(covariant LocalizationsDelegate<KanafLocalizations> old) =>
+      false;
+}
 
 /// يتحقق من نظام تصميم كَنَفْ: الثيم، الراوتر، والمكوّنات المشتركة.
 /// هذه الاختبارات تصرّف الكود فعلياً، فهي تكشف أخطاء البناء التي لا
@@ -22,6 +61,7 @@ Widget _testApp({Widget? home, RouteFactory? onGenerateRoute}) {
     locale: const Locale('ar'),
     supportedLocales: const [Locale('ar')],
     localizationsDelegates: const [
+      _TestKanafLocalizationsDelegate(),
       GlobalMaterialLocalizations.delegate,
       GlobalWidgetsLocalizations.delegate,
       GlobalCupertinoLocalizations.delegate,
@@ -44,7 +84,8 @@ void main() {
       expect(light.brightness, Brightness.light);
       expect(dark.brightness, Brightness.dark);
       // نظام الألوان مشتق لا مرصوف يدوياً.
-      expect(light.colorScheme.primary, isNot(equals(dark.colorScheme.primary)));
+      expect(
+          light.colorScheme.primary, isNot(equals(dark.colorScheme.primary)));
     });
 
     test('يوفّر الألوان الدلالية كامتداد للثيم في الوضعين', () {
@@ -106,10 +147,11 @@ void main() {
   });
 
   group('KanafStatusChip', () {
-    Future<void> pumpChip(WidgetTester tester, String status) {
-      return tester.pumpWidget(
+    Future<void> pumpChip(WidgetTester tester, String status) async {
+      await tester.pumpWidget(
         _testApp(home: Scaffold(body: KanafStatusChip(status: status))),
       );
+      await tester.pump();
     }
 
     testWidgets('يترجم حالات الخادم الإنجليزية إلى عربية', (tester) async {

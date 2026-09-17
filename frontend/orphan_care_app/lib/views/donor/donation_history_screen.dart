@@ -220,8 +220,8 @@ class _DonationCard extends StatelessWidget {
         KanafRoutes.donationReceipt,
         arguments: donation,
       ),
-      color: scheme.surfaceContainerLow.withOpacity(0.98),
-      borderColor: statusTone.withOpacity(0.38),
+      color: scheme.surfaceContainerLow.withValues(alpha: 0.98),
+      borderColor: statusTone.withValues(alpha: 0.38),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -234,8 +234,8 @@ class _DonationCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      statusTone.withOpacity(0.24),
-                      scheme.primary.withOpacity(0.10),
+                      statusTone.withValues(alpha: 0.24),
+                      scheme.primary.withValues(alpha: 0.10),
                     ],
                     begin: Alignment.topRight,
                     end: Alignment.bottomLeft,
@@ -282,9 +282,9 @@ class _DonationCard extends StatelessWidget {
                   vertical: KanafSpacing.xs,
                 ),
                 decoration: BoxDecoration(
-                  color: statusTone.withOpacity(0.13),
+                  color: statusTone.withValues(alpha: 0.13),
                   borderRadius: KanafRadii.pill,
-                  border: Border.all(color: statusTone.withOpacity(0.28)),
+                  border: Border.all(color: statusTone.withValues(alpha: 0.28)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -309,7 +309,7 @@ class _DonationCard extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(KanafSpacing.md),
             decoration: BoxDecoration(
-              color: scheme.surfaceContainerHighest.withOpacity(0.50),
+              color: scheme.surfaceContainerHighest.withValues(alpha: 0.50),
               borderRadius: KanafRadii.md,
             ),
             child: Row(
@@ -325,7 +325,7 @@ class _DonationCard extends StatelessWidget {
                 Container(
                   width: 1,
                   height: 42,
-                  color: scheme.outlineVariant.withOpacity(0.65),
+                  color: scheme.outlineVariant.withValues(alpha: 0.65),
                 ),
                 Expanded(
                   child: _DonationInfoBlock(
@@ -342,7 +342,7 @@ class _DonationCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(KanafSpacing.md),
               decoration: BoxDecoration(
-                color: scheme.primary.withOpacity(0.08),
+                color: scheme.primary.withValues(alpha: 0.08),
                 borderRadius: KanafRadii.md,
               ),
               child: Row(

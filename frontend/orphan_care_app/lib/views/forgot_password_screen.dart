@@ -77,8 +77,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           ),
                           validator: (value) {
                             final email = value?.trim() ?? '';
-                            if (email.isEmpty)
+                            if (email.isEmpty) {
                               return context.tr('validation.emailRequired');
+                            }
                             if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
                                 .hasMatch(email)) {
                               return context.tr('validation.emailInvalid');

@@ -39,6 +39,22 @@ void main() {
       final api = ApiService();
       expect(await api.isAuthenticated(), isFalse);
     });
+
+    test('وضع الاستخدام النشط يقبل المتبرع والمتطوع فقط', () async {
+      final api = ApiService();
+
+      await api.saveActiveRole('volunteer');
+      expect(await api.getSavedRole(), 'volunteer');
+
+      await api.saveActiveRole('donor');
+      expect(await api.getSavedRole(), 'donor');
+
+      expect(
+        () => api.saveActiveRole('care_home'),
+        throwsA(isA<ApiServiceException>()),
+      );
+      expect(await api.getSavedRole(), 'donor');
+    });
   });
 
   group('KanafThemeController', () {

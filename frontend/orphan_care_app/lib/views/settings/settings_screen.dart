@@ -78,10 +78,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       title: context.tr('settings.changeEmail'),
                       subtitle: user['email']?.toString() ??
                           context.tr('settings.changeEmailSubtitle'),
-                      onTap: () => Navigator.pushNamed(
-                        context,
-                        KanafRoutes.changeEmail,
-                      ),
+                      onTap: () =>
+                          Navigator.pushNamed(context, KanafRoutes.changeEmail),
                     ),
                     _SettingsTile(
                       icon: Icons.lock_outline_rounded,
@@ -90,6 +88,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       onTap: () => Navigator.pushNamed(
                         context,
                         KanafRoutes.changePassword,
+                      ),
+                    ),
+                    _SettingsTile(
+                      icon: Icons.swap_horiz_rounded,
+                      title: context.tr('settings.activeRole'),
+                      subtitle: context.tr('settings.activeRoleSubtitle'),
+                      onTap: () => Navigator.pushNamed(
+                        context,
+                        KanafRoutes.roleSelection,
                       ),
                     ),
                   ],
@@ -151,10 +158,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       icon: Icons.info_outline_rounded,
                       title: context.tr('settings.aboutTitle'),
                       subtitle: context.tr('settings.aboutSubtitle'),
-                      onTap: () => Navigator.pushNamed(
-                        context,
-                        KanafRoutes.aboutApp,
-                      ),
+                      onTap: () =>
+                          Navigator.pushNamed(context, KanafRoutes.aboutApp),
                     ),
                   ],
                 ),
@@ -177,7 +182,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
       children: [
         KanafSectionHeader(title: title),
         const SizedBox(height: KanafSpacing.md),
-        KanafCard(padding: EdgeInsets.zero, child: Column(children: children)),
+        KanafCard(
+          padding: EdgeInsets.zero,
+          child: Column(children: children),
+        ),
       ],
     );
   }
@@ -188,7 +196,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       onPressed: _isLoggingOut ? null : _confirmLogout,
       style: OutlinedButton.styleFrom(
         foregroundColor: scheme.error,
-        side: BorderSide(color: scheme.error.withOpacity(0.5)),
+        side: BorderSide(color: scheme.error.withValues(alpha: 0.5)),
       ),
       icon: _isLoggingOut
           ? const SizedBox.square(
@@ -196,9 +204,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: CircularProgressIndicator(strokeWidth: 2),
             )
           : const Icon(Icons.logout_rounded),
-      label: Text(_isLoggingOut
-          ? context.tr('settings.loggingOut')
-          : context.tr('settings.logout')),
+      label: Text(
+        _isLoggingOut
+            ? context.tr('settings.loggingOut')
+            : context.tr('settings.logout'),
+      ),
     );
   }
 
@@ -237,10 +247,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       provider.clearAll();
 
       if (!mounted) return;
-      Navigator.of(context).pushNamedAndRemoveUntil(
-        KanafRoutes.login,
-        (route) => false,
-      );
+      Navigator.of(context)
+          .pushNamedAndRemoveUntil(KanafRoutes.login, (route) => false);
     } catch (error) {
       debugPrint('Kanaf logout failed: $error');
       if (!mounted) return;
@@ -261,26 +269,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
       builder: (dialogContext) => AlertDialog(
         title: Text(context.tr('settings.languageDialog')),
         contentPadding: const EdgeInsets.only(top: KanafSpacing.sm),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            RadioListTile<String>(
-              value: 'ar',
-              groupValue: current,
-              onChanged: (value) => Navigator.pop(dialogContext, value),
-              secondary: const Icon(Icons.translate_rounded),
-              title: Text(context.tr('settings.arabic')),
-              subtitle: Text(context.tr('settings.arabicSubtitle')),
-            ),
-            RadioListTile<String>(
-              value: 'en',
-              groupValue: current,
-              onChanged: (value) => Navigator.pop(dialogContext, value),
-              secondary: const Icon(Icons.language_rounded),
-              title: Text(context.tr('settings.english')),
-              subtitle: Text(context.tr('settings.englishSubtitle')),
-            ),
-          ],
+        content: RadioGroup<String>(
+          groupValue: current,
+          onChanged: (value) => Navigator.pop(dialogContext, value),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              RadioListTile<String>(
+                value: 'ar',
+                secondary: const Icon(Icons.translate_rounded),
+                title: Text(context.tr('settings.arabic')),
+                subtitle: Text(context.tr('settings.arabicSubtitle')),
+              ),
+              RadioListTile<String>(
+                value: 'en',
+                secondary: const Icon(Icons.language_rounded),
+                title: Text(context.tr('settings.english')),
+                subtitle: Text(context.tr('settings.englishSubtitle')),
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(
@@ -300,10 +308,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(context.tr('settings.cancelMonthlyTitle')),
-        content: Text(context.tr(
-          'settings.cancelMonthlyMessage',
-          args: {'id': donation.id},
-        )),
+        content: Text(
+          context.tr(
+            'settings.cancelMonthlyMessage',
+            args: {'id': donation.id},
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
@@ -319,11 +329,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (confirmed != true || !mounted) return;
     setState(() => _cancelRequested.add(donation.id));
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          context.tr('settings.cancelMonthlyQueued'),
-        ),
-      ),
+      SnackBar(content: Text(context.tr('settings.cancelMonthlyQueued'))),
     );
   }
 }
@@ -360,8 +366,9 @@ class _MonthlyDonationsSection extends StatelessWidget {
               ? ListTile(
                   leading: const Icon(Icons.event_repeat_rounded),
                   title: Text(context.tr('settings.noMonthlyDonations')),
-                  subtitle:
-                      Text(context.tr('settings.noMonthlyDonationsSubtitle')),
+                  subtitle: Text(
+                    context.tr('settings.noMonthlyDonationsSubtitle'),
+                  ),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: KanafSpacing.lg,
                   ),
@@ -375,8 +382,9 @@ class _MonthlyDonationsSection extends StatelessWidget {
                         donation: monthly[i],
                         amountFormat: amountFormat,
                         dateFormat: dateFormat,
-                        cancelRequested:
-                            cancelRequested.contains(monthly[i].id),
+                        cancelRequested: cancelRequested.contains(
+                          monthly[i].id,
+                        ),
                         onCancel: () => onCancel(monthly[i]),
                       ),
                     ],
@@ -421,15 +429,19 @@ class _MonthlyDonationTile extends StatelessWidget {
       title: Text(
         amount == null
             ? context.tr('settings.monthlyDonation')
-            : context.tr('settings.monthlyAmount', args: {
-                'amount': amountFormat.format(amount),
-              }),
+            : context.tr(
+                'settings.monthlyAmount',
+                args: {'amount': amountFormat.format(amount)},
+              ),
       ),
       subtitle: Text(
-        context.tr('settings.nextDeductionLine', args: {
-          'description': description,
-          'date': dateFormat.format(nextDate),
-        }),
+        context.tr(
+          'settings.nextDeductionLine',
+          args: {
+            'description': description,
+            'date': dateFormat.format(nextDate),
+          },
+        ),
         maxLines: 3,
         overflow: TextOverflow.ellipsis,
       ),

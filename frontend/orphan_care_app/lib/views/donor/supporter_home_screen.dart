@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart' hide TextDirection;
 
 import '../../l10n/kanaf_localizations.dart';
 import '../../models/need_model.dart';
@@ -9,7 +8,6 @@ import '../../models/volunteer_opportunity_model.dart';
 import '../../providers/app_provider.dart';
 import '../../providers/app_provider_scope.dart';
 import '../../router/kanaf_router.dart';
-import '../../services/api_config.dart';
 import '../../theme/kanaf_tokens.dart';
 import '../../widgets/kanaf_nav_shell.dart';
 import '../../widgets/kanaf_media_content_card.dart';
@@ -141,6 +139,7 @@ class _SupporterHomeScreenState extends State<SupporterHomeScreen>
           ),
         ),
         actions: [
+          const KanafRoleSwitchButton(currentRole: 'donor'),
           IconButton(
             tooltip: l10n.tr('home.searchTooltip'),
             onPressed: () =>
@@ -267,8 +266,11 @@ class _SupporterHomeScreenState extends State<SupporterHomeScreen>
       children: [
         LayoutBuilder(
           builder: (context, constraints) {
-            final bannerHeight =
-                _clampDouble(constraints.maxWidth * 0.56, 212, 280);
+            final bannerHeight = _clampDouble(
+              constraints.maxWidth * 0.56,
+              212,
+              280,
+            );
             return SizedBox(
               height: bannerHeight,
               child: ClipRRect(
@@ -292,28 +294,31 @@ class _SupporterHomeScreenState extends State<SupporterHomeScreen>
           },
         ),
         const SizedBox(height: KanafSpacing.md),
-        Builder(builder: (context) {
-          final colors = _HomeColors.of(context);
-          return Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              for (var i = 0; i < _sliderItemCount; i++)
-                AnimatedContainer(
-                  duration: KanafDuration.standard,
-                  margin:
-                      const EdgeInsets.symmetric(horizontal: KanafSpacing.xs),
-                  width: i == _currentSlide ? 24 : 7,
-                  height: 7,
-                  decoration: BoxDecoration(
-                    color: i == _currentSlide
-                        ? KanafPalette.seed
-                        : colors.inactiveIndicator,
-                    borderRadius: KanafRadii.pill,
+        Builder(
+          builder: (context) {
+            final colors = _HomeColors.of(context);
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                for (var i = 0; i < _sliderItemCount; i++)
+                  AnimatedContainer(
+                    duration: KanafDuration.standard,
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: KanafSpacing.xs,
+                    ),
+                    width: i == _currentSlide ? 24 : 7,
+                    height: 7,
+                    decoration: BoxDecoration(
+                      color: i == _currentSlide
+                          ? KanafPalette.seed
+                          : colors.inactiveIndicator,
+                      borderRadius: KanafRadii.pill,
+                    ),
                   ),
-                ),
-            ],
-          );
-        }),
+              ],
+            );
+          },
+        ),
       ],
     );
   }
@@ -372,9 +377,10 @@ abstract final class _HomeColors {
       cardSoft: scheme.surfaceContainerHigh,
       text: scheme.onSurface,
       muted: scheme.onSurfaceVariant,
-      border: scheme.outlineVariant.withOpacity(0.6),
+      border: scheme.outlineVariant.withValues(alpha: 0.6),
       progressTrack: scheme.surfaceContainerHighest,
-      inactiveIndicator: scheme.outlineVariant.withOpacity(isDark ? 0.55 : 0.8),
+      inactiveIndicator:
+          scheme.outlineVariant.withValues(alpha: isDark ? 0.55 : 0.8),
     );
   }
 }
@@ -424,8 +430,8 @@ class _HomeBackdrop extends StatelessWidget {
                     center: const Alignment(0.85, -0.95),
                     radius: 1.2,
                     colors: [
-                      KanafPalette.ember.withOpacity(intensity),
-                      KanafPalette.ember.withOpacity(0),
+                      KanafPalette.ember.withValues(alpha: intensity),
+                      KanafPalette.ember.withValues(alpha: 0),
                     ],
                   ),
                 ),
@@ -440,8 +446,8 @@ class _HomeBackdrop extends StatelessWidget {
                     center: const Alignment(-1, -0.75),
                     radius: 1.1,
                     colors: [
-                      KanafPalette.seed.withOpacity(intensity * 0.7),
-                      KanafPalette.seed.withOpacity(0),
+                      KanafPalette.seed.withValues(alpha: intensity * 0.7),
+                      KanafPalette.seed.withValues(alpha: 0),
                     ],
                   ),
                 ),
@@ -468,8 +474,11 @@ class _QuranGivingBanner extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final textPanelWidth =
-            _clampDouble(constraints.maxWidth * 0.58, 205, 370);
+        final textPanelWidth = _clampDouble(
+          constraints.maxWidth * 0.58,
+          205,
+          370,
+        );
         return Stack(
           fit: StackFit.expand,
           children: [
@@ -486,9 +495,9 @@ class _QuranGivingBanner extends StatelessWidget {
                   begin: Alignment.centerLeft,
                   end: Alignment.centerRight,
                   colors: [
-                    const Color(0xFFFFF4E7).withOpacity(0.90),
-                    const Color(0xFFFFE8CF).withOpacity(0.70),
-                    const Color(0xFFFFE0BD).withOpacity(0.18),
+                    const Color(0xFFFFF4E7).withValues(alpha: 0.90),
+                    const Color(0xFFFFE8CF).withValues(alpha: 0.70),
+                    const Color(0xFFFFE0BD).withValues(alpha: 0.18),
                     Colors.transparent,
                   ],
                   stops: const [0, 0.48, 0.66, 0.84],
@@ -516,7 +525,7 @@ class _QuranGivingBanner extends StatelessWidget {
                             vertical: KanafSpacing.xs,
                           ),
                           decoration: BoxDecoration(
-                            color: KanafPalette.seed.withOpacity(0.14),
+                            color: KanafPalette.seed.withValues(alpha: 0.14),
                             borderRadius: KanafRadii.pill,
                           ),
                           child: Row(
@@ -636,7 +645,7 @@ class _BannerDivider extends StatelessWidget {
     return Container(
       width: 1,
       height: 34,
-      color: KanafPalette.brandInk.withOpacity(0.22),
+      color: KanafPalette.brandInk.withValues(alpha: 0.22),
     );
   }
 }
@@ -661,7 +670,7 @@ class _QuickAction extends StatelessWidget {
       color: colors.card,
       shape: RoundedRectangleBorder(
         borderRadius: KanafRadii.lg,
-        side: BorderSide(color: KanafPalette.seed.withOpacity(0.28)),
+        side: BorderSide(color: KanafPalette.seed.withValues(alpha: 0.28)),
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -691,9 +700,7 @@ class _QuickAction extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
-                style: context.texts.labelSmall?.copyWith(
-                  color: colors.muted,
-                ),
+                style: context.texts.labelSmall?.copyWith(color: colors.muted),
               ),
             ],
           ),
@@ -960,355 +967,6 @@ class _UpdatesStrip extends StatelessWidget {
   }
 }
 
-class _FeaturedNeedCard extends StatelessWidget {
-  const _FeaturedNeedCard({required this.need});
-
-  final NeedModel need;
-
-  @override
-  Widget build(BuildContext context) {
-    final progress = need.progress ?? 0;
-    final colors = _HomeColors.of(context);
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final compact =
-            constraints.maxWidth < 340 || constraints.maxHeight < 218;
-        final imageFlex = compact ? 5 : 6;
-        final contentFlex = compact ? 7 : 8;
-        final padding = compact ? KanafSpacing.sm : KanafSpacing.md;
-        final buttonHeight = compact ? 36.0 : 42.0;
-        final description = need.description.trim();
-
-        return Material(
-          color: colors.card,
-          shape: RoundedRectangleBorder(
-            borderRadius: KanafRadii.lg,
-            side: BorderSide(color: colors.border),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: () => _openNeed(context, need),
-            child: Row(
-              textDirection: TextDirection.rtl,
-              children: [
-                Expanded(
-                  flex: contentFlex,
-                  child: Padding(
-                    padding: EdgeInsets.all(padding),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Row(
-                          textDirection: TextDirection.rtl,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Icon(
-                              need.icon,
-                              size: compact ? 18 : 20,
-                              color: KanafPalette.ember,
-                            ),
-                            const SizedBox(width: KanafSpacing.xs),
-                            Expanded(
-                              child: Text(
-                                need.title,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                textAlign: TextAlign.end,
-                                style: context.texts.titleMedium?.copyWith(
-                                  color: colors.text,
-                                  fontWeight: FontWeight.w900,
-                                  height: 1.12,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: compact ? 4 : KanafSpacing.xs),
-                        Row(
-                          textDirection: TextDirection.rtl,
-                          children: [
-                            const Icon(
-                              Icons.location_on_rounded,
-                              size: 15,
-                              color: KanafPalette.ember,
-                            ),
-                            const SizedBox(width: KanafSpacing.xxs),
-                            Expanded(
-                              child: Text(
-                                _needSubtitle(context, need),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                textAlign: TextAlign.end,
-                                style: context.texts.bodySmall?.copyWith(
-                                  color: colors.muted,
-                                  height: 1.15,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        if (description.isNotEmpty) ...[
-                          SizedBox(height: compact ? 3 : KanafSpacing.xs),
-                          Text(
-                            description,
-                            maxLines: compact ? 1 : 2,
-                            overflow: TextOverflow.ellipsis,
-                            textAlign: TextAlign.end,
-                            style: context.texts.bodySmall?.copyWith(
-                              color: colors.muted,
-                              height: 1.2,
-                            ),
-                          ),
-                        ],
-                        SizedBox(height: compact ? 5 : KanafSpacing.sm),
-                        _NeedProgress(
-                          need: need,
-                          progress: progress,
-                          compact: compact,
-                        ),
-                        const Spacer(),
-                        SizedBox(
-                          height: buttonHeight,
-                          child: FilledButton.icon(
-                            style: FilledButton.styleFrom(
-                              backgroundColor: KanafPalette.ember,
-                              foregroundColor: const Color(0xFF241006),
-                              minimumSize: Size.fromHeight(buttonHeight),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: KanafSpacing.sm,
-                              ),
-                              textStyle: TextStyle(
-                                fontWeight: FontWeight.w900,
-                                fontSize: compact ? 13 : 14,
-                              ),
-                              shape: const RoundedRectangleBorder(
-                                borderRadius: KanafRadii.pill,
-                              ),
-                            ),
-                            onPressed: () => _donateToNeed(context, need),
-                            icon: const Icon(
-                              Icons.volunteer_activism_rounded,
-                              size: 18,
-                            ),
-                            label: FittedBox(
-                              fit: BoxFit.scaleDown,
-                              child: Text(context.tr('home.donateNow')),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                Expanded(
-                  flex: imageFlex,
-                  child: Padding(
-                    padding: const EdgeInsetsDirectional.fromSTEB(
-                      0,
-                      KanafSpacing.sm,
-                      KanafSpacing.sm,
-                      KanafSpacing.sm,
-                    ),
-                    child: ClipRRect(
-                      borderRadius: KanafRadii.md,
-                      child: SizedBox.expand(child: _NeedImage(need: need)),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _CampaignNeedCard extends StatelessWidget {
-  const _CampaignNeedCard({required this.need});
-
-  final NeedModel need;
-
-  @override
-  Widget build(BuildContext context) {
-    final progress = need.progress ?? 0;
-    final colors = _HomeColors.of(context);
-
-    return Material(
-      color: colors.card,
-      shape: RoundedRectangleBorder(
-        borderRadius: KanafRadii.lg,
-        side: BorderSide(color: colors.border),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => _openNeed(context, need),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  _NeedImage(need: need),
-                  DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          Colors.black.withOpacity(0.76),
-                        ],
-                      ),
-                    ),
-                  ),
-                  if (need.priority == 'urgent')
-                    const PositionedDirectional(
-                      top: KanafSpacing.sm,
-                      start: KanafSpacing.sm,
-                      child: _UrgentPill(),
-                    ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(KanafSpacing.md),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    need.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.end,
-                    style: context.texts.titleSmall?.copyWith(
-                      color: colors.text,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  const SizedBox(height: KanafSpacing.xs),
-                  Text(
-                    _needSubtitle(context, need),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.end,
-                    style: context.texts.labelSmall?.copyWith(
-                      color: colors.muted,
-                    ),
-                  ),
-                  const SizedBox(height: KanafSpacing.sm),
-                  _NeedProgress(
-                    need: need,
-                    progress: progress,
-                    compact: true,
-                  ),
-                  const SizedBox(height: KanafSpacing.sm),
-                  SizedBox(
-                    height: 40,
-                    child: FilledButton(
-                      style: FilledButton.styleFrom(
-                        minimumSize: const Size.fromHeight(40),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: KanafSpacing.sm,
-                        ),
-                        textStyle: const TextStyle(
-                          fontWeight: FontWeight.w900,
-                          fontSize: 13,
-                        ),
-                        shape: const RoundedRectangleBorder(
-                          borderRadius: KanafRadii.pill,
-                        ),
-                      ),
-                      onPressed: () => _donateToNeed(context, need),
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(context.tr('home.donateNow')),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _VolunteerCard extends StatelessWidget {
-  const _VolunteerCard({required this.opportunity});
-
-  final VolunteerOpportunityModel opportunity;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = _HomeColors.of(context);
-    return Material(
-      color: colors.card,
-      shape: RoundedRectangleBorder(
-        borderRadius: KanafRadii.lg,
-        side: BorderSide(color: colors.border),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => Navigator.pushNamed(
-          context,
-          KanafRoutes.volunteerOpportunityDetails,
-          arguments: opportunity.toRouteArguments(),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(KanafSpacing.md),
-          child: Row(
-            children: [
-              Container(
-                width: 46,
-                height: 46,
-                decoration: BoxDecoration(
-                  color: KanafPalette.seed.withOpacity(0.18),
-                  borderRadius: KanafRadii.md,
-                ),
-                child: Icon(opportunity.icon, color: KanafPalette.ember),
-              ),
-              const SizedBox(width: KanafSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      opportunity.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.end,
-                      style: context.texts.titleSmall?.copyWith(
-                        color: colors.text,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: KanafSpacing.xs),
-                    Text(
-                      _opportunityMeta(context, opportunity),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.end,
-                      style: context.texts.labelSmall?.copyWith(
-                        color: colors.muted,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _UpdateCard extends StatelessWidget {
   const _UpdateCard({required this.data});
 
@@ -1337,7 +995,7 @@ class _UpdateCard extends StatelessWidget {
             children: [
               Icon(
                 Icons.chevron_left_rounded,
-                color: colors.muted.withOpacity(0.8),
+                color: colors.muted.withValues(alpha: 0.8),
               ),
               const SizedBox(width: KanafSpacing.sm),
               Expanded(
@@ -1376,7 +1034,8 @@ class _UpdateCard extends StatelessWidget {
                 width: 52,
                 height: 52,
                 decoration: BoxDecoration(
-                  color: KanafPalette.seed.withOpacity(isUnread ? 0.22 : 0.12),
+                  color: KanafPalette.seed
+                      .withValues(alpha: isUnread ? 0.22 : 0.12),
                   borderRadius: KanafRadii.md,
                 ),
                 child: Icon(
@@ -1394,108 +1053,6 @@ class _UpdateCard extends StatelessWidget {
   }
 }
 
-class _NeedProgress extends StatelessWidget {
-  const _NeedProgress({
-    required this.need,
-    required this.progress,
-    this.compact = false,
-  });
-
-  final NeedModel need;
-  final double progress;
-  final bool compact;
-
-  @override
-  Widget build(BuildContext context) {
-    final locale = Localizations.localeOf(context).languageCode;
-    final format = NumberFormat.decimalPattern(locale);
-    final collected = format.format(need.fulfilledQuantity);
-    final percent = (progress.clamp(0.0, 1.0) * 100).round();
-    final colors = _HomeColors.of(context);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        ClipRRect(
-          borderRadius: KanafRadii.pill,
-          child: LinearProgressIndicator(
-            value: progress.clamp(0.0, 1.0),
-            minHeight: compact ? 5 : 7,
-            backgroundColor: colors.progressTrack,
-            color: KanafPalette.ember,
-          ),
-        ),
-        SizedBox(height: compact ? 3 : KanafSpacing.xs),
-        Row(
-          textDirection: TextDirection.rtl,
-          children: [
-            Flexible(
-              child: Text(
-                context.tr(
-                  'home.collectedOf',
-                  args: {
-                    'collected': collected,
-                    'target': need.requiredQuantity,
-                  },
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.end,
-                style: context.texts.labelSmall?.copyWith(
-                  color: colors.muted,
-                ),
-              ),
-            ),
-            const Spacer(),
-            Text(
-              '$percent%',
-              style: context.texts.labelSmall?.copyWith(
-                color: KanafPalette.ember,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _NeedImage extends StatelessWidget {
-  const _NeedImage({required this.need});
-
-  final NeedModel need;
-
-  @override
-  Widget build(BuildContext context) {
-    final imageUrl = need.imageUrl?.trim();
-    if (imageUrl != null && imageUrl.isNotEmpty) {
-      final resolvedUrl = ApiConfig.buildImageUrl(imageUrl);
-      if (resolvedUrl == null) {
-        return const _ImageFallback(icon: Icons.image_outlined);
-      }
-      return Image.network(
-        resolvedUrl,
-        headers: ApiConfig.imageRequestHeaders,
-        fit: BoxFit.cover,
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
-          return const _ImageFallback(icon: Icons.image_outlined);
-        },
-        errorBuilder: (context, error, stackTrace) {
-          ApiConfig.logImageLoadError(
-            source: imageUrl,
-            resolved: resolvedUrl,
-            error: error,
-          );
-          return const _ImageFallback(icon: Icons.broken_image_outlined);
-        },
-      );
-    }
-    return const _ImageFallback(icon: Icons.image_outlined);
-  }
-}
-
 class _ImageFallback extends StatelessWidget {
   const _ImageFallback({required this.icon});
 
@@ -1507,31 +1064,6 @@ class _ImageFallback extends StatelessWidget {
     return ColoredBox(
       color: colors.cardSoft,
       child: Icon(icon, color: KanafPalette.ember, size: 42),
-    );
-  }
-}
-
-class _UrgentPill extends StatelessWidget {
-  const _UrgentPill();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: KanafSpacing.sm,
-        vertical: KanafSpacing.xs,
-      ),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.error,
-        borderRadius: KanafRadii.pill,
-      ),
-      child: Text(
-        context.tr('home.urgent'),
-        style: context.texts.labelSmall?.copyWith(
-          color: Colors.white,
-          fontWeight: FontWeight.w900,
-        ),
-      ),
     );
   }
 }
@@ -1580,7 +1112,7 @@ class _SectionState extends StatelessWidget {
             width: 72,
             height: 72,
             decoration: BoxDecoration(
-              color: KanafPalette.seed.withOpacity(0.14),
+              color: KanafPalette.seed.withValues(alpha: 0.14),
               borderRadius: KanafRadii.lg,
             ),
             child: Icon(icon, color: KanafPalette.ember, size: 34),
@@ -1610,35 +1142,6 @@ class _SectionState extends StatelessWidget {
       ),
     );
   }
-}
-
-String _needSubtitle(BuildContext context, NeedModel need) {
-  final home = need.careHomeName?.trim();
-  final location = need.careHomeLocation?.trim();
-  if (home != null &&
-      home.isNotEmpty &&
-      location != null &&
-      location.isNotEmpty) {
-    return '$home - $location';
-  }
-  if (home != null && home.isNotEmpty) return home;
-  if (location != null && location.isNotEmpty) return location;
-  return need.categoryLabelFor(context);
-}
-
-String _opportunityMeta(
-  BuildContext context,
-  VolunteerOpportunityModel opportunity,
-) {
-  final place = opportunity.location.trim().isNotEmpty
-      ? opportunity.location.trim()
-      : opportunity.careHomeLocation?.trim();
-  final count = context.tr(
-    'home.volunteersCount',
-    args: {'count': opportunity.requiredVolunteers},
-  );
-  if (place != null && place.isNotEmpty) return '$place - $count';
-  return count;
 }
 
 double _clampDouble(double value, double min, double max) {

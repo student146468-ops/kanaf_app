@@ -1,10 +1,13 @@
+import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:kanaf/l10n/kanaf_localizations.dart';
 import 'package:kanaf/providers/app_provider.dart';
 import 'package:kanaf/providers/app_provider_scope.dart';
 import 'package:kanaf/services/api_failure.dart';
@@ -46,6 +49,23 @@ import 'package:shared_preferences/shared_preferences.dart';
 ///
 /// تُشغَّل بأبعاد Pixel 7 المنطقية (412×915).
 const Size _phoneSize = Size(412, 915);
+late Map<String, String> _arabicLocalizations;
+
+class _ScreenshotLocalizationsDelegate
+    extends LocalizationsDelegate<KanafLocalizations> {
+  const _ScreenshotLocalizationsDelegate();
+
+  @override
+  bool isSupported(Locale locale) => true;
+
+  @override
+  Future<KanafLocalizations> load(Locale locale) =>
+      SynchronousFuture(KanafLocalizations(locale, _arabicLocalizations));
+
+  @override
+  bool shouldReload(covariant LocalizationsDelegate<KanafLocalizations> old) =>
+      false;
+}
 
 Future<void> _loadArabicFonts() async {
   // بدون تحميل صريح تُرسم النصوص بخط الاختبار (مربعات فارغة)،
@@ -111,6 +131,7 @@ Widget _wrap(Widget screen, {Object? routeArguments, bool dark = false}) {
       locale: const Locale('ar'),
       supportedLocales: const [Locale('ar')],
       localizationsDelegates: const [
+        _ScreenshotLocalizationsDelegate(),
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
@@ -125,8 +146,15 @@ Widget _wrap(Widget screen, {Object? routeArguments, bool dark = false}) {
 
 void main() {
   setUpAll(() async {
+    final raw = await rootBundle.loadString('assets/l10n/ar.arb');
+    final data = jsonDecode(raw) as Map<String, dynamic>;
+    _arabicLocalizations = {
+      for (final entry in data.entries)
+        if (!entry.key.startsWith('@') && entry.value is String)
+          entry.key: entry.value as String,
+    };
     await _loadArabicFonts();
-    initializeDateFormatting('ar');
+    await initializeDateFormatting('ar');
   });
 
   setUp(() {
@@ -155,6 +183,8 @@ void main() {
     await tester.pumpWidget(
       _wrap(screen, routeArguments: routeArguments, dark: dark),
     );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
 
     // تحميل الصور فعلياً: فكّ ترميز PNG عملية غير متزامنة حقيقية،
     // و`pumpWidget` يعمل داخل منطقة زمن وهمي تمنعها. بدون `runAsync`
@@ -241,6 +271,7 @@ void main() {
           'reference': 'KNF-1042',
           'status': 'pending',
           'summary': '٢٥٠ د.ل عبر تحويل مصرفي',
+          'date': '2026-09-16T04:32:00',
         },
       );
     });

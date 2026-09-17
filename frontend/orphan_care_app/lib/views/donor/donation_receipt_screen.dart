@@ -171,7 +171,7 @@ class _ReceiptHeader extends StatelessWidget {
             width: 58,
             height: 58,
             decoration: BoxDecoration(
-              color: scheme.primary.withOpacity(0.12),
+              color: scheme.primary.withValues(alpha: 0.12),
               borderRadius: KanafRadii.md,
             ),
             child: Icon(

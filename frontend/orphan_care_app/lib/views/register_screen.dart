@@ -101,10 +101,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             child: _RoleBanner(role: role),
                           ),
                         const SizedBox(height: KanafSpacing.xl),
-                        KanafStaggeredEntrance(
-                          index: 1,
-                          child: _buildFields(),
-                        ),
+                        KanafStaggeredEntrance(index: 1, child: _buildFields()),
                         const SizedBox(height: KanafSpacing.xxl),
                         KanafStaggeredEntrance(
                           index: 2,
@@ -235,10 +232,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
           validator: (value) {
             final password = value ?? '';
-            if (password.isEmpty)
+            if (password.isEmpty) {
               return context.tr('validation.passwordRequired');
-            if (password.length < 8)
+            }
+            if (password.length < 8) {
               return context.tr('validation.passwordTooShort');
+            }
             if (!RegExp(r'[A-Za-z]').hasMatch(password) ||
                 !RegExp(r'[0-9]').hasMatch(password)) {
               return context.tr('validation.passwordWeak');
@@ -275,8 +274,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
           ),
           validator: (value) {
-            if (value == null || value.isEmpty)
+            if (value == null || value.isEmpty) {
               return context.tr('validation.confirmPasswordRequired');
+            }
             if (value != _passwordController.text) {
               return context.tr('validation.passwordMismatch');
             }
@@ -293,14 +293,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (form == null || !form.validate()) return;
 
     final role = _role;
-    if (role == null) {
-      _showMessage(context.tr('auth.roleRequired'));
-      Navigator.of(context).pushNamedAndRemoveUntil(
-        KanafRoutes.roleSelection,
-        (route) => false,
-      );
-      return;
-    }
 
     setState(() => _isLoading = true);
     try {
@@ -312,7 +304,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         'password_confirm': _confirmPasswordController.text,
         'first_name': _nameController.text.trim(),
         'phone_number': _phoneController.text.trim(),
-        'role': role,
+        if (role != null) 'role': role,
       });
 
       if (!mounted) return;
@@ -327,9 +319,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
         return;
       }
 
+      if (role != null) {
+        await _apiService.saveActiveRole(role);
+        if (!mounted) return;
+      }
       AuthNavigation.navigateByRole(
         context,
-        AuthNavigation.roleFromAuthResponse(response),
+        role ?? AuthNavigation.roleFromAuthResponse(response),
       );
     } catch (error) {
       debugPrint('Register failed: $error');
@@ -376,7 +372,7 @@ class _RoleBanner extends StatelessWidget {
 
     return KanafCard(
       color: scheme.primaryContainer,
-      borderColor: scheme.primary.withOpacity(0.35),
+      borderColor: scheme.primary.withValues(alpha: 0.35),
       child: Row(
         children: [
           Icon(icon, color: scheme.onPrimaryContainer),
@@ -398,7 +394,7 @@ class _RoleBanner extends StatelessWidget {
                 Text(
                   context.tr('auth.accountTypeSubtitle'),
                   style: context.texts.bodySmall?.copyWith(
-                    color: scheme.onPrimaryContainer.withOpacity(0.8),
+                    color: scheme.onPrimaryContainer.withValues(alpha: 0.8),
                   ),
                 ),
               ],

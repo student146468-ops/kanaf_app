@@ -215,10 +215,12 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           // نفس قواعد الخادم في `_is_valid_registration_password`.
           validator: (value) {
             final password = value?.trim() ?? '';
-            if (password.isEmpty)
+            if (password.isEmpty) {
               return context.tr('validation.passwordRequired');
-            if (password.length < 8)
+            }
+            if (password.length < 8) {
               return context.tr('validation.passwordTooShort');
+            }
             if (!RegExp(r'[A-Za-z]').hasMatch(password) ||
                 !RegExp(r'[0-9]').hasMatch(password)) {
               return context.tr('validation.passwordWeak');
@@ -254,8 +256,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           ),
           validator: (value) {
             final confirmation = value?.trim() ?? '';
-            if (confirmation.isEmpty)
+            if (confirmation.isEmpty) {
               return context.tr('validation.confirmPasswordRequired');
+            }
             if (confirmation != _passwordController.text.trim()) {
               return context.tr('validation.passwordMismatch');
             }

@@ -1,8 +1,11 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../l10n/kanaf_localizations.dart';
 import '../providers/app_provider_scope.dart';
+import '../router/kanaf_router.dart';
+import '../services/api_service.dart';
 import '../theme/kanaf_tokens.dart';
+import '../utils/auth_navigation.dart';
 
 /// وجهة في شريط التنقل السفلي.
 class KanafDestination {
@@ -159,5 +162,43 @@ class KanafNotificationButton extends StatelessWidget {
     await Navigator.pushNamed(context, route);
     if (!context.mounted) return;
     await provider.fetchNotifications(notifyLoading: false);
+  }
+}
+
+class KanafRoleSwitchButton extends StatelessWidget {
+  const KanafRoleSwitchButton({super.key, required this.currentRole});
+
+  final String currentRole;
+
+  @override
+  Widget build(BuildContext context) {
+    final normalized = AuthNavigation.normalizeRole(currentRole);
+    final nextRole = normalized == AuthNavigation.volunteerRole
+        ? AuthNavigation.donorRole
+        : AuthNavigation.volunteerRole;
+    final icon = nextRole == AuthNavigation.volunteerRole
+        ? Icons.handshake_outlined
+        : Icons.favorite_outline_rounded;
+    final labelKey = nextRole == AuthNavigation.volunteerRole
+        ? 'role.volunteer'
+        : 'role.donor';
+
+    return IconButton(
+      tooltip: context.tr(
+        'role.switchTo',
+        args: {'role': context.tr(labelKey)},
+      ),
+      onPressed: () => _switchRole(context, nextRole),
+      icon: Icon(icon),
+    );
+  }
+
+  Future<void> _switchRole(BuildContext context, String role) async {
+    await ApiService().saveActiveRole(role);
+    if (!context.mounted) return;
+    Navigator.of(context).pushNamedAndRemoveUntil(
+      AuthNavigation.homeRouteForRole(role) ?? KanafRoutes.roleSelection,
+      (route) => false,
+    );
   }
 }

@@ -125,7 +125,7 @@ class _ApplyOpportunityViewState extends State<ApplyOpportunityView> {
 
     return KanafCard(
       color: scheme.primaryContainer,
-      borderColor: scheme.primary.withOpacity(0.3),
+      borderColor: scheme.primary.withValues(alpha: 0.3),
       child: Row(
         children: [
           Icon(Icons.handshake_outlined, color: scheme.onPrimaryContainer),
@@ -149,7 +149,7 @@ class _ApplyOpportunityViewState extends State<ApplyOpportunityView> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: context.texts.bodySmall?.copyWith(
-                      color: scheme.onPrimaryContainer.withOpacity(0.85),
+                      color: scheme.onPrimaryContainer.withValues(alpha: 0.85),
                     ),
                   ),
                 ],

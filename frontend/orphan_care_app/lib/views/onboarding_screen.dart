@@ -70,7 +70,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   void _finish() {
-    Navigator.of(context).pushReplacementNamed(KanafRoutes.roleSelection);
+    Navigator.of(context).pushReplacementNamed(KanafRoutes.login);
   }
 
   @override
@@ -156,9 +156,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             icon: Icon(
               _isLastPage ? Icons.login_rounded : Icons.arrow_back_rounded,
             ),
-            label: Text(_isLastPage
-                ? context.tr('onboarding.start')
-                : context.tr('onboarding.next')),
+            label: Text(
+              _isLastPage
+                  ? context.tr('onboarding.start')
+                  : context.tr('onboarding.next'),
+            ),
           ),
           SizedBox(
             height: 44,
@@ -215,7 +217,7 @@ class _SlideView extends StatelessWidget {
                   borderRadius: KanafRadii.xl,
                   boxShadow: [
                     BoxShadow(
-                      color: KanafPalette.seed.withOpacity(0.16),
+                      color: KanafPalette.seed.withValues(alpha: 0.16),
                       blurRadius: 34,
                       offset: const Offset(0, 14),
                     ),

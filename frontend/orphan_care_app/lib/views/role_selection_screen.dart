@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../router/kanaf_router.dart';
+import '../services/api_service.dart';
 import '../theme/kanaf_motion.dart';
 import '../theme/kanaf_tokens.dart';
 import '../utils/auth_navigation.dart';
@@ -23,7 +24,9 @@ class RoleSelectionScreen extends StatefulWidget {
 }
 
 class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
+  final ApiService _apiService = ApiService();
   String? _selectedRole;
+  bool _isProceeding = false;
 
   static const List<_RoleOption> _roles = [
     _RoleOption(
@@ -121,9 +124,18 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                   ),
                   KanafActionBar(
                     child: FilledButton.icon(
-                      onPressed: _selectedRole == null ? null : _proceed,
+                      onPressed: _selectedRole == null || _isProceeding
+                          ? null
+                          : _proceed,
                       icon: const Icon(Icons.arrow_back_rounded),
-                      label: Text(context.tr('role.continue')),
+                      label: _isProceeding
+                          ? const SizedBox.square(
+                              dimension: 22,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.5,
+                              ),
+                            )
+                          : Text(context.tr('role.continue')),
                     ),
                   ),
                 ],
@@ -135,13 +147,22 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
     );
   }
 
-  void _proceed() {
+  Future<void> _proceed() async {
     final role = _selectedRole;
     if (role == null) return;
-    Navigator.of(context).pushReplacementNamed(
-      KanafRoutes.login,
-      arguments: role,
-    );
+    setState(() => _isProceeding = true);
+    final authenticated = await _apiService.isAuthenticated();
+    if (!mounted) return;
+
+    if (authenticated) {
+      await _apiService.saveActiveRole(role);
+      if (!mounted) return;
+      AuthNavigation.navigateByRole(context, role);
+      return;
+    }
+
+    setState(() => _isProceeding = false);
+    Navigator.of(context).pushReplacementNamed(KanafRoutes.login);
   }
 }
 
@@ -197,7 +218,7 @@ class _RoleCard extends StatelessWidget {
                 height: 54,
                 decoration: BoxDecoration(
                   color: selected
-                      ? scheme.primary.withOpacity(0.16)
+                      ? scheme.primary.withValues(alpha: 0.16)
                       : scheme.surfaceContainerHighest,
                   borderRadius: KanafRadii.md,
                 ),

@@ -600,8 +600,8 @@ void main() {
           title: 'مخطط الكيانات والعلاقات (ERD) — منصة كَنَفْ',
           width: 1400,
           height: 940,
-          child: Stack(
-            children: const [
+          child: const Stack(
+            children: [
               _Wires(
                 links: [
                   // Notification.user User
@@ -834,9 +834,9 @@ void main() {
           title: 'المعمارية العامة لمنصة كَنَفْ',
           width: 1080,
           height: 640,
-          child: Stack(
+          child: const Stack(
             children: [
-              const _Wires(
+              _Wires(
                 links: [
                   (Offset(540, 150), Offset(540, 215), false),
                   (Offset(540, 330), Offset(540, 395), false),
@@ -849,7 +849,7 @@ void main() {
                 child: _EntityBox(
                   title: 'طبقة العرض — Flutter',
                   subtitle: 'Material 3 · عربية RTL',
-                  fields: const [
+                  fields: [
                     'Screens · KanafRouter · KanafTheme',
                     'KanafAsyncView (تحميل/خطأ/فراغ/محتوى)',
                   ],
@@ -862,7 +862,7 @@ void main() {
                 child: _EntityBox(
                   title: 'طبقة الحالة — Provider',
                   subtitle: 'AppProvider',
-                  fields: const [
+                  fields: [
                     'إدارة البيانات · تصنيف الأعطال · حرّاس الحفظ',
                   ],
                   width: 560,
@@ -874,7 +874,7 @@ void main() {
                 child: _EntityBox(
                   title: 'طبقة الاتصال — Dio',
                   subtitle: 'ApiService',
-                  fields: const [
+                  fields: [
                     'JWT · تجديد الرمز · مهلات · NetworkProbe',
                   ],
                   width: 560,
@@ -886,7 +886,7 @@ void main() {
                 child: _EntityBox(
                   title: 'الخادم — Django REST Framework',
                   subtitle: 'PostgreSQL / SQLite',
-                  fields: const [
+                  fields: [
                     'ViewSets · Serializers · صلاحيات · SimpleJWT',
                   ],
                   width: 560,

@@ -102,8 +102,9 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
                         ),
                         validator: (value) {
                           final code = value?.trim() ?? '';
-                          if (code.isEmpty)
+                          if (code.isEmpty) {
                             return context.tr('validation.codeRequired');
+                          }
                           if (code.length != 6) {
                             return context.tr('validation.codeLength');
                           }
@@ -123,9 +124,11 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
                                 ),
                               )
                             : const Icon(Icons.verified_outlined),
-                        label: Text(_isVerifying
-                            ? context.tr('phone.verifying')
-                            : context.tr('phone.verify')),
+                        label: Text(
+                          _isVerifying
+                              ? context.tr('phone.verifying')
+                              : context.tr('phone.verify'),
+                        ),
                       ),
                       const SizedBox(height: KanafSpacing.md),
                       TextButton.icon(
@@ -139,9 +142,11 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
                                 ),
                               )
                             : const Icon(Icons.refresh_rounded),
-                        label: Text(_isResending
-                            ? context.tr('phone.resending')
-                            : context.tr('phone.resend')),
+                        label: Text(
+                          _isResending
+                              ? context.tr('phone.resending')
+                              : context.tr('phone.resend'),
+                        ),
                       ),
                     ],
                   ),
@@ -173,9 +178,13 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
       if (!mounted) return;
       setState(() => _isVerifying = false);
       unawaited(PushNotificationService.instance.registerCurrentDevice());
+      if (_role != null) {
+        await _apiService.saveActiveRole(_role!);
+        if (!mounted) return;
+      }
       AuthNavigation.navigateByRole(
         context,
-        AuthNavigation.roleFromAuthResponse(response) ?? _role,
+        _role ?? AuthNavigation.roleFromAuthResponse(response),
       );
     } catch (error) {
       debugPrint('Phone OTP verify failed: $error');

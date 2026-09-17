@@ -32,11 +32,11 @@ class PhoneVerificationRequiredException extends ApiServiceException {
   final String? role;
 
   Map<String, dynamic> toRouteArguments() => {
-        'user_id': userId,
-        'email': email,
-        'phone_number': phoneNumber,
-        'role': role,
-      };
+    'user_id': userId,
+    'email': email,
+    'phone_number': phoneNumber,
+    'role': role,
+  };
 }
 
 class ApiService {
@@ -123,10 +123,7 @@ class ApiService {
     final requestData = {'email': email.trim(), 'password': password.trim()};
     _logAuthRequest('POST', path, requestData);
     try {
-      final response = await _dio.post(
-        path,
-        data: requestData,
-      );
+      final response = await _dio.post(path, data: requestData);
       _logAuthResponse('login', response);
       final responseData = _extractMap(response.data);
       await _saveAuthSession(responseData);
@@ -136,11 +133,7 @@ class ApiService {
       final verification = _phoneVerificationRequired(e);
       if (verification != null) throw verification;
       throw ApiServiceException(
-        friendlyMessageForDioException(
-          e,
-          isLogin: true,
-          authEndpoint: true,
-        ),
+        friendlyMessageForDioException(e, isLogin: true, authEndpoint: true),
       );
     } on ApiServiceException {
       rethrow;
@@ -167,11 +160,7 @@ class ApiService {
     } on DioException catch (e) {
       debugPrint('Register API error: ${_developerErrorSummary(e)}');
       throw ApiServiceException(
-        friendlyMessageForDioException(
-          e,
-          isRegister: true,
-          authEndpoint: true,
-        ),
+        friendlyMessageForDioException(e, isRegister: true, authEndpoint: true),
       );
     } on ApiServiceException {
       rethrow;
@@ -188,10 +177,13 @@ class ApiService {
     String? email,
   }) async {
     try {
-      final response = await _dio.post('/auth/phone-otp/send/', data: {
-        'phone_number': phoneNumber,
-        if (email != null && email.isNotEmpty) 'email': email,
-      });
+      final response = await _dio.post(
+        '/auth/phone-otp/send/',
+        data: {
+          'phone_number': phoneNumber,
+          if (email != null && email.isNotEmpty) 'email': email,
+        },
+      );
       return _extractMap(response.data);
     } on DioException catch (e) {
       debugPrint('Phone OTP send API error: ${_developerErrorSummary(e)}');
@@ -206,12 +198,15 @@ class ApiService {
     required String code,
   }) async {
     try {
-      final response = await _dio.post('/auth/phone-otp/verify/', data: {
-        if (userId != null) 'user_id': userId,
-        if (email != null && email.isNotEmpty) 'email': email,
-        'phone_number': phoneNumber,
-        'code': code,
-      });
+      final response = await _dio.post(
+        '/auth/phone-otp/verify/',
+        data: {
+          if (userId != null) 'user_id': userId,
+          if (email != null && email.isNotEmpty) 'email': email,
+          'phone_number': phoneNumber,
+          'code': code,
+        },
+      );
       final data = _extractMap(response.data);
       await _saveAuthSession(data);
       return data;
@@ -228,7 +223,8 @@ class ApiService {
       }
     } on DioException catch (error) {
       debugPrint(
-          'Kanaf server logout failed: ${_developerErrorSummary(error)}');
+        'Kanaf server logout failed: ${_developerErrorSummary(error)}',
+      );
     } finally {
       await _clearToken();
     }
@@ -244,11 +240,14 @@ class ApiService {
     required String newPasswordConfirm,
   }) async {
     try {
-      final response = await _dio.post('/auth/change-password/', data: {
-        'current_password': currentPassword,
-        'new_password': newPassword,
-        'new_password_confirm': newPasswordConfirm,
-      });
+      final response = await _dio.post(
+        '/auth/change-password/',
+        data: {
+          'current_password': currentPassword,
+          'new_password': newPassword,
+          'new_password_confirm': newPasswordConfirm,
+        },
+      );
       await _saveRefreshedSession(response.data);
     } on DioException catch (e) {
       throw ApiServiceException(
@@ -263,10 +262,10 @@ class ApiService {
     required String currentPassword,
   }) async {
     try {
-      final response = await _dio.post('/auth/change-email/', data: {
-        'new_email': newEmail,
-        'current_password': currentPassword,
-      });
+      final response = await _dio.post(
+        '/auth/change-email/',
+        data: {'new_email': newEmail, 'current_password': currentPassword},
+      );
       final data = _extractMap(response.data);
       await _saveRefreshedSession(data);
       return data;
@@ -335,16 +334,17 @@ class ApiService {
     required String passwordConfirm,
   }) async {
     try {
-      await _dio.post('/auth/password-reset/confirm/', data: {
-        'email': email.trim(),
-        'code': code.trim(),
-        'password': password.trim(),
-        'password_confirm': passwordConfirm.trim(),
-      });
-    } on DioException catch (e) {
-      throw ApiServiceException(
-        _passwordResetErrorMessage(e),
+      await _dio.post(
+        '/auth/password-reset/confirm/',
+        data: {
+          'email': email.trim(),
+          'code': code.trim(),
+          'password': password.trim(),
+          'password_confirm': passwordConfirm.trim(),
+        },
       );
+    } on DioException catch (e) {
+      throw ApiServiceException(_passwordResetErrorMessage(e));
     }
   }
 
@@ -361,7 +361,7 @@ class ApiService {
         'code',
         'password',
         'password_confirm',
-        'email'
+        'email',
       ]) {
         final value = data[key];
         if (value == null) continue;
@@ -393,8 +393,9 @@ class ApiService {
   ///    رمز التحديث (rotation)، فتفشل البقية وتمسح الجلسة رغم نجاحها.
   ///    صار هناك تجديد واحد في الطيران يتشاركه الجميع.
   Future<bool> refreshAccessToken() {
-    return _refreshInFlight ??=
-        _performRefresh().whenComplete(() => _refreshInFlight = null);
+    return _refreshInFlight ??= _performRefresh().whenComplete(
+      () => _refreshInFlight = null,
+    );
   }
 
   Future<bool> _performRefresh() async {
@@ -408,16 +409,18 @@ class ApiService {
         data: {'refresh': refreshToken},
       );
       final data = response.data;
-      final access =
-          data is Map ? data['access'] ?? data['access_token'] : null;
+      final access = data is Map
+          ? data['access'] ?? data['access_token']
+          : null;
       if (access == null || access.toString().isEmpty) {
         await _clearToken();
         return false;
       }
       await _saveToken(
         access.toString(),
-        refreshToken:
-            data is Map ? data['refresh'] ?? refreshToken : refreshToken,
+        refreshToken: data is Map
+            ? data['refresh'] ?? refreshToken
+            : refreshToken,
       );
       return true;
     } on DioException {
@@ -427,6 +430,17 @@ class ApiService {
   }
 
   Future<Map<String, dynamic>> getMe() => _getMap('/auth/me/');
+
+  Future<void> saveActiveRole(String role) async {
+    final normalized = AuthNavigation.normalizeRole(role);
+    if (normalized == null ||
+        AuthNavigation.webOnlyRoles.contains(normalized)) {
+      throw const ApiServiceException(
+        'تعذر تحديد وضع الاستخدام. اختر متبرع أو متطوع.',
+      );
+    }
+    await _saveStoredRole(normalized);
+  }
 
   Future<List<dynamic>> getOrphans() => _getList('/orphans/');
   Future<Map<String, dynamic>> getOrphanDetails(int id) =>
@@ -438,8 +452,9 @@ class ApiService {
         'لم يؤكد الخادم حفظ بيانات اليتيم. حاول مرة أخرى.',
       );
   Future<Map<String, dynamic>> updateOrphan(
-          int id, Map<String, dynamic> data) =>
-      _putMap('/orphans/$id/', data);
+    int id,
+    Map<String, dynamic> data,
+  ) => _putMap('/orphans/$id/', data);
 
   Future<List<dynamic>> getDonations() => _getList('/donations/');
 
@@ -467,8 +482,9 @@ class ApiService {
   Future<Map<String, dynamic>> getVolunteerOpportunityDetails(int id) =>
       _getMap('/volunteer-opportunities/$id/');
   Future<Map<String, dynamic>> applyToVolunteerOpportunity(
-          int id, Map<String, dynamic> data) =>
-      _postMap('/volunteer-opportunities/$id/apply/', data);
+    int id,
+    Map<String, dynamic> data,
+  ) => _postMap('/volunteer-opportunities/$id/apply/', data);
   Future<List<dynamic>> getVolunteerApplications() =>
       _getList('/volunteer-applications/my-applications/');
 
@@ -519,21 +535,18 @@ class ApiService {
   }
 
   Future<void> markNotificationRead(int id) => _send(
-        'POST',
-        '/notifications/$id/mark_as_read/',
-        'تعذر تحديث حالة الإشعار',
-      );
+    'POST',
+    '/notifications/$id/mark_as_read/',
+    'تعذر تحديث حالة الإشعار',
+  );
   Future<void> markAllNotificationsRead() => _send(
-        'POST',
-        '/notifications/mark_all_as_read/',
-        'تعذر تحديث حالة الإشعارات',
-      );
+    'POST',
+    '/notifications/mark_all_as_read/',
+    'تعذر تحديث حالة الإشعارات',
+  );
 
-  Future<void> deleteNotification(int id) => _send(
-        'DELETE',
-        '/notifications/$id/',
-        'تعذر حذف الإشعار',
-      );
+  Future<void> deleteNotification(int id) =>
+      _send('DELETE', '/notifications/$id/', 'تعذر حذف الإشعار');
 
   Future<int> deleteAllNotifications() async {
     try {
@@ -557,15 +570,9 @@ class ApiService {
 
   Future<void> deactivateDeviceToken(String token) async {
     try {
-      await _dio.delete(
-        '/notifications/device-token/',
-        data: {'token': token},
-      );
+      await _dio.delete('/notifications/device-token/', data: {'token': token});
     } on DioException catch (e) {
-      throw await failureFor(
-        e,
-        fallback: 'تعذر تحديث إعدادات الإشعارات',
-      );
+      throw await failureFor(e, fallback: 'تعذر تحديث إعدادات الإشعارات');
     }
   }
 
@@ -588,7 +595,9 @@ class ApiService {
   }
 
   Future<Map<String, dynamic>> _postMap(
-      String path, Map<String, dynamic> data) async {
+    String path,
+    Map<String, dynamic> data,
+  ) async {
     try {
       final response = await _dio.post(path, data: data);
       return _extractMap(response.data);
@@ -621,10 +630,7 @@ class ApiService {
   /// الدالة يعني أن الخادم أكد العملية فعلاً.
   Future<void> _send(String method, String path, String fallback) async {
     try {
-      await _dio.request<dynamic>(
-        path,
-        options: Options(method: method),
-      );
+      await _dio.request<dynamic>(path, options: Options(method: method));
     } on DioException catch (e) {
       throw await failureFor(e, fallback: fallback);
     }
@@ -639,7 +645,9 @@ class ApiService {
   }
 
   Future<Map<String, dynamic>> _putMap(
-      String path, Map<String, dynamic> data) async {
+    String path,
+    Map<String, dynamic> data,
+  ) async {
     try {
       final response = await _dio.put(path, data: data);
       return _extractMap(response.data);
@@ -649,7 +657,9 @@ class ApiService {
   }
 
   Future<Map<String, dynamic>> _patchMap(
-      String path, Map<String, dynamic> data) async {
+    String path,
+    Map<String, dynamic> data,
+  ) async {
     try {
       final response = await _dio.patch(path, data: data);
       return _extractMap(response.data);
@@ -829,7 +839,8 @@ class ApiService {
     if (isLogin) return 'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
 
     final text = _flattenErrorText(data).toLowerCase();
-    final hasConflictText = text.contains('already') ||
+    final hasConflictText =
+        text.contains('already') ||
         text.contains('exists') ||
         text.contains('unique') ||
         text.contains('مستخدم');
@@ -1021,8 +1032,7 @@ class ApiService {
     final role = _roleFromAuthResponse(data);
     await _saveToken(token, refreshToken: _refreshTokenFromAuthResponse(data));
 
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('user_role', role);
+    await _saveStoredRole(role);
   }
 
   String _tokenFromAuthResponse(Map<String, dynamic> data) {
@@ -1047,6 +1057,13 @@ class ApiService {
       );
     }
     return role;
+  }
+
+  Future<void> _saveStoredRole(String role) async {
+    final normalized = AuthNavigation.normalizeRole(role);
+    if (normalized == null) return;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('user_role', normalized);
   }
 
   Future<String?> getSavedRole() async {

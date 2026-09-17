@@ -57,7 +57,7 @@ class AboutAppScreen extends StatelessWidget {
               KanafSpacing.xxl,
             ),
             children: [
-              KanafStaggeredEntrance(index: 0, child: _IntroCard()),
+              const KanafStaggeredEntrance(index: 0, child: _IntroCard()),
               const SizedBox(height: KanafSpacing.xxl),
               KanafStaggeredEntrance(
                 index: 1,
@@ -103,7 +103,7 @@ class AboutAppScreen extends StatelessWidget {
                     KanafSectionHeader(title: context.tr('about.projectTitle')),
               ),
               const SizedBox(height: KanafSpacing.md),
-              KanafStaggeredEntrance(
+              const KanafStaggeredEntrance(
                 index: 6,
                 child: KanafCard(
                   child: Column(
@@ -171,7 +171,7 @@ class _FeatureRow extends StatelessWidget {
           width: 44,
           height: 44,
           decoration: BoxDecoration(
-            color: scheme.primary.withOpacity(0.12),
+            color: scheme.primary.withValues(alpha: 0.12),
             borderRadius: KanafRadii.sm,
           ),
           child: Icon(icon, size: 22, color: scheme.primary),

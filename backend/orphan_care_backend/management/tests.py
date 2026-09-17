@@ -731,8 +731,8 @@ class AuthApiTests(APITestCase):
         self.assertEqual(second.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(VolunteerApplication.objects.filter(opportunity=opportunity, user=user).count(), 1)
 
-    def test_direct_volunteer_application_post_requires_volunteer_role(self):
-        user = get_user_model().objects.create_user(username='notvolunteerapply', password='StrongPass123!')
+    def test_donor_profile_can_submit_volunteer_application(self):
+        user = get_user_model().objects.create_user(username='donorvolunteer', password='StrongPass123!')
         UserProfile.objects.create(user=user, role=UserProfile.ROLE_DONOR)
         opportunity = VolunteerOpportunity.objects.create(
             title='Delivery help',
@@ -744,12 +744,12 @@ class AuthApiTests(APITestCase):
 
         response = self.client.post(
             '/api/volunteer-applications/',
-            {'opportunity': opportunity.id, 'message': 'I should not apply'},
+            {'opportunity': opportunity.id, 'message': 'I can help'},
             format='json',
         )
 
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertFalse(VolunteerApplication.objects.filter(opportunity=opportunity, user=user).exists())
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(VolunteerApplication.objects.filter(opportunity=opportunity, user=user).exists())
 
     def test_only_staff_can_approve_volunteer_application(self):
         user = get_user_model().objects.create_user(username='approvaluser', password='StrongPass123!')
@@ -893,6 +893,23 @@ class AuthApiTests(APITestCase):
         self.assertEqual(history_response.json()[0]['need_title'], need.title)
         notifications = self.client.get('/api/notifications/')
         self.assertTrue(any(item['notification_type'] == Notification.TYPE_DONATION for item in notifications.json()))
+
+    def test_volunteer_profile_can_create_donation(self):
+        user = get_user_model().objects.create_user(username='volunteerdonor', password='StrongPass123!')
+        UserProfile.objects.create(user=user, role=UserProfile.ROLE_VOLUNTEER)
+        need = Need.objects.create(title='School supplies', description='Notebooks and pens')
+        self.client.force_authenticate(user=user)
+
+        response = self.client.post('/api/donations/', {
+            'donation_type': 'in_kind',
+            'need_id': need.id,
+            'item_type': 'school supplies',
+            'quantity': '2 boxes',
+            'description': 'Notebooks and pens',
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(Donation.objects.filter(user=user, need=need).exists())
 
     def test_in_kind_donation_flow_is_linked_to_jwt_user_and_hidden_from_others(self):
         donor = get_user_model().objects.create_user(username='DELETE_TEST_IN_KIND_DONOR', password='StrongPass123!')

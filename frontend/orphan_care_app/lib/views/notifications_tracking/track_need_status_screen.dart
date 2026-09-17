@@ -181,7 +181,7 @@ class _SummaryCard extends StatelessWidget {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: scheme.primary.withOpacity(0.12),
+                  color: scheme.primary.withValues(alpha: 0.12),
                   borderRadius: KanafRadii.sm,
                 ),
                 child: Icon(need.icon, size: 24, color: scheme.primary),
@@ -290,7 +290,7 @@ class _Timeline extends StatelessWidget {
                               vertical: KanafSpacing.xxs,
                             ),
                             color: steps[i].done
-                                ? scheme.primary.withOpacity(0.35)
+                                ? scheme.primary.withValues(alpha: 0.35)
                                 : scheme.outlineVariant,
                           ),
                         ),

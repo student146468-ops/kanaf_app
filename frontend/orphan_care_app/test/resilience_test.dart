@@ -1,7 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaf/l10n/kanaf_localizations.dart';
 import 'package:kanaf/services/api_failure.dart';
 import 'package:kanaf/services/api_service.dart';
 import 'package:kanaf/theme/kanaf_motion.dart';
@@ -10,18 +12,55 @@ import 'package:kanaf/widgets/kanaf_states.dart';
 
 /// اختبارات المرحلة الثالثة: تصنيف الأعطال، والمصادقة، والأداء.
 
+class _TestKanafLocalizationsDelegate
+    extends LocalizationsDelegate<KanafLocalizations> {
+  const _TestKanafLocalizationsDelegate();
+
+  static const _values = <String, String>{
+    'state.emptyTitle': 'لا توجد بيانات بعد',
+    'state.offlineTitle': 'لا يوجد اتصال بالإنترنت',
+    'state.unreachableTitle': 'الخدمة غير متاحة حالياً',
+    'state.timeoutTitle': 'استغرق الاتصال وقتاً طويلاً',
+    'state.serverTitle': 'خطأ في الخادم',
+    'state.unauthorizedTitle': 'انتهت صلاحية الجلسة',
+    'state.requestTitle': 'تعذر إتمام الطلب',
+    'state.loadFailedTitle': 'تعذر تحميل البيانات',
+    'common.retry': 'إعادة المحاولة',
+    'common.update': 'تحديث',
+  };
+
+  @override
+  bool isSupported(Locale locale) => true;
+
+  @override
+  Future<KanafLocalizations> load(Locale locale) =>
+      SynchronousFuture(KanafLocalizations(locale, _values));
+
+  @override
+  bool shouldReload(covariant LocalizationsDelegate<KanafLocalizations> old) =>
+      false;
+}
+
 Widget _app(Widget child) {
   return MaterialApp(
     theme: KanafTheme.light(),
     locale: const Locale('ar'),
     supportedLocales: const [Locale('ar')],
     localizationsDelegates: const [
+      _TestKanafLocalizationsDelegate(),
       GlobalMaterialLocalizations.delegate,
       GlobalWidgetsLocalizations.delegate,
       GlobalCupertinoLocalizations.delegate,
     ],
     home: Scaffold(body: child),
   );
+}
+
+void _disposeWidgetTreeAfterTest(WidgetTester tester) {
+  addTearDown(() async {
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+  });
 }
 
 DioException _dio({
@@ -110,6 +149,7 @@ void main() {
   group('شاشة العطل تتبع سببه', () {
     testWidgets('شاشة «لا يوجد اتصال» لا تظهر إلا عند انقطاع فعلي',
         (tester) async {
+      _disposeWidgetTreeAfterTest(tester);
       await tester.pumpWidget(
         _app(
           const KanafFailureState(
@@ -118,12 +158,14 @@ void main() {
           ),
         ),
       );
+      await tester.pumpAndSettle();
 
       expect(find.text('لا يوجد اتصال بالإنترنت'), findsOneWidget);
       expect(find.byIcon(Icons.wifi_off_rounded), findsOneWidget);
     });
 
     testWidgets('عطل الخادم لا يدّعي انقطاع الاتصال', (tester) async {
+      _disposeWidgetTreeAfterTest(tester);
       await tester.pumpWidget(
         _app(
           const KanafFailureState(
@@ -132,6 +174,7 @@ void main() {
           ),
         ),
       );
+      await tester.pumpAndSettle();
 
       // هذا جوهر الإصلاح: مستخدم متصل يجب ألا يُقال له إنه غير متصل.
       expect(find.text('لا يوجد اتصال بالإنترنت'), findsNothing);
@@ -140,6 +183,7 @@ void main() {
     });
 
     testWidgets('انتهاء الجلسة له عنوانه الخاص', (tester) async {
+      _disposeWidgetTreeAfterTest(tester);
       await tester.pumpWidget(
         _app(
           const KanafFailureState(
@@ -148,12 +192,14 @@ void main() {
           ),
         ),
       );
+      await tester.pumpAndSettle();
 
       expect(find.text('انتهت صلاحية الجلسة'), findsOneWidget);
       expect(find.text('لا يوجد اتصال بالإنترنت'), findsNothing);
     });
 
     testWidgets('الطلب المرفوض لا يعرض زر إعادة المحاولة', (tester) async {
+      _disposeWidgetTreeAfterTest(tester);
       var retried = false;
 
       await tester.pumpWidget(
@@ -165,6 +211,7 @@ void main() {
           ),
         ),
       );
+      await tester.pumpAndSettle();
 
       expect(find.text('إعادة المحاولة'), findsNothing);
       expect(retried, isFalse);
@@ -172,6 +219,7 @@ void main() {
 
     testWidgets('الفراغ ليس عطلاً — لا تظهر شاشة الخطأ بلا سبب',
         (tester) async {
+      _disposeWidgetTreeAfterTest(tester);
       await tester.pumpWidget(
         _app(
           KanafAsyncView(
@@ -182,6 +230,7 @@ void main() {
           ),
         ),
       );
+      await tester.pumpAndSettle();
 
       expect(find.text('لا توجد بيانات بعد'), findsOneWidget);
       expect(find.text('لا يوجد اتصال بالإنترنت'), findsNothing);
@@ -190,6 +239,7 @@ void main() {
 
     testWidgets('وجود بيانات يمنع شاشة العطل رغم وجود رسالة خطأ',
         (tester) async {
+      _disposeWidgetTreeAfterTest(tester);
       await tester.pumpWidget(
         _app(
           KanafAsyncView(
@@ -201,6 +251,7 @@ void main() {
           ),
         ),
       );
+      await tester.pumpAndSettle();
 
       expect(find.text('المحتوى المحفوظ'), findsOneWidget);
       expect(find.text('لا يوجد اتصال بالإنترنت'), findsNothing);
@@ -210,6 +261,7 @@ void main() {
   group('أداء الحركة', () {
     testWidgets('العناصر البعيدة في القائمة لا تُنشئ متحكّم حركة',
         (tester) async {
+      _disposeWidgetTreeAfterTest(tester);
       // متحكّم حركة لكل صف في قائمة طويلة هدر خالص، ويجعل العناصر
       // تتلاشى من جديد كلما مرّرها المستخدم.
       await tester.pumpWidget(
@@ -223,6 +275,7 @@ void main() {
           ),
         ),
       );
+      await tester.pumpAndSettle();
 
       // بلا حركة يظهر المحتوى فوراً في أول إطار.
       expect(find.text('صف 0'), findsOneWidget);
@@ -230,11 +283,13 @@ void main() {
     });
 
     testWidgets('العناصر الأولى تُحرَّك', (tester) async {
+      _disposeWidgetTreeAfterTest(tester);
       await tester.pumpWidget(
         _app(
           const KanafStaggeredEntrance(index: 0, child: Text('أول عنصر')),
         ),
       );
+      await tester.pump();
 
       expect(find.byType(FadeTransition), findsOneWidget);
       await tester.pumpAndSettle();
@@ -242,12 +297,14 @@ void main() {
     });
 
     testWidgets('إعداد تقليل الحركة يُحترم', (tester) async {
+      _disposeWidgetTreeAfterTest(tester);
       await tester.pumpWidget(
         MaterialApp(
           theme: KanafTheme.light(),
           locale: const Locale('ar'),
           supportedLocales: const [Locale('ar')],
           localizationsDelegates: const [
+            _TestKanafLocalizationsDelegate(),
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
@@ -260,6 +317,7 @@ void main() {
           ),
         ),
       );
+      await tester.pumpAndSettle();
 
       expect(find.byType(FadeTransition), findsNothing);
       expect(find.text('بلا حركة'), findsOneWidget);
