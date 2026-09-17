@@ -10,15 +10,15 @@ import '../utils/auth_navigation.dart';
 import '../widgets/kanaf_layout.dart';
 import '../l10n/kanaf_localizations.dart';
 
-class PhoneVerificationScreen extends StatefulWidget {
-  const PhoneVerificationScreen({super.key});
+class EmailVerificationScreen extends StatefulWidget {
+  const EmailVerificationScreen({super.key});
 
   @override
-  State<PhoneVerificationScreen> createState() =>
-      _PhoneVerificationScreenState();
+  State<EmailVerificationScreen> createState() =>
+      _EmailVerificationScreenState();
 }
 
-class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
+class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
   final ApiService _apiService = ApiService();
   final _formKey = GlobalKey<FormState>();
   final _codeController = TextEditingController();
@@ -28,7 +28,6 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
 
   int? _userId;
   String _email = '';
-  String _phoneNumber = '';
   String? _role;
 
   @override
@@ -38,7 +37,6 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
     if (args is Map) {
       _userId = int.tryParse('${args['user_id'] ?? ''}');
       _email = (args['email'] ?? '').toString();
-      _phoneNumber = (args['phone_number'] ?? '').toString();
       _role = AuthNavigation.normalizeRole((args['role'] ?? '').toString());
     }
   }
@@ -53,7 +51,7 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(context.tr('phone.appBar')),
+        title: Text(context.tr('emailVerification.appBar')),
         leading: const BackButton(),
       ),
       body: KanafBackdrop(
@@ -75,12 +73,12 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       KanafHeroBand(
-                        title: context.tr('phone.title'),
-                        subtitle: _phoneNumber.isEmpty
-                            ? context.tr('phone.subtitle')
+                        title: context.tr('emailVerification.title'),
+                        subtitle: _email.isEmpty
+                            ? context.tr('emailVerification.subtitle')
                             : context.tr(
-                                'phone.subtitleWithNumber',
-                                args: {'phone': _phoneNumber},
+                                'emailVerification.subtitleWithEmail',
+                                args: {'email': _email},
                               ),
                       ),
                       const SizedBox(height: KanafSpacing.xxl),
@@ -98,7 +96,7 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
                         decoration: InputDecoration(
                           labelText: context.tr('common.verificationCode'),
                           hintText: context.tr('auth.codeHint'),
-                          prefixIcon: const Icon(Icons.sms_outlined),
+                          prefixIcon: const Icon(Icons.email_outlined),
                         ),
                         validator: (value) {
                           final code = value?.trim() ?? '';
@@ -126,8 +124,8 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
                             : const Icon(Icons.verified_outlined),
                         label: Text(
                           _isVerifying
-                              ? context.tr('phone.verifying')
-                              : context.tr('phone.verify'),
+                              ? context.tr('emailVerification.verifying')
+                              : context.tr('emailVerification.verify'),
                         ),
                       ),
                       const SizedBox(height: KanafSpacing.md),
@@ -144,8 +142,8 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
                             : const Icon(Icons.refresh_rounded),
                         label: Text(
                           _isResending
-                              ? context.tr('phone.resending')
-                              : context.tr('phone.resend'),
+                              ? context.tr('emailVerification.resending')
+                              : context.tr('emailVerification.resend'),
                         ),
                       ),
                     ],
@@ -162,17 +160,16 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
   Future<void> _verify() async {
     final form = _formKey.currentState;
     if (form == null || !form.validate()) return;
-    if (_phoneNumber.isEmpty) {
-      _showMessage(context.tr('phone.missingPhone'));
+    if (_email.isEmpty) {
+      _showMessage(context.tr('emailVerification.missingEmail'));
       return;
     }
 
     setState(() => _isVerifying = true);
     try {
-      final response = await _apiService.verifyPhoneOtp(
+      final response = await _apiService.verifyEmailOtp(
         userId: _userId,
         email: _email,
-        phoneNumber: _phoneNumber,
         code: _codeController.text.trim(),
       );
       if (!mounted) return;
@@ -187,40 +184,39 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
         _role ?? AuthNavigation.roleFromAuthResponse(response),
       );
     } catch (error) {
-      debugPrint('Phone OTP verify failed: $error');
+      debugPrint('Email OTP verify failed: $error');
       if (!mounted) return;
       setState(() => _isVerifying = false);
       _showMessage(
         error is ApiServiceException
             ? error.message
-            : context.tr('phone.verifyFailed'),
+            : context.tr('emailVerification.verifyFailed'),
       );
     }
   }
 
   Future<void> _resend() async {
-    if (_phoneNumber.isEmpty) {
-      _showMessage(context.tr('phone.missingPhone'));
+    if (_email.isEmpty) {
+      _showMessage(context.tr('emailVerification.missingEmail'));
       return;
     }
 
     setState(() => _isResending = true);
     try {
-      await _apiService.resendPhoneOtp(
+      await _apiService.resendEmailOtp(
         email: _email,
-        phoneNumber: _phoneNumber,
       );
       if (!mounted) return;
       setState(() => _isResending = false);
-      _showMessage(context.tr('phone.resendSuccess'));
+      _showMessage(context.tr('emailVerification.resendSuccess'));
     } catch (error) {
-      debugPrint('Phone OTP resend failed: $error');
+      debugPrint('Email OTP resend failed: $error');
       if (!mounted) return;
       setState(() => _isResending = false);
       _showMessage(
         error is ApiServiceException
             ? error.message
-            : context.tr('phone.resendFailed'),
+            : context.tr('emailVerification.resendFailed'),
       );
     }
   }

@@ -104,7 +104,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                               : const Icon(Icons.send_outlined),
                           label: Text(
                             _isLoading
-                                ? context.tr('phone.resending')
+                                ? context.tr('emailVerification.resending')
                                 : context.tr('forgot.sendCode'),
                           ),
                         ),

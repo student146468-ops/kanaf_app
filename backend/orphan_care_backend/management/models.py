@@ -126,6 +126,29 @@ class PhoneVerificationCode(models.Model):
         return timezone.now() >= self.expires_at
 
 
+class EmailVerificationCode(models.Model):
+    CODE_LENGTH = 6
+    MAX_ATTEMPTS = 5
+    VALIDITY = timezone.timedelta(minutes=10)
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+                             related_name='email_verification_codes')
+    email = models.EmailField()
+    code_hash = models.CharField(max_length=64)
+    created_at = models.DateTimeField(default=timezone.now)
+    expires_at = models.DateTimeField()
+    used_at = models.DateTimeField(null=True, blank=True)
+    attempts = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [models.Index(fields=['user', 'used_at'], name='email_otp_user_used_idx')]
+
+    @property
+    def is_expired(self):
+        return timezone.now() >= self.expires_at
+
+
 class Volunteer(models.Model):
     name = models.CharField(max_length=100, db_index=True)
     specialty = models.CharField(max_length=100, db_index=True)

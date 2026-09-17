@@ -22,8 +22,8 @@ from management.views_api import (
     OrphanViewSet,
     PasswordResetConfirmView,
     PasswordResetRequestView,
-    PhoneOtpSendView,
-    PhoneOtpVerifyView,
+    EmailOtpSendView,
+    EmailOtpVerifyView,
     ProfileViewSet,
     RegisterView,
     ReportsView,
@@ -51,8 +51,11 @@ router.register(r'profiles', ProfileViewSet, basename='profile')
 urlpatterns = [
     path('auth/login/', LoginView.as_view(), name='token_obtain_pair'),
     path('auth/register/', RegisterView.as_view(), name='register'),
-    path('auth/phone-otp/send/', PhoneOtpSendView.as_view(), name='phone_otp_send'),
-    path('auth/phone-otp/verify/', PhoneOtpVerifyView.as_view(), name='phone_otp_verify'),
+    path('auth/email-otp/send/', EmailOtpSendView.as_view(), name='email_otp_send'),
+    path('auth/email-otp/verify/', EmailOtpVerifyView.as_view(), name='email_otp_verify'),
+    # Older clients may still use these URLs; verification is email-only.
+    path('auth/phone-otp/send/', EmailOtpSendView.as_view(), name='phone_otp_send'),
+    path('auth/phone-otp/verify/', EmailOtpVerifyView.as_view(), name='phone_otp_verify'),
     path('auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('auth/logout/', LogoutView.as_view(), name='logout'),
     path(

@@ -24,6 +24,15 @@ from .models import (
 MAX_DONATION_AMOUNT = Decimal('1000000')
 
 
+class EmailOtpSendSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+
+class EmailOtpVerifySerializer(EmailOtpSendSerializer):
+    code = serializers.RegexField(r'^[0-9]{6}$')
+    user_id = serializers.IntegerField(required=False)
+
+
 def _decimal_from_text(value):
     match = re.search(r'\d+(?:\.\d+)?', str(value or '').replace(',', ''))
     if not match:

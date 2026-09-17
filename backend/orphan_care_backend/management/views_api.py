@@ -35,6 +35,8 @@ from .models import Donation, InventoryItem, Need, Orphan, Sponsor, Volunteer
 from .serializers import (
     CareHomeSerializer,
     DonationSerializer,
+    EmailOtpSendSerializer,
+    EmailOtpVerifySerializer,
     InventorySerializer,
     NeedSerializer,
     NotificationSerializer,
@@ -50,13 +52,12 @@ from .models import (
     CareHome,
     Notification,
     PasswordResetCode,
-    PhoneVerificationCode,
+    EmailVerificationCode,
     UserProfile,
     VisitHour,
     VolunteerApplication,
     VolunteerOpportunity,
 )
-from .sms import SmsConfigurationError, SmsDeliveryError, send_sms
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
@@ -244,8 +245,8 @@ def hash_reset_code(code):
     return hashlib.sha256(salted).hexdigest()
 
 
-def hash_phone_verification_code(code):
-    salted = f'{settings.SECRET_KEY}:phone:{code}'.encode('utf-8')
+def hash_email_verification_code(code):
+    salted = f'{settings.SECRET_KEY}:email-verification:{code}'.encode('utf-8')
     return hashlib.sha256(salted).hexdigest()
 
 
@@ -333,74 +334,53 @@ def consume_password_reset_code(user, code):
         return record
 
 
-def issue_phone_verification_code(user):
-    profile = getattr(user, 'profile', None)
-    phone_number = getattr(profile, 'phone_number', '') if profile else ''
-    if not _is_valid_phone_number(phone_number):
-        raise ValueError('User has no valid phone number for OTP.')
-
-    PhoneVerificationCode.objects.filter(
-        user=user,
-        used_at__isnull=True,
-    ).update(used_at=timezone.now())
-
-    code = f'{secrets.randbelow(10 ** PhoneVerificationCode.CODE_LENGTH):0{PhoneVerificationCode.CODE_LENGTH}d}'
-    now = timezone.now()
-    record = PhoneVerificationCode.objects.create(
-        user=user,
-        phone_number=phone_number,
-        code_hash=hash_phone_verification_code(code),
-        created_at=now,
-        expires_at=now + PhoneVerificationCode.VALIDITY,
-    )
-
-    minutes = int(PhoneVerificationCode.VALIDITY.total_seconds() // 60)
-    message = f'رمز تحقق كَنَفْ هو {code}. صالح لمدة {minutes} دقائق.'
-    logger.info(
-        'Phone OTP send requested user_id=%s phone=%s backend=%s',
-        user.id,
-        _mask_phone(phone_number),
-        settings.SMS_BACKEND,
-    )
-    result = send_sms(phone_number=phone_number, message=message)
-    record.provider = result.provider
-    record.provider_message_id = result.message_id
-    record.save(update_fields=['provider', 'provider_message_id'])
-    logger.info(
-        'Phone OTP send accepted user_id=%s phone=%s provider=%s message_id=%s status=%s',
-        user.id,
-        _mask_phone(phone_number),
-        result.provider,
-        result.message_id,
-        result.status,
-    )
+def issue_email_verification_code(user):
+    # Serialize resends per account and preserve the previous code on delivery failure.
+    with transaction.atomic():
+        User.objects.select_for_update().get(pk=user.pk)
+        now = timezone.now()
+        EmailVerificationCode.objects.filter(
+            user=user, used_at__isnull=True,
+        ).update(used_at=now)
+        code = f'{secrets.randbelow(10 ** EmailVerificationCode.CODE_LENGTH):06d}'
+        EmailVerificationCode.objects.create(
+            user=user, email=user.email.lower(),
+            code_hash=hash_email_verification_code(code),
+            expires_at=now + EmailVerificationCode.VALIDITY,
+        )
+        _send_brevo_email(
+            subject='رمز تأكيد البريد الإلكتروني - كَنَفْ',
+            text_content=f'رمز تأكيد حساب كَنَفْ هو: {code}\nالرمز صالح لمدة 10 دقائق ولمرة واحدة فقط.',
+            recipient_email=user.email,
+            recipient_name=user.get_full_name() or user.username,
+        )
     return code
 
 
-def consume_phone_verification_code(user, code):
+def consume_email_verification_code(user, code):
     with transaction.atomic():
         record = (
-            PhoneVerificationCode.objects
+            EmailVerificationCode.objects
             .select_for_update()
-            .filter(user=user, used_at__isnull=True)
+            .filter(user=user, email__iexact=user.email, used_at__isnull=True)
             .order_by('-created_at')
             .first()
         )
         if record is None or record.is_expired:
             return None
 
-        if record.attempts >= PhoneVerificationCode.MAX_ATTEMPTS:
+        if record.attempts >= EmailVerificationCode.MAX_ATTEMPTS:
             record.used_at = timezone.now()
             record.save(update_fields=['used_at'])
             return None
 
         if not secrets.compare_digest(
             record.code_hash,
-            hash_phone_verification_code(code),
+            hash_email_verification_code(code),
         ):
             record.attempts += 1
             update_fields = ['attempts']
-            if record.attempts >= PhoneVerificationCode.MAX_ATTEMPTS:
+            if record.attempts >= EmailVerificationCode.MAX_ATTEMPTS:
                 record.used_at = timezone.now()
                 update_fields.append('used_at')
             record.save(update_fields=update_fields)
@@ -411,34 +391,11 @@ def consume_phone_verification_code(user, code):
         return record
 
 
-def _mask_phone(phone_number):
-    phone = str(phone_number or '')
-    if len(phone) <= 4:
-        return '****'
-    return f'{phone[:3]}***{phone[-2:]}'
-
-
-def _sms_error_response(exc):
-    if isinstance(exc, SmsConfigurationError):
-        logger.error('Phone OTP SMS configuration error: %s', exc)
-        return Response(
-            {
-                'detail': 'خدمة إرسال OTP غير مهيأة للبيئة الحالية. استخدم SMS_BACKEND=development مع DEBUG=True أثناء التطوير، أو اضبط مزود SMS حقيقي في الإنتاج.',
-                'code': 'sms_not_configured',
-                'missing_settings': [
-                    'DEBUG=True with SMS_BACKEND=development for local testing',
-                    'or production SMS provider credentials such as Twilio',
-                ],
-            },
-            status=status.HTTP_503_SERVICE_UNAVAILABLE,
-        )
-
-    logger.exception('Phone OTP SMS delivery failed: %s', exc)
+def _email_verification_error_response():
+    logger.exception('Account verification email delivery failed')
     return Response(
-        {
-            'detail': 'تعذر إرسال رمز التحقق عبر SMS حالياً. حاول مرة أخرى لاحقاً.',
-            'code': 'sms_delivery_failed',
-        },
+        {'detail': 'تعذر إرسال رمز التحقق إلى البريد الإلكتروني. حاول مرة أخرى لاحقاً.',
+         'code': 'email_delivery_failed'},
         status=status.HTTP_503_SERVICE_UNAVAILABLE,
     )
 
@@ -804,17 +761,17 @@ class RegisterView(APIView):
             )
 
         try:
-            issue_phone_verification_code(user)
-        except (SmsConfigurationError, SmsDeliveryError) as exc:
-            logger.warning('Registration rolled back after SMS failure user_id=%s phone=%s', user.id, _mask_phone(phone_number))
+            issue_email_verification_code(user)
+        except (BrevoEmailDeliveryError, TimeoutError, OSError):
+            logger.warning('Registration rolled back after email failure user_id=%s', user.id)
             user.delete()
-            return _sms_error_response(exc)
+            return _email_verification_error_response()
 
-        logger.info('Registration created pending phone verification user_id=%s phone=%s', user.id, _mask_phone(phone_number))
+        logger.info('Registration pending email verification user_id=%s', user.id)
         return Response(
             {
-                'detail': 'تم إنشاء الحساب وإرسال رمز التحقق إلى رقم الهاتف.',
-                'requires_phone_verification': True,
+                'detail': 'تم إنشاء الحساب وإرسال رمز التحقق إلى البريد الإلكتروني.',
+                'requires_email_verification': True,
                 'user_id': user.id,
                 'email': user.email,
                 'phone_number': phone_number,
@@ -824,131 +781,60 @@ class RegisterView(APIView):
         )
 
 
-class PhoneOtpSendView(APIView):
+class EmailOtpSendView(APIView):
     permission_classes = [AllowAny]
     throttle_classes = [ScopedRateThrottle]
-    throttle_scope = 'phone_otp'
+    throttle_scope = 'email_otp'
 
     @extend_schema(
-        request=inline_serializer(
-            name='PhoneOtpSendRequest',
-            fields={
-                'email': serializers.EmailField(required=False),
-                'phone_number': serializers.CharField(),
-            },
-        ),
+        request=EmailOtpSendSerializer,
         responses={200: inline_serializer(
-            name='PhoneOtpSendResponse',
-            fields={
-                'detail': serializers.CharField(),
-                'requires_phone_verification': serializers.BooleanField(),
-                'user_id': serializers.IntegerField(),
-                'phone_number': serializers.CharField(),
-            },
+            name='EmailOtpSendResponse', fields={'detail': serializers.CharField()},
         )},
     )
     def post(self, request):
-        phone_number = (request.data.get('phone_number') or '').strip()
-        email = (request.data.get('email') or '').strip().lower()
-
-        if not _is_valid_phone_number(phone_number):
-            return Response({'detail': PHONE_VALIDATION_MESSAGE}, status=status.HTTP_400_BAD_REQUEST)
-
-        queryset = User.objects.select_related('profile').filter(
-            profile__phone_number=phone_number,
-            profile__is_verified=False,
-        )
-        if email:
-            queryset = queryset.filter(email__iexact=email)
-        user = queryset.order_by('-id').first()
-        if user is None:
-            return Response(
-                {'detail': 'لا يوجد حساب غير موثق بهذا الرقم.'},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        try:
-            issue_phone_verification_code(user)
-        except (SmsConfigurationError, SmsDeliveryError) as exc:
-            return _sms_error_response(exc)
-
-        return Response(
-            {
-                'detail': 'تم إرسال رمز تحقق جديد إلى رقم الهاتف.',
-                'requires_phone_verification': True,
-                'user_id': user.id,
-                'phone_number': phone_number,
-            },
-            status=status.HTTP_200_OK,
-        )
+        serializer = EmailOtpSendSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data['email'].lower()
+        user = User.objects.filter(
+            email__iexact=email, is_active=True, profile__is_verified=False,
+        ).first()
+        if user is not None:
+            try:
+                issue_email_verification_code(user)
+            except (BrevoEmailDeliveryError, TimeoutError, OSError):
+                return _email_verification_error_response()
+        return Response({'detail': 'إذا كان الحساب ينتظر التحقق، فقد أرسلنا رمزاً إلى بريده الإلكتروني.'})
 
 
-class PhoneOtpVerifyView(APIView):
+class EmailOtpVerifyView(APIView):
     permission_classes = [AllowAny]
     throttle_classes = [ScopedRateThrottle]
-    throttle_scope = 'phone_otp'
-
+    throttle_scope = 'email_otp'
     INVALID_CODE_MESSAGE = 'رمز التحقق غير صحيح أو منتهي الصلاحية. اطلب رمزاً جديداً.'
 
-    @extend_schema(
-        request=inline_serializer(
-            name='PhoneOtpVerifyRequest',
-            fields={
-                'user_id': serializers.IntegerField(required=False),
-                'email': serializers.EmailField(required=False),
-                'phone_number': serializers.CharField(),
-                'code': serializers.CharField(),
-            },
-        ),
-        responses={200: AUTH_RESPONSE_SCHEMA},
-    )
+    @extend_schema(request=EmailOtpVerifySerializer, responses={200: AUTH_RESPONSE_SCHEMA})
     def post(self, request):
-        user_id = request.data.get('user_id')
-        email = (request.data.get('email') or '').strip().lower()
-        phone_number = (request.data.get('phone_number') or '').strip()
-        code = (request.data.get('code') or '').strip()
-
-        errors = {}
-        if not _is_valid_phone_number(phone_number):
-            errors['phone_number'] = [PHONE_VALIDATION_MESSAGE]
-        if not code:
-            errors['code'] = ['رمز التحقق مطلوب.']
-        elif not re.fullmatch(r'\d{6}', code):
-            errors['code'] = ['رمز التحقق يتكون من 6 أرقام.']
-        if errors:
-            return Response(errors, status=status.HTTP_400_BAD_REQUEST)
-
-        queryset = User.objects.select_related('profile').filter(
-            profile__phone_number=phone_number,
-        )
-        if user_id:
-            queryset = queryset.filter(id=user_id)
-        if email:
-            queryset = queryset.filter(email__iexact=email)
-        user = queryset.order_by('-id').first()
-        if user is None:
-            logger.info('Phone OTP verify failed for unknown phone=%s', _mask_phone(phone_number))
-            return Response({'detail': self.INVALID_CODE_MESSAGE}, status=status.HTTP_400_BAD_REQUEST)
-
-        profile = user.profile
-        if profile.is_verified:
-            logger.info('Phone OTP verify skipped already verified user_id=%s', user.id)
+        serializer = EmailOtpVerifySerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        with transaction.atomic():
+            queryset = User.objects.select_for_update().filter(
+                email__iexact=data['email'], is_active=True,
+            )
+            if 'user_id' in data:
+                queryset = queryset.filter(pk=data['user_id'])
+            user = queryset.first()
+            if user is None or not hasattr(user, 'profile') or user.profile.is_verified:
+                return Response({'detail': self.INVALID_CODE_MESSAGE}, status=status.HTTP_400_BAD_REQUEST)
+            record = consume_email_verification_code(user, data['code'])
+            if record is None:
+                return Response({'detail': self.INVALID_CODE_MESSAGE}, status=status.HTTP_400_BAD_REQUEST)
+            user.profile.is_verified = True
+            user.profile.save(update_fields=['is_verified', 'updated_at'])
             payload = _token_payload(user)
             payload.update({'id': user.id, 'username': user.username, 'email': user.email})
-            return Response(payload, status=status.HTTP_200_OK)
-
-        record = consume_phone_verification_code(user, code)
-        if record is None:
-            logger.warning('Phone OTP verify rejected user_id=%s phone=%s', user.id, _mask_phone(phone_number))
-            return Response({'detail': self.INVALID_CODE_MESSAGE}, status=status.HTTP_400_BAD_REQUEST)
-
-        profile.is_verified = True
-        profile.save(update_fields=['is_verified', 'updated_at'])
-        logger.info('Phone OTP verified user_id=%s phone=%s', user.id, _mask_phone(phone_number))
-
-        payload = _token_payload(user)
-        payload.update({'id': user.id, 'username': user.username, 'email': user.email})
-        return Response(payload, status=status.HTTP_200_OK)
+        return Response(payload)
 
 
 class LoginView(APIView):
@@ -988,11 +874,15 @@ class LoginView(APIView):
 
         profile, _created_profile = UserProfile.objects.get_or_create(user=authenticated_user)
         if profile.phone_number and not profile.is_verified:
+            try:
+                issue_email_verification_code(authenticated_user)
+            except (BrevoEmailDeliveryError, TimeoutError, OSError):
+                return _email_verification_error_response()
             return Response(
                 {
-                    'detail': 'رقم الهاتف غير موثق. أدخل رمز التحقق لإكمال الدخول.',
-                    'code': 'phone_verification_required',
-                    'requires_phone_verification': True,
+                    'detail': 'أرسلنا رمز التحقق إلى بريدك الإلكتروني لإكمال الدخول.',
+                    'code': 'email_verification_required',
+                    'requires_email_verification': True,
                     'user_id': authenticated_user.id,
                     'email': authenticated_user.email,
                     'phone_number': profile.phone_number,

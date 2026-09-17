@@ -311,9 +311,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       setState(() => _isLoading = false);
       TextInput.finishAutofillContext();
 
-      if (response['requires_phone_verification'] == true) {
+      if (response['requires_email_verification'] == true) {
         Navigator.of(context).pushReplacementNamed(
-          KanafRoutes.phoneVerification,
+          KanafRoutes.emailVerification,
           arguments: response,
         );
         return;

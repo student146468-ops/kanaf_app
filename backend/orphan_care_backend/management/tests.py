@@ -21,7 +21,7 @@ from management.models import (
     Notification,
     Orphan,
     PasswordResetCode,
-    PhoneVerificationCode,
+    EmailVerificationCode,
     Sponsor,
     UserProfile,
     VisitHour,
@@ -131,8 +131,12 @@ class ManagementWebRoutingTests(TestCase):
         self.assertContains(response, 'منظومة كنف')
 
 
-@override_settings(DEBUG=True, SMS_BACKEND='development')
-class AuthApiTests(APITestCase):
+@override_settings(DEBUG=True, BREVO_API_KEY='test-key', BREVO_SENDER_EMAIL='sender@example.com')
+class AuthApiTests(BrevoEmailMockMixin, APITestCase):
+    def setUp(self):
+        cache.clear()
+        self.start_brevo_email_mock()
+
     def test_health_endpoint_reports_database(self):
         response = self.client.get(reverse('health'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -173,10 +177,10 @@ class AuthApiTests(APITestCase):
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertTrue(get_user_model().objects.filter(username='newuser').exists())
-        self.assertTrue(response.json()['requires_phone_verification'])
+        self.assertTrue(response.json()['requires_email_verification'])
         user = get_user_model().objects.get(username='newuser')
         self.assertFalse(user.profile.is_verified)
-        self.assertEqual(PhoneVerificationCode.objects.filter(user=user).count(), 1)
+        self.assertEqual(EmailVerificationCode.objects.filter(user=user).count(), 1)
 
     def test_register_rejects_duplicate_email_with_email_error(self):
         get_user_model().objects.create_user(
@@ -234,7 +238,7 @@ class AuthApiTests(APITestCase):
         }, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertTrue(response.json()['requires_phone_verification'])
+        self.assertTrue(response.json()['requires_email_verification'])
         self.assertIn('user_id', response.json())
 
     def test_flutter_login_path_is_available(self):
@@ -366,7 +370,7 @@ class AuthApiTests(APITestCase):
         self.assertFalse(user.profile.is_verified)
 
     @override_settings(DEBUG=True, SMS_BACKEND='development')
-    def test_register_then_phone_otp_verify_returns_tokens(self):
+    def test_register_then_email_otp_verify_returns_tokens(self):
         with patch('management.views_api.secrets.randbelow', return_value=123456):
             register = self.client.post(reverse('register'), {
                 'username': 'otpuser',
@@ -379,10 +383,9 @@ class AuthApiTests(APITestCase):
 
         self.assertEqual(register.status_code, status.HTTP_201_CREATED)
         body = register.json()
-        verify = self.client.post(reverse('phone_otp_verify'), {
+        verify = self.client.post(reverse('email_otp_verify'), {
             'user_id': body['user_id'],
             'email': body['email'],
-            'phone_number': body['phone_number'],
             'code': '123456',
         }, format='json')
 
@@ -392,40 +395,38 @@ class AuthApiTests(APITestCase):
         user.profile.refresh_from_db()
         self.assertTrue(user.profile.is_verified)
 
-    @override_settings(DEBUG=True, SMS_BACKEND='development')
-    def test_development_sms_backend_logs_otp_without_returning_it(self):
+    def test_registration_sends_email_without_exposing_otp(self):
         with patch('management.views_api.secrets.randbelow', return_value=654321):
-            with self.assertLogs('management.sms', level='WARNING') as logs:
-                response = self.client.post(reverse('register'), {
-                    'username': 'devotp',
-                    'email': 'devotp@example.com',
-                    'password': 'StrongPass123!',
-                    'password_confirm': 'StrongPass123!',
-                    'role': UserProfile.ROLE_DONOR,
-                    'phone_number': '0912345678',
-                }, format='json')
-
+            response = self.client.post(reverse('register'), {
+                'username': 'emailotp',
+                'email': 'emailotp@example.com',
+                'password': 'StrongPass123!',
+                'password_confirm': 'StrongPass123!',
+                'phone_number': '0912345678',
+            }, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertTrue(response.json()['requires_phone_verification'])
         self.assertNotIn('654321', response.content.decode('utf-8'))
-        self.assertIn('654321', '\n'.join(logs.output))
+        mail = self.sent_brevo_emails[-1]['json']
+        self.assertEqual(mail['to'][0]['email'], 'emailotp@example.com')
+        self.assertIn('654321', mail['textContent'])
+        self.assertNotIn('654321', EmailVerificationCode.objects.get().code_hash)
 
-    @override_settings(DEBUG=False, SMS_BACKEND='development')
-    def test_development_sms_backend_is_rejected_in_production(self):
+    @override_settings(DEBUG=False, BREVO_API_KEY='')
+    def test_missing_email_configuration_rolls_back_registration(self):
         response = self.client.post(reverse('register'), {
-            'username': 'proddevotp',
-            'email': 'proddevotp@example.com',
+            'username': 'noemail',
+            'email': 'noemail@example.com',
             'password': 'StrongPass123!',
             'password_confirm': 'StrongPass123!',
-            'role': UserProfile.ROLE_DONOR,
             'phone_number': '0912345678',
         }, format='json')
-
         self.assertEqual(response.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
-        self.assertEqual(response.json()['code'], 'sms_not_configured')
-        self.assertFalse(get_user_model().objects.filter(username='proddevotp').exists())
+        self.assertEqual(response.json()['code'], 'email_delivery_failed')
+        self.assertFalse(User.objects.filter(username='noemail').exists())
+        self.assertFalse(EmailVerificationCode.objects.exists())
+        self.mock_brevo_urlopen.assert_not_called()
 
-    def test_unverified_phone_login_requires_otp(self):
+    def test_unverified_account_login_requires_email_otp(self):
         user = get_user_model().objects.create_user(
             username='unverified',
             email='unverified@example.com',
@@ -443,10 +444,10 @@ class AuthApiTests(APITestCase):
         }, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response.json()['code'], 'phone_verification_required')
+        self.assertEqual(response.json()['code'], 'email_verification_required')
 
     @override_settings(SMS_BACKEND='twilio', TWILIO_ACCOUNT_SID='', TWILIO_AUTH_TOKEN='')
-    def test_register_reports_missing_sms_credentials(self):
+    def test_register_does_not_require_sms_credentials(self):
         response = self.client.post(reverse('register'), {
             'username': 'nosms',
             'email': 'nosms@example.com',
@@ -456,9 +457,9 @@ class AuthApiTests(APITestCase):
             'phone_number': '0912345678',
         }, format='json')
 
-        self.assertEqual(response.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
-        self.assertEqual(response.json()['code'], 'sms_not_configured')
-        self.assertFalse(get_user_model().objects.filter(username='nosms').exists())
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(response.json()['requires_email_verification'])
+        self.assertEqual(self.sent_brevo_emails[-1]['json']['to'][0]['email'], 'nosms@example.com')
 
     def test_invalid_role_is_rejected(self):
         response = self.client.post(reverse('register'), {

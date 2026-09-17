@@ -267,9 +267,9 @@ class _LoginScreenState extends State<LoginScreen> {
       debugPrint('Login failed: $error');
       if (!mounted) return;
       setState(() => _isLoading = false);
-      if (error is PhoneVerificationRequiredException) {
+      if (error is EmailVerificationRequiredException) {
         Navigator.of(context).pushNamed(
-          KanafRoutes.phoneVerification,
+          KanafRoutes.emailVerification,
           arguments: error.toRouteArguments(),
         );
         return;

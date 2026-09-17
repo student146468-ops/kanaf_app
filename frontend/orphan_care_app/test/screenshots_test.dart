@@ -21,6 +21,7 @@ import 'package:kanaf/views/donor/profile_screen.dart';
 import 'package:kanaf/views/donor/search_filter_screen.dart';
 import 'package:kanaf/views/donor/supporter_home_screen.dart';
 import 'package:kanaf/views/forgot_password_screen.dart';
+import 'package:kanaf/views/email_verification_screen.dart';
 import 'package:kanaf/views/login_screen.dart';
 import 'package:kanaf/views/onboarding_screen.dart';
 import 'package:kanaf/views/register_screen.dart';
@@ -211,7 +212,57 @@ void main() {
     );
   }
 
+  for (final width in [320.0, 412.0, 1024.0]) {
+    testWidgets('Email verification fits width $width without a phone', (tester) async {
+      tester.view.physicalSize = Size(width, 915);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      const email = 'a.very.long.email.address.for.verification@example.com';
+      await tester.pumpWidget(_wrap(
+        const EmailVerificationScreen(),
+        routeArguments: {'email': email, 'user_id': 1},
+      ));
+      await tester.pumpAndSettle();
+      expect(find.text('تأكيد البريد الإلكتروني'), findsOneWidget);
+      expect(find.textContaining(email), findsOneWidget);
+      expect(find.text('تأكيد رقم الهاتف'), findsNothing);
+      expect(tester.takeException(), isNull);
+      await tester.ensureVisible(find.byType(FilledButton));
+      await tester.tap(find.byType(FilledButton));
+      await tester.pumpAndSettle();
+      expect(
+        find.descendant(
+          of: find.byType(TextFormField),
+          matching: find.text(_arabicLocalizations['validation.codeRequired']!),
+        ),
+        findsOneWidget,
+      );
+      await tester.enterText(find.byType(TextFormField), '123');
+      await tester.tap(find.byType(FilledButton));
+      await tester.pumpAndSettle();
+      expect(find.text(_arabicLocalizations['validation.codeLength']!), findsOneWidget);
+    });
+  }
+
+  testWidgets('Email verification requires email for resend', (tester) async {
+    await tester.pumpWidget(_wrap(const EmailVerificationScreen()));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('إعادة إرسال الرمز'));
+    await tester.tap(find.text('إعادة إرسال الرمز'));
+    await tester.pumpAndSettle();
+    expect(find.text(_arabicLocalizations['emailVerification.missingEmail']!), findsOneWidget);
+  });
+
   group('لقطات شاشات كَنَفْ', () {
+    testWidgets('28 - email verification', (tester) async {
+      await capture(
+        tester,
+        '28_email_verification',
+        const EmailVerificationScreen(),
+        routeArguments: {'email': 'donor@example.com', 'user_id': 1, 'role': 'donor'},
+      );
+    });
+
     testWidgets('01 - الترحيب', (tester) async {
       await capture(tester, '01_onboarding', const OnboardingScreen());
     });

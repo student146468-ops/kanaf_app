@@ -202,6 +202,7 @@ REST_FRAMEWORK = {
         # مصادقة وتُرسل بريداً، فهي هدف طبيعي للإساءة والتخمين.
         'password_reset': config('PASSWORD_RESET_THROTTLE', default='20/hour'),
         'phone_otp': config('PHONE_OTP_THROTTLE', default='8/hour'),
+        'email_otp': config('EMAIL_OTP_THROTTLE', default='8/hour'),
     },
 }
 

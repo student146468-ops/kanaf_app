@@ -17,24 +17,21 @@ const String _duplicateEmailMessage = 'هذا البريد الإلكتروني 
 const String _duplicatePhoneMessage = 'رقم الهاتف مستخدم بالفعل.';
 const String _duplicateAccountMessage = 'بيانات الحساب مستخدمة بالفعل.';
 
-class PhoneVerificationRequiredException extends ApiServiceException {
-  const PhoneVerificationRequiredException({
+class EmailVerificationRequiredException extends ApiServiceException {
+  const EmailVerificationRequiredException({
     required this.userId,
     required this.email,
-    required this.phoneNumber,
     required this.role,
-    String message = 'رقم الهاتف غير موثق. أدخل رمز التحقق لإكمال العملية.',
+    String message = 'البريد الإلكتروني غير موثق. أدخل رمز التحقق لإكمال العملية.',
   }) : super(message, kind: ApiFailureKind.unauthorized, statusCode: 403);
 
   final int? userId;
   final String email;
-  final String phoneNumber;
   final String? role;
 
   Map<String, dynamic> toRouteArguments() => {
     'user_id': userId,
     'email': email,
-    'phone_number': phoneNumber,
     'role': role,
   };
 }
@@ -130,7 +127,7 @@ class ApiService {
       return responseData;
     } on DioException catch (e) {
       debugPrint('Login API error: ${_developerErrorSummary(e)}');
-      final verification = _phoneVerificationRequired(e);
+      final verification = _emailVerificationRequired(e);
       if (verification != null) throw verification;
       throw ApiServiceException(
         friendlyMessageForDioException(e, isLogin: true, authEndpoint: true),
@@ -152,7 +149,7 @@ class ApiService {
       final response = await _dio.post(path, data: userData);
       _logAuthResponse('register', response);
       final responseData = _extractMap(response.data);
-      if (responseData['requires_phone_verification'] == true) {
+      if (responseData['requires_email_verification'] == true) {
         return responseData;
       }
       await _saveAuthSession(responseData);
@@ -172,38 +169,34 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> resendPhoneOtp({
-    required String phoneNumber,
-    String? email,
+  Future<Map<String, dynamic>> resendEmailOtp({
+    required String email,
   }) async {
     try {
       final response = await _dio.post(
-        '/auth/phone-otp/send/',
+        '/auth/email-otp/send/',
         data: {
-          'phone_number': phoneNumber,
-          if (email != null && email.isNotEmpty) 'email': email,
+          'email': email.trim(),
         },
       );
       return _extractMap(response.data);
     } on DioException catch (e) {
-      debugPrint('Phone OTP send API error: ${_developerErrorSummary(e)}');
-      throw ApiServiceException(_phoneOtpErrorMessage(e));
+      debugPrint('Email OTP send API error: ${_developerErrorSummary(e)}');
+      throw ApiServiceException(_emailOtpErrorMessage(e));
     }
   }
 
-  Future<Map<String, dynamic>> verifyPhoneOtp({
+  Future<Map<String, dynamic>> verifyEmailOtp({
     int? userId,
-    required String phoneNumber,
-    String? email,
+    required String email,
     required String code,
   }) async {
     try {
       final response = await _dio.post(
-        '/auth/phone-otp/verify/',
+        '/auth/email-otp/verify/',
         data: {
           if (userId != null) 'user_id': userId,
-          if (email != null && email.isNotEmpty) 'email': email,
-          'phone_number': phoneNumber,
+          'email': email.trim(),
           'code': code,
         },
       );
@@ -211,8 +204,8 @@ class ApiService {
       await _saveAuthSession(data);
       return data;
     } on DioException catch (e) {
-      debugPrint('Phone OTP verify API error: ${_developerErrorSummary(e)}');
-      throw ApiServiceException(_phoneOtpErrorMessage(e));
+      debugPrint('Email OTP verify API error: ${_developerErrorSummary(e)}');
+      throw ApiServiceException(_emailOtpErrorMessage(e));
     }
   }
 
@@ -930,32 +923,31 @@ class ApiService {
         'request=${_safeLogData(e.requestOptions.data)}';
   }
 
-  static PhoneVerificationRequiredException? _phoneVerificationRequired(
+  static EmailVerificationRequiredException? _emailVerificationRequired(
     DioException e,
   ) {
     final data = e.response?.data;
-    if (data is! Map || data['code'] != 'phone_verification_required') {
+    if (data is! Map || data['code'] != 'email_verification_required') {
       return null;
     }
-    return PhoneVerificationRequiredException(
+    return EmailVerificationRequiredException(
       userId: int.tryParse('${data['user_id'] ?? ''}'),
       email: (data['email'] ?? '').toString(),
-      phoneNumber: (data['phone_number'] ?? '').toString(),
       role: AuthNavigation.normalizeRole((data['role'] ?? '').toString()),
       message: (data['detail'] ?? '').toString().trim().isNotEmpty
           ? data['detail'].toString()
-          : 'رقم الهاتف غير موثق. أدخل رمز التحقق لإكمال الدخول.',
+          : 'البريد الإلكتروني غير موثق. أدخل رمز التحقق لإكمال الدخول.',
     );
   }
 
-  static String _phoneOtpErrorMessage(DioException e) {
+  static String _emailOtpErrorMessage(DioException e) {
     final data = e.response?.data;
     if (data is Map) {
       final detail = data['detail'];
       if (detail != null && detail.toString().trim().isNotEmpty) {
         return detail.toString();
       }
-      for (final key in const ['code', 'phone_number']) {
+      for (final key in const ['code', 'email']) {
         final value = data[key];
         if (value == null) continue;
         final text = value is Iterable
@@ -966,7 +958,7 @@ class ApiService {
     }
     return friendlyMessageForDioException(
       e,
-      fallback: 'تعذر التحقق من رمز الهاتف حالياً. حاول مرة أخرى.',
+      fallback: 'تعذر التحقق من رمز البريد الإلكتروني حالياً. حاول مرة أخرى.',
     );
   }
 
