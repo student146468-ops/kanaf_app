@@ -9,6 +9,21 @@ if (file("google-services.json").exists()) {
     apply plugin: "com.google.gms.google-services"
 }
 
+def kanafAbiByPlatform = [
+    "android-arm": "armeabi-v7a",
+    "android-arm64": "arm64-v8a",
+    "android-x64": "x86_64",
+]
+def kanafTargetAbis = (project.findProperty("target-platform") ?: "android-arm,android-arm64,android-x64")
+    .toString().split(",").collect { platform ->
+        def abi = kanafAbiByPlatform[platform.trim()]
+        if (abi == null) {
+            throw new GradleException("Unsupported Android target platform: $platform")
+        }
+        abi
+    }
+def kanafSplitPerAbi = project.findProperty("split-per-abi")?.toString()?.toBoolean() ?: false
+
 android {
     namespace = "com.example.orphan_care_app"
     compileSdk = 35
@@ -35,6 +50,15 @@ android {
     }
 
     buildTypes {
+        configureEach { buildType ->
+            // Flutter's default filters include all ABIs. Match native plugin
+            // libraries to the selected engine so a phone APK stays ARM64-only.
+            // ABI splits configure their own filters and must remain separate.
+            if (!kanafSplitPerAbi) {
+                buildType.ndk.abiFilters.clear()
+                buildType.ndk.abiFilters.addAll(kanafTargetAbis)
+            }
+        }
         release {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.

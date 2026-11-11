@@ -20,6 +20,9 @@ try {
 Write-Host "Building release APK with API_BASE_URL=$ApiBaseUrl"
 
 flutter build apk --release --dart-define=API_BASE_URL=$ApiBaseUrl
+if ($LASTEXITCODE -ne 0) {
+    throw "Flutter APK build failed (exit $LASTEXITCODE). No APK was copied."
+}
 
 $apkPath = Join-Path $projectRoot 'build/app/outputs/flutter-apk/app-release.apk'
 $readyApkDir = Join-Path $projectRoot 'READY_APK'

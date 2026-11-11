@@ -7,6 +7,9 @@ $apiBaseUrl = 'http://127.0.0.1:8000/api'
 Write-Host "Building USB reverse debug APK with API_BASE_URL=$apiBaseUrl"
 
 flutter build apk --debug --dart-define=API_BASE_URL=$apiBaseUrl
+if ($LASTEXITCODE -ne 0) {
+    throw "Flutter APK build failed (exit $LASTEXITCODE). No APK was copied."
+}
 
 $apkPath = Join-Path $projectRoot 'build/app/outputs/flutter-apk/app-debug.apk'
 $readyApkDir = Join-Path $projectRoot 'READY_APK'

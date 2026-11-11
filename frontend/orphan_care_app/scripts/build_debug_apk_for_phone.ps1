@@ -49,6 +49,9 @@ if (-not (Test-ApiHealth -BaseUrl $ApiBaseUrl)) {
 Write-Host "Building debug APK with API_BASE_URL=$ApiBaseUrl"
 
 flutter build apk --debug --dart-define=API_BASE_URL=$ApiBaseUrl
+if ($LASTEXITCODE -ne 0) {
+    throw "Flutter APK build failed (exit $LASTEXITCODE). No APK was copied."
+}
 
 $apkPath = Join-Path $projectRoot 'build/app/outputs/flutter-apk/app-debug.apk'
 $readyApkDir = Join-Path $projectRoot 'READY_APK'
