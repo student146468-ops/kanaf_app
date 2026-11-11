@@ -337,6 +337,22 @@ class _DonationCard extends StatelessWidget {
               ],
             ),
           ),
+          if (_notBlank(donation.careHomeName)) ...[
+            const SizedBox(height: KanafSpacing.md),
+            _DonationInfoBlock(
+              icon: Icons.home_outlined,
+              label: 'دار الرعاية',
+              value: donation.careHomeName!,
+            ),
+          ],
+          if (_notBlank(donation.careHomeLocation)) ...[
+            const SizedBox(height: KanafSpacing.sm),
+            _DonationInfoBlock(
+              icon: Icons.location_on_outlined,
+              label: 'موقع الدار',
+              value: donation.careHomeLocation!,
+            ),
+          ],
           if (donation.needTitle != null) ...[
             const SizedBox(height: KanafSpacing.md),
             Container(

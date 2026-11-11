@@ -29,6 +29,7 @@
                         <th>المتبرع</th>
                         <th>النوع</th>
                         <th>الاحتياج</th>
+                        <th>دار الرعاية</th>
                         <th>المبلغ / الكمية</th>
                         <th>تاريخ الإنشاء</th>
                         <th>الحالة</th>
@@ -52,6 +53,12 @@
                             {% if d.item_type %}<br><small>{{ d.item_type }}</small>{% endif %}
                         </td>
                         <td>{{ d.need|default:"-" }}</td>
+                        <td>
+                            {% if d.need.care_home %}
+                                {{ d.need.care_home.name }}<br>
+                                <small>{{ d.need.care_home.address }}</small>
+                            {% else %}-{% endif %}
+                        </td>
                         <td>
                             {% if d.donation_type == "financial" %}
                                 {{ d.amount|default:"-" }}
@@ -94,7 +101,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="7" class="empty-state">لا توجد تبرعات مسجلة حاليًا.</td>
+                        <td colspan="8" class="empty-state">لا توجد تبرعات مسجلة حاليًا.</td>
                     </tr>
                     {% endfor %}
                 </tbody>

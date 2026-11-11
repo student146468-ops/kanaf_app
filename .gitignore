@@ -13,3 +13,6 @@ firebase-service-account*.json
 backend/orphan_care_backend/firebase-service-account*.json
 frontend/orphan_care_app/android/app/google-services.json
 frontend/orphan_care_app/ios/Runner/GoogleService-Info.plist
+
+# Database snapshots contain private production data.
+**/backups/

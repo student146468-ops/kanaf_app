@@ -99,8 +99,9 @@ void main() {
       ));
       await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextFormField), '123456');
-      await tester.ensureVisible(find.byType(FilledButton));
-      await tester.tap(find.byType(FilledButton));
+      final verifyButton = find.bySubtype<FilledButton>();
+      await tester.ensureVisible(verifyButton);
+      await tester.tap(verifyButton);
       await tester.pump();
       // A queued keyboard submit must not consume the one-time code twice.
       tester

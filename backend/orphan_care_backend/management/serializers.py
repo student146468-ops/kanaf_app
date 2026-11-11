@@ -107,6 +107,9 @@ class DonationSerializer(serializers.ModelSerializer):
         allow_null=True,
     )
     need_title = serializers.CharField(source='need.title', read_only=True)
+    care_home_id = serializers.IntegerField(source='need.care_home_id', read_only=True, default=None)
+    care_home_name = serializers.CharField(source='need.care_home.name', read_only=True, default=None)
+    care_home_location = serializers.CharField(source='need.care_home.address', read_only=True, default=None)
     username = serializers.CharField(source='user.username', read_only=True)
 
     class Meta:
@@ -121,6 +124,9 @@ class DonationSerializer(serializers.ModelSerializer):
             'need',
             'need_id',
             'need_title',
+            'care_home_id',
+            'care_home_name',
+            'care_home_location',
             'amount',
             'description',
             'quantity',
@@ -434,6 +440,9 @@ class VolunteerApplicationSerializer(serializers.ModelSerializer):
     opportunity_status = serializers.CharField(source='opportunity.status', read_only=True)
     opportunity_start_date = serializers.DateTimeField(source='opportunity.start_date', read_only=True)
     opportunity_end_date = serializers.DateTimeField(source='opportunity.end_date', read_only=True)
+    care_home_id = serializers.IntegerField(source='opportunity.care_home_id', read_only=True)
+    care_home_name = serializers.CharField(source='opportunity.care_home.name', read_only=True)
+    care_home_location = serializers.CharField(source='opportunity.care_home.address', read_only=True)
 
     class Meta:
         model = VolunteerApplication
@@ -447,6 +456,7 @@ class VolunteerApplicationSerializer(serializers.ModelSerializer):
             'rating',
             'rating_notes',
             'rated_at',
+            'certificate_issued_at',
         ]
 
     def get_volunteer_name(self, obj) -> str:

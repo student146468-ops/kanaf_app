@@ -8,28 +8,29 @@
             <span class="panel-kicker"><i class="fas fa-gear"></i></span>
         </h3>
 
-        <form class="form-grid">
+        {% for home in care_homes %}
+        <div class="form-grid">
             <div>
-                <label for="organizationName">اسم المؤسسة</label>
-                <input id="organizationName" type="text" value="جمعية رعاية الأيتام">
+                <label for="organizationName{{ home.id }}">اسم دار الرعاية</label>
+                <input id="organizationName{{ home.id }}" type="text" value="{{ home.name }}" readonly>
             </div>
             <div>
-                <label for="systemLanguage">لغة النظام</label>
-                <select id="systemLanguage">
-                    <option>العربية</option>
-                    <option>English</option>
-                </select>
+                <label for="organizationAddress{{ home.id }}">الموقع</label>
+                <input id="organizationAddress{{ home.id }}" type="text" value="{{ home.address }}" readonly>
             </div>
-            <button type="button"><i class="fas fa-floppy-disk"></i> حفظ الإعدادات</button>
-        </form>
+            <a href="{% url 'admin:management_carehome_change' home.id %}">تعديل بيانات الدار</a>
+        </div>
+        {% empty %}
+        <p class="empty-state">لا توجد دار رعاية مسجلة بعد.</p>
+        {% endfor %}
     </div>
 
     <div class="content-card settings-note">
         <div class="list-item">
             <span class="list-icon"><i class="fas fa-circle-info"></i></span>
             <div>
-                <strong>إعدادات عامة</strong>
-                <span>هذه الصفحة تستخدم نفس تنسيق لوحة كنف الموحد دون تغيير منطق النظام الحالي.</span>
+                <strong>بيانات دور الرعاية</strong>
+                <span>تُعرض هنا البيانات المسجلة، وتظهر تحديثاتها في الاحتياجات والتبرعات وفرص التطوع المرتبطة بكل دار.</span>
             </div>
         </div>
     </div>

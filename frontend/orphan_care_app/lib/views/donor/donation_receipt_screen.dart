@@ -58,6 +58,16 @@ class DonationReceiptScreen extends StatelessWidget {
                             label: 'الرقم',
                             value: 'KNF-${donation.id}',
                           ),
+                          if (_notBlank(donation.careHomeName))
+                            KanafDetailRow(
+                              label: 'دار الرعاية',
+                              value: donation.careHomeName!,
+                            ),
+                          if (_notBlank(donation.careHomeLocation))
+                            KanafDetailRow(
+                              label: 'موقع الدار',
+                              value: donation.careHomeLocation!,
+                            ),
                           KanafDetailRow(
                             label: 'التاريخ',
                             value: _dateFormat.format(

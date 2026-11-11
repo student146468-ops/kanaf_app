@@ -153,7 +153,7 @@ def volunteers_view(request):
 @staff_required
 def volunteer_applications_view(request):
     context = {
-        'applications': VolunteerApplication.objects.select_related('user', 'opportunity').all(),
+        'applications': VolunteerApplication.objects.select_related('user', 'opportunity__care_home').all(),
         'application_status_choices': VolunteerApplication.STATUS_CHOICES,
     }
     return render(request, 'volunteer_applications.html', context)
@@ -200,7 +200,7 @@ def volunteer_opportunities_view(request):
 @staff_required
 def donations_list(request):
     context = {
-        'donations': Donation.objects.select_related('user', 'need').all(),
+        'donations': Donation.objects.select_related('user', 'need__care_home').all(),
         'donation_status_choices': Donation.STATUS_CHOICES,
     }
     if request.method == 'POST':
@@ -285,7 +285,9 @@ def reports_view(request):
 
 @staff_required
 def settings_view(request):
-    return render(request, 'settings.html')
+    return render(request, 'settings.html', {
+        'care_homes': CareHome.objects.order_by('name'),
+    })
 
 
 @staff_required

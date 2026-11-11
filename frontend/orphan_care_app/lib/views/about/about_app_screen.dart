@@ -110,7 +110,7 @@ class AboutAppScreen extends StatelessWidget {
                     children: [
                       KanafDetailRow(
                         label: 'النطاق الجغرافي',
-                        value: 'ليبيا — مدينة غريان',
+                        value: 'ليبيا — طرابلس',
                       ),
                       KanafDetailRow(
                         label: 'الجهة',

@@ -16,6 +16,9 @@
   final DateTime? updatedAt;
   final DateTime? donationDate;
   final DateTime? createdAt;
+  final int? careHomeId;
+  final String? careHomeName;
+  final String? careHomeLocation;
 
   DonationModel({
     required this.id,
@@ -35,6 +38,9 @@
     this.updatedAt,
     this.donationDate,
     this.createdAt,
+    this.careHomeId,
+    this.careHomeName,
+    this.careHomeLocation,
   });
 
   static String _stringValue(dynamic value, [String fallback = '']) {
@@ -44,7 +50,7 @@
 
   static String? _nullableStringValue(dynamic value) {
     if (value == null) return null;
-    final text = value.toString();
+    final text = value.toString().trim();
     return text.isEmpty ? null : text;
   }
 
@@ -80,6 +86,10 @@
       updatedAt: _nullableDateTimeValue(json['updated_at']),
       donationDate: _nullableDateTimeValue(json['donation_date']),
       createdAt: _nullableDateTimeValue(json['created_at']),
+      careHomeId: int.tryParse(
+          (json['care_home_id'] ?? json['care_home'])?.toString() ?? ''),
+      careHomeName: _nullableStringValue(json['care_home_name']),
+      careHomeLocation: _nullableStringValue(json['care_home_location']),
     );
   }
 
@@ -102,6 +112,9 @@
       'updated_at': updatedAt?.toIso8601String(),
       'donation_date': donationDate?.toIso8601String(),
       'created_at': createdAt?.toIso8601String(),
+      'care_home_id': careHomeId,
+      'care_home_name': careHomeName,
+      'care_home_location': careHomeLocation,
     };
   }
 
@@ -123,6 +136,9 @@
     DateTime? updatedAt,
     DateTime? donationDate,
     DateTime? createdAt,
+    int? careHomeId,
+    String? careHomeName,
+    String? careHomeLocation,
   }) {
     return DonationModel(
       id: id ?? this.id,
@@ -142,6 +158,9 @@
       updatedAt: updatedAt ?? this.updatedAt,
       donationDate: donationDate ?? this.donationDate,
       createdAt: createdAt ?? this.createdAt,
+      careHomeId: careHomeId ?? this.careHomeId,
+      careHomeName: careHomeName ?? this.careHomeName,
+      careHomeLocation: careHomeLocation ?? this.careHomeLocation,
     );
   }
 

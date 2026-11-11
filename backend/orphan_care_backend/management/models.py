@@ -4,7 +4,7 @@ from decimal import Decimal, InvalidOperation
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
-from django.db import models
+from django.db import models, router, transaction
 from django.utils import timezone
 
 
@@ -488,6 +488,7 @@ class VolunteerApplication(models.Model):
     )
     rating_notes = models.TextField(blank=True)
     rated_at = models.DateTimeField(null=True, blank=True)
+    certificate_issued_at = models.DateTimeField(null=True, blank=True, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -507,6 +508,34 @@ class VolunteerApplication(models.Model):
 
     def __str__(self):
         return f'{self.user.username} -> {self.opportunity.title}'
+
+    def save(self, *args, **kwargs):
+        # Issuance belongs to the first confirmed completion, not later ratings
+        # or edits. Lock existing rows so concurrent admin/API saves and stale
+        # instances all preserve the same date.
+        database = kwargs.get('using') or router.db_for_write(type(self), instance=self)
+        with transaction.atomic(using=database):
+            if self.pk:
+                stored_date = (
+                    type(self).objects.using(database).select_for_update()
+                    .filter(pk=self.pk)
+                    .values_list('certificate_issued_at', flat=True)
+                    .first()
+                )
+                if stored_date is not None:
+                    self.certificate_issued_at = stored_date
+
+            update_fields = kwargs.get('update_fields')
+            saves_status = update_fields is None or 'status' in update_fields
+            if (
+                saves_status
+                and self.status == self.STATUS_COMPLETED
+                and self.certificate_issued_at is None
+            ):
+                self.certificate_issued_at = timezone.now()
+                if update_fields is not None:
+                    kwargs['update_fields'] = set(update_fields) | {'certificate_issued_at'}
+            return super().save(*args, **kwargs)
 
 
 class CareHome(models.Model):

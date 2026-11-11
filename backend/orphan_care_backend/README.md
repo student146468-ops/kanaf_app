@@ -87,3 +87,50 @@ python manage.py test
 ## Backup
 
 Use `scripts/backup_db.py` and `scripts/restore_db.py`. See `backup_restore.md`.
+
+## PythonAnywhere: care-home identity update
+
+The target care-home name is `دار الطفل أبوهريدة` and its address is `طرابلس`.
+The existing record must be updated in the database used by the web app; do not
+upload a local SQLite file over production. The rename preserves its primary key,
+manager, contacts and linked needs, donations, volunteer opportunities and visits.
+
+In a Bash console, activate the same virtualenv configured on the **Web** tab and
+use the same environment variables / private `.env` as the web app. Then run:
+
+```bash
+cd /home/kanafapp/kanaf-app
+git status --short
+git pull --ff-only origin main
+bash backend/orphan_care_backend/scripts/deploy_pythonanywhere.sh
+```
+
+The script backs up the active SQLite or PostgreSQL database, runs migrations,
+renames the existing home, collects static files and runs Django checks. It stops
+if any step fails. A PostgreSQL backup requires `pg_dump` installed on the server.
+Preserve server-local code changes before pulling; do not use a hard reset or
+replace the database. If this checkout lives at another path, use that path.
+
+When multiple homes exist, the command lists them and stops without renaming one.
+Select the correct existing record explicitly and rerun the script:
+
+```bash
+bash backend/orphan_care_backend/scripts/deploy_pythonanywhere.sh --care-home-id 7
+```
+
+Replace `7` with the actual record ID. To inspect the selected home before applying:
+
+```bash
+cd backend/orphan_care_backend
+python manage.py rename_care_home --care-home-id 7
+```
+
+Finally click **Reload** on the PythonAnywhere **Web** tab. Sign in and check
+`/settings/`, linked donations, opportunities and a completed volunteer certificate.
+Rebuild/install the Flutter app to receive its updated screens; a backend reload
+does not update an installed APK. `جامعة غريان` remains the university affiliation.
+
+Certificate dates are persisted on the first completion. For historical completed
+applications, migration `0020` freezes their previously recorded `updated_at` as
+the best available historical date; the original completion time was not stored
+separately. Later ratings or edits no longer change the displayed issue date.

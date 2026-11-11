@@ -129,9 +129,15 @@ class _CertificateCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = context.colors;
     final title = data['opportunity_title']?.toString() ?? 'مشاركة تطوعية';
-    final location = data['opportunity_location']?.toString() ?? '';
-    final issued = DateTime.tryParse(data['updated_at']?.toString() ?? '') ??
-        DateTime.tryParse(data['created_at']?.toString() ?? '');
+    final careHomeName = data['care_home_name']?.toString().trim() ?? '';
+    final careHomeLocation =
+        data['care_home_location']?.toString().trim() ?? '';
+    final location = careHomeLocation.isNotEmpty
+        ? careHomeLocation
+        : data['opportunity_location']?.toString() ?? '';
+    final issuer = careHomeName.isEmpty ? 'دار الرعاية' : careHomeName;
+    final issued =
+        DateTime.tryParse(data['certificate_issued_at']?.toString() ?? '');
     final rating = data['rating'];
 
     return KanafCard(
@@ -172,10 +178,18 @@ class _CertificateCard extends StatelessWidget {
                 ),
                 const SizedBox(height: KanafSpacing.lg),
                 Text(
-                  'تشهد كَنَفْ بأن',
+                  'تشهد $issuer بأن',
                   textAlign: TextAlign.center,
                   style: context.texts.bodySmall,
                 ),
+                if (careHomeLocation.isNotEmpty) ...[
+                  const SizedBox(height: KanafSpacing.xs),
+                  Text(
+                    careHomeLocation,
+                    textAlign: TextAlign.center,
+                    style: context.texts.bodySmall,
+                  ),
+                ],
                 const SizedBox(height: KanafSpacing.xs),
                 Text(
                   name,

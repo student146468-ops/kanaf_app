@@ -175,6 +175,7 @@ class VolunteerApplicationAdmin(admin.ModelAdmin):
     list_display = ['opportunity', 'user', 'status', 'created_at']
     list_filter = ['status']
     search_fields = ['opportunity__title', 'user__username', 'message']
+    readonly_fields = ['certificate_issued_at']
 
     def save_model(self, request, obj, form, change):
         previous_status = None

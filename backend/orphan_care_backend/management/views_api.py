@@ -1233,7 +1233,7 @@ class DonationViewSet(SafeDestroyMixin, viewsets.ModelViewSet):
     def get_queryset(self):
         if getattr(self, 'swagger_fake_view', False):
             return Donation.objects.none()
-        queryset = Donation.objects.select_related('user', 'need')
+        queryset = Donation.objects.select_related('user', 'need', 'need__care_home')
         if self.request.user.is_staff:
             return queryset
         return queryset.filter(user=self.request.user)
@@ -1699,8 +1699,12 @@ class VolunteerApplicationViewSet(SafeDestroyMixin, viewsets.ModelViewSet):
                 {'detail': 'Only the care home managing this opportunity can complete applications.'},
                 status=status.HTTP_403_FORBIDDEN,
             )
-        application.status = VolunteerApplication.STATUS_COMPLETED
-        application.save(update_fields=['status', 'updated_at'])
+        with transaction.atomic():
+            # Re-read after acquiring the lock so repeated/concurrent completion
+            # requests keep the first certificate issuance date.
+            application = VolunteerApplication.objects.select_for_update().get(pk=application.pk)
+            application.status = VolunteerApplication.STATUS_COMPLETED
+            application.save(update_fields=['status', 'updated_at'])
         _create_notification(
             application.user,
             Notification.TYPE_VOLUNTEER,
